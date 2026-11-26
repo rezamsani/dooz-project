@@ -7,6 +7,7 @@ import {
   computed,
   inject,
   signal,
+  NgZone,
 } from '@angular/core';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { MatIconModule } from '@angular/material/icon';
@@ -63,6 +64,8 @@ import { RoomSnapshotDto } from './game/online.types';
 import { PieceTray } from './game/piece-tray';
 import { PlayerStats } from './game/player-stats';
 import { SoundFx } from './game/sound-fx';
+import { App as NativeApp } from '@capacitor/app';
+import { RuntimeConfig } from './runtime-config';
 
 function createPreviewMorrisState(variant: MorrisVariant): MorrisState {
   const base = createInitialMorrisState(variant, 'X', true);
@@ -115,6 +118,8 @@ export class App {
   readonly soundFx = inject(SoundFx);
   readonly playerStats = inject(PlayerStats);
   readonly onlineClient = inject(OnlineClient);
+  readonly runtimeConfig = inject(RuntimeConfig);
+  private readonly zone = inject(NgZone);
 
   private aiTimerId: ReturnType<typeof setTimeout> | null = null;
   private turnIntervalId: ReturnType<typeof setInterval> | null = null;
@@ -657,6 +662,17 @@ export class App {
   });
 
   constructor() {
+    if (this.runtimeConfig.isNative && isPlatformBrowser(this.platformId)) {
+      void NativeApp.addListener('backButton', () => {
+        this.zone.run(() => this.onNativeBack());
+      }).then((listener) => {
+        if (this.destroyRef.destroyed) {
+          void listener.remove();
+        } else {
+          this.destroyRef.onDestroy(() => { void listener.remove(); });
+        }
+      });
+    }
     this.onlineClient.onRoomState((room, role) => {
       this.syncFromOnlineRoom(room, role);
     });
@@ -687,6 +703,14 @@ export class App {
 
   formatNumber(n: number): string {
     return toPersianDigits(n);
+  }
+
+  onNativeBack(): void {
+    if (this.showHelp()) this.closeHelp();
+    else if (this.replayActive()) this.exitReplay();
+    else if (this.isFullscreen()) this.exitFullscreen();
+    else if (this.gameState() !== 'TITLE_MENU') this.goToTitleMenu();
+    else void NativeApp.minimizeApp();
   }
 
   setGameVariant(variant: GameVariant): void {
@@ -896,8 +920,8 @@ export class App {
     const code = this.onlineRoom()?.code;
     if (!code || !isPlatformBrowser(this.platformId)) return;
     this.soundFx.playClick();
-    const url = `${window.location.origin}${window.location.pathname}?room=${code}`;
-    await this.copyToClipboard(url, 'لینک دعوت کپی شد');
+    const url = this.runtimeConfig.inviteLink(code);
+    await this.copyToClipboard(url ?? code, url ? 'لینک دعوت کپی شد' : 'کد اتاق کپی شد');
   }
 
   sendQuickEmote(emoteId: QuickEmoteId): void {

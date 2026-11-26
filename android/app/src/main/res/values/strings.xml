@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">دوز</string>
+    <string name="title_activity_main">دوز</string>
+    <string name="package_name">ir.dooz.game</string>
+    <string name="custom_url_scheme">ir.dooz.game</string>
+</resources>

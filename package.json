@@ -8,6 +8,10 @@
     "serve:online": "tsc -p tsconfig.online.json && node out-tsc/online-server/dev-online-server.js",
     "test:online": "tsc -p tsconfig.online.json && node --test scripts/online-server.test.mjs",
     "build": "ng build",
+    "build:mobile": "node scripts/build-mobile.mjs",
+    "android:init": "npm run build:mobile && cap add android",
+    "android:sync": "npm run build:mobile && cap sync android",
+    "android:open": "cap open android",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
     "lint": "ng lint",
@@ -15,6 +19,11 @@
   },
   "private": true,
   "dependencies": {
+    "@capacitor/android": "^8.6.3",
+    "@capacitor/app": "^8.1.2",
+    "@capacitor/core": "^8.6.3",
+    "@fontsource-variable/vazirmatn": "^5.2.0",
+    "@fontsource/material-icons": "^5.2.0",
     "@angular/cdk": "^21.0.0",
     "@angular/common": "^21.0.0",
     "@angular/compiler": "^21.0.0",
@@ -36,6 +45,7 @@
     "ws": "^8.23.0"
   },
   "devDependencies": {
+    "@capacitor/cli": "^8.0.0",
     "@angular/build": "^21.0.0",
     "@angular/cli": "^21.0.0",
     "@angular/compiler-cli": "^21.0.0",

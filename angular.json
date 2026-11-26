@@ -58,6 +58,19 @@
               ],
               "outputHashing": "all"
             },
+            "mobile": {
+              "outputPath": "dist/mobile",
+              "server": false,
+              "ssr": false,
+              "outputMode": "static",
+              "sourceMap": false,
+              "optimization": true,
+              "outputHashing": "all",
+              "budgets": [
+                { "type": "initial", "maximumWarning": "750kB", "maximumError": "1MB" },
+                { "type": "anyComponentStyle", "maximumWarning": "4kB", "maximumError": "8kB" }
+              ]
+            },
             "development": {
               "optimization": false,
               "extractLicenses": false,

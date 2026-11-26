@@ -1,5 +1,6 @@
 import { isPlatformBrowser } from '@angular/common';
 import { DestroyRef, Injectable, PLATFORM_ID, inject, signal } from '@angular/core';
+import { RuntimeConfig } from '../runtime-config';
 import {
   BoardRule,
   GameVariant,
@@ -24,10 +25,9 @@ export interface EmoteBanner {
 export class OnlineClient {
   private readonly platformId = inject(PLATFORM_ID);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly config = inject(RuntimeConfig);
 
   private ws: WebSocket | null = null;
-  private isOpening = false;
-  private socketEpoch = 0;
   private pendingQueue: ClientWsMessage[] = [];
   private emoteTimerId: ReturnType<typeof setTimeout> | null = null;
   private stateListener: ((room: RoomSnapshotDto, role: Player) => void) | null = null;
@@ -126,8 +126,6 @@ export class OnlineClient {
   }
 
   disconnect(): void {
-    this.socketEpoch++;
-    this.isOpening = false;
     if (this.emoteTimerId !== null) {
       clearTimeout(this.emoteTimerId);
       this.emoteTimerId = null;
@@ -146,31 +144,6 @@ export class OnlineClient {
     this.yourRole.set(null);
   }
 
-  private ensureSocket(): void {
-    if (!isPlatformBrowser(this.platformId)) return;
-    if (
-      this.isOpening ||
-      (this.ws &&
-        (this.ws.readyState === WebSocket.OPEN || this.ws.readyState === WebSocket.CONNECTING))
-    ) {
-      return;
-    }
-
-    this.isOpening = true;
-    const epoch = this.socketEpoch;
-    this.connectionStatus.set('CONNECTING');
-
-    // Check the online endpoint before opening the WebSocket connection.
-    fetch('/api/health', { cache: 'no-store' })
-      .catch(() => undefined)
-      .finally(() => {
-        this.isOpening = false;
-        if (epoch === this.socketEpoch) {
-          this.openWebSocket();
-        }
-      });
-  }
-
   private openWebSocket(): void {
     if (!isPlatformBrowser(this.platformId)) return;
     if (
@@ -180,14 +153,28 @@ export class OnlineClient {
       return;
     }
 
-    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const url = `${protocol}//${window.location.host}/api/ws`;
+    const url = this.config.socketUrl;
+    if (!url) {
+      this.pendingQueue = [];
+      this.connectionStatus.set('ERROR');
+      this.errorMessage.set('بازی آنلاین فعلاً در دسترس نیست. می‌توانید آفلاین بازی کنید.');
+      return;
+    }
     this.connectionStatus.set('CONNECTING');
 
-    const socket = new WebSocket(url);
+    let socket: WebSocket;
+    try {
+      socket = new WebSocket(url);
+    } catch {
+      this.pendingQueue = [];
+      this.connectionStatus.set('ERROR');
+      this.errorMessage.set('اتصال به سرور بازی آنلاین برقرار نشد.');
+      return;
+    }
     this.ws = socket;
 
     socket.onopen = () => {
+      if (this.ws !== socket) return;
       this.connectionStatus.set('CONNECTED');
       const queued = [...this.pendingQueue];
       this.pendingQueue = [];
@@ -197,6 +184,7 @@ export class OnlineClient {
     };
 
     socket.onmessage = (event) => {
+      if (this.ws !== socket) return;
       try {
         const parsed = JSON.parse(String(event.data)) as ServerWsMessage;
         this.handleServerMessage(parsed);
@@ -206,6 +194,8 @@ export class OnlineClient {
     };
 
     socket.onerror = () => {
+      if (this.ws !== socket) return;
+      this.pendingQueue = [];
       this.connectionStatus.set('ERROR');
       this.errorMessage.set('اتصال به سرور بازی آنلاین برقرار نشد.');
     };
@@ -213,6 +203,7 @@ export class OnlineClient {
     socket.onclose = () => {
       if (this.ws === socket) {
         this.ws = null;
+        this.pendingQueue = [];
         if (this.connectionStatus() !== 'ERROR') {
           this.connectionStatus.set('IDLE');
         }
@@ -222,11 +213,11 @@ export class OnlineClient {
 
   private send(msg: ClientWsMessage): void {
     if (!isPlatformBrowser(this.platformId)) return;
-    this.ensureSocket();
     if (this.ws && this.ws.readyState === WebSocket.OPEN) {
       this.ws.send(JSON.stringify(msg));
     } else {
       this.pendingQueue.push(msg);
+      this.openWebSocket();
     }
   }
 

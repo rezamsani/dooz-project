@@ -640,6 +640,7 @@
                 <mat-icon class="!h-[18px] !w-[18px] !text-[18px]">help_outline</mat-icon>
                 <span>قوانین بازی</span>
               </button>
+              @if (!runtimeConfig.isNative) {
               <button
                 type="button"
                 [disabled]="isDownloadingProject()"
@@ -649,6 +650,7 @@
                 <mat-icon class="!h-[18px] !w-[18px] !text-[18px]">download</mat-icon>
                 <span>{{ isDownloadingProject() ? 'در حال آماده‌سازی...' : 'دانلود پروژه (ZIP)' }}</span>
               </button>
+              }
             </div>
             @if (downloadError(); as errMsg) {
               <p role="alert" class="text-xs font-medium text-rose-600 dark:text-rose-300">
@@ -1889,6 +1891,7 @@
             </mat-icon>
             <span>{{ playerStats.colorMode() === 'dark' ? 'حالت روشن' : 'حالت تاریک' }}</span>
           </button>
+        @if (!runtimeConfig.isNative) {
         <span aria-hidden="true">·</span>
         <button
           type="button"
@@ -1899,6 +1902,7 @@
           <mat-icon class="!h-[15px] !w-[15px] !text-[15px]">download</mat-icon>
           <span>{{ isDownloadingProject() ? 'در حال دانلود...' : 'دانلود پروژه (ZIP)' }}</span>
         </button>
+        }
         <span aria-hidden="true">·</span>
         <button
           type="button"

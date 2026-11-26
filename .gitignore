@@ -3,6 +3,13 @@
 # Env variables
 .env*
 !.env.example
+!.env.mobile.example
+
+# Android local configuration and signing keys
+android/local.properties
+android/keystore.properties
+*.jks
+*.keystore
 
 # Compiled output
 /dist

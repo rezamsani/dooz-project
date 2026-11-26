@@ -4,6 +4,7 @@ import { deflateRawSync } from 'node:zlib';
 
 const ALLOWED_ROOT_FILES = new Set([
   'package.json',
+  'package-lock.json',
   'angular.json',
   'tsconfig.json',
   'tsconfig.app.json',
@@ -11,6 +12,8 @@ const ALLOWED_ROOT_FILES = new Set([
   'tsconfig.online.json',
   'proxy.conf.json',
   'README.md',
+  'capacitor.config.ts',
+  '.env.mobile.example',
   'eslint.config.js',
   '.postcssrc.json',
   '.gitignore',
@@ -207,10 +210,12 @@ export function createProjectZipArchive(): Buffer | null {
     }
   }
 
-  zipEntries.push({
-    name: 'dooz-project/README.md',
-    data: Buffer.from(PERSIAN_README, 'utf8'),
-  });
+  if (!zipEntries.some((entry) => entry.name === 'dooz-project/README.md')) {
+    zipEntries.push({
+      name: 'dooz-project/README.md',
+      data: Buffer.from(PERSIAN_README, 'utf8'),
+    });
+  }
 
   zipEntries.sort((a, b) => a.name.localeCompare(b.name));
   return buildZipBuffer(zipEntries);
