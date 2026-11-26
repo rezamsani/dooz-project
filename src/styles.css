@@ -73,15 +73,27 @@
 @keyframes tokenDrop {
   0% {
     opacity: 0;
-    transform: scale(0.72);
+    transform: translateY(-6px) scale(0.68);
   }
-  70% {
+  65% {
     opacity: 1;
-    transform: scale(1.06);
+    transform: translateY(1px) scale(1.08);
   }
   100% {
     opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes ambientBreath {
+  0%,
+  100% {
+    opacity: 0.55;
     transform: scale(1);
+  }
+  50% {
+    opacity: 0.92;
+    transform: scale(1.05);
   }
 }
 
@@ -113,12 +125,17 @@
   animation: popIn 180ms cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
+.animate-ambient-breath {
+  animation: ambientBreath 4.2s ease-in-out infinite;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .animate-piece-draw,
   .animate-piece-draw-delay,
   .animate-token-drop,
   .animate-win-line,
-  .animate-panel-in {
+  .animate-panel-in,
+  .animate-ambient-breath {
     animation: none !important;
   }
 }

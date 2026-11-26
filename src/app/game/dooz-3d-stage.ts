@@ -7,6 +7,7 @@ import {
   output,
   signal,
 } from '@angular/core';
+import { resolveBoardColorTokens } from './color-palette';
 import {
   BoardTheme,
   CellValue,
@@ -140,11 +141,24 @@ const STAGE_ENV_CONFIG: Record<EnvironmentTheme, StageEnvironmentConfig> = {
         ></div>
       }
 
-      <!-- Calibrated Scene Atmospheric Lighting & Vignette -->
+      <!-- Calibrated Scene Atmospheric Lighting & Living Ambience -->
       <div
         class="pointer-events-none absolute inset-0"
         [style.background]="envConfig().lightTint"
       ></div>
+      @if (environment() === 'lounge') {
+        <div
+          class="animate-ambient-breath pointer-events-none absolute right-[10%] top-[44%] h-40 w-40 rounded-full bg-amber-400/20 blur-3xl"
+        ></div>
+      } @else if (environment() === 'carpet' || environment() === 'meadow') {
+        <div
+          class="animate-ambient-breath pointer-events-none absolute left-[22%] top-[10%] h-48 w-72 rounded-full bg-amber-200/15 blur-3xl"
+        ></div>
+      } @else if (environment() === 'waterfall') {
+        <div
+          class="animate-ambient-breath pointer-events-none absolute left-[38%] top-[16%] h-44 w-56 rounded-full bg-cyan-200/15 blur-3xl"
+        ></div>
+      }
       <div
         class="pointer-events-none absolute inset-0 shadow-[inset_0_0_90px_rgba(0,0,0,0.45)]"
       ></div>
@@ -178,9 +192,9 @@ const STAGE_ENV_CONFIG: Record<EnvironmentTheme, StageEnvironmentConfig> = {
             <!-- Right Side Tray (Player X) -->
             @if (showSideDishes()) {
               <div
-                class="hidden shrink-0 sm:block"
+                class="hidden shrink-0 rounded-2xl border-b-[10px] ring-1 ring-white/15 sm:block"
+                [style.border-bottom-color]="slabEdgeColor()"
                 [style.box-shadow]="slabShadow()"
-                [class]="slabEdgeClass()"
               >
                 <app-piece-tray
                   [player]="'X'"
@@ -193,6 +207,8 @@ const STAGE_ENV_CONFIG: Record<EnvironmentTheme, StageEnvironmentConfig> = {
                   [theme]="boardTheme()"
                   [pieceStyle]="pieceStyle()"
                   [colorMode]="colorMode()"
+                  [customPieceColor]="customXColor()"
+                  [customBoardColor]="customBoardColor()"
                   [expanded]="false"
                 />
               </div>
@@ -200,8 +216,8 @@ const STAGE_ENV_CONFIG: Record<EnvironmentTheme, StageEnvironmentConfig> = {
 
             <!-- Main 3D Physical Board Slab -->
             <div
-              class="relative w-full max-w-[440px] flex-1 rounded-2xl"
-              [class]="slabEdgeClass()"
+              class="relative w-full max-w-[440px] flex-1 rounded-2xl border-b-[10px] ring-1 ring-white/15"
+              [style.border-bottom-color]="slabEdgeColor()"
               [style.box-shadow]="slabShadow()"
               style="transform-style: preserve-3d;"
             >
@@ -214,6 +230,9 @@ const STAGE_ENV_CONFIG: Record<EnvironmentTheme, StageEnvironmentConfig> = {
                   [theme]="boardTheme()"
                   [pieceStyle]="pieceStyle()"
                   [colorMode]="colorMode()"
+                  [customXColor]="customXColor()"
+                  [customOColor]="customOColor()"
+                  [customBoardColor]="customBoardColor()"
                   [hintIndex]="threeHintIndex()"
                   [expanded]="false"
                   [disabled]="disabled()"
@@ -229,6 +248,9 @@ const STAGE_ENV_CONFIG: Record<EnvironmentTheme, StageEnvironmentConfig> = {
                   [theme]="boardTheme()"
                   [pieceStyle]="pieceStyle()"
                   [colorMode]="colorMode()"
+                  [customXColor]="customXColor()"
+                  [customOColor]="customOColor()"
+                  [customBoardColor]="customBoardColor()"
                   [hintDecision]="morrisHint()"
                   [expanded]="false"
                   [disabled]="disabled()"
@@ -245,9 +267,9 @@ const STAGE_ENV_CONFIG: Record<EnvironmentTheme, StageEnvironmentConfig> = {
             <!-- Left Side Tray (Player O) -->
             @if (showSideDishes()) {
               <div
-                class="hidden shrink-0 sm:block"
+                class="hidden shrink-0 rounded-2xl border-b-[10px] ring-1 ring-white/15 sm:block"
+                [style.border-bottom-color]="slabEdgeColor()"
                 [style.box-shadow]="slabShadow()"
-                [class]="slabEdgeClass()"
               >
                 <app-piece-tray
                   [player]="'O'"
@@ -260,6 +282,8 @@ const STAGE_ENV_CONFIG: Record<EnvironmentTheme, StageEnvironmentConfig> = {
                   [theme]="boardTheme()"
                   [pieceStyle]="pieceStyle()"
                   [colorMode]="colorMode()"
+                  [customPieceColor]="customOColor()"
+                  [customBoardColor]="customBoardColor()"
                   [expanded]="false"
                 />
               </div>
@@ -312,6 +336,9 @@ export class Dooz3DStage {
   readonly boardTheme = input<BoardTheme>('walnut');
   readonly pieceStyle = input<PieceStyle>('gemstone');
   readonly colorMode = input<ColorMode>('dark');
+  readonly customXColor = input<string | null>(null);
+  readonly customOColor = input<string | null>(null);
+  readonly customBoardColor = input<string | null>(null);
   readonly cameraPreset = input<CameraPreset>('TABLE');
 
   // Interaction outputs
@@ -394,20 +421,11 @@ export class Dooz3DStage {
     return `scale(1.07) translate3d(${tx}%, ${ty}%, 0)`;
   });
 
-  readonly slabEdgeClass = computed<string>(() => {
-    switch (this.boardTheme()) {
-      case 'walnut':
-        return 'rounded-2xl border-b-[10px] border-b-[#21110B] ring-1 ring-amber-500/25';
-      case 'felt':
-        return 'rounded-2xl border-b-[10px] border-b-[#1A0E08] ring-1 ring-emerald-400/25';
-      case 'tile':
-        return 'rounded-2xl border-b-[10px] border-b-[#07232C] ring-1 ring-cyan-400/30';
-      default:
-        return this.colorMode() === 'light'
-          ? 'rounded-2xl border-b-[10px] border-b-slate-300 ring-1 ring-slate-900/10'
-          : 'rounded-2xl border-b-[10px] border-b-[#09121D] ring-1 ring-white/15';
-    }
-  });
+  readonly slabEdgeColor = computed<string>(
+    () =>
+      resolveBoardColorTokens(this.boardTheme(), this.colorMode(), this.customBoardColor())
+        .slabEdge,
+  );
 
   readonly slabShadow = computed<string>(() => {
     const tint = this.envConfig().shadowTint;

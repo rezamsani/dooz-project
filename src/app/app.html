@@ -670,6 +670,9 @@
                 [theme]="playerStats.boardTheme()"
                 [pieceStyle]="playerStats.pieceStyle()"
                 [colorMode]="playerStats.colorMode()"
+                [customXColor]="playerStats.customXColor()"
+                [customOColor]="playerStats.customOColor()"
+                [customBoardColor]="playerStats.customBoardColor()"
                 [disabled]="true"
                 [showCellNumbers]="false"
               />
@@ -679,6 +682,9 @@
                 [theme]="playerStats.boardTheme()"
                 [pieceStyle]="playerStats.pieceStyle()"
                 [colorMode]="playerStats.colorMode()"
+                [customXColor]="playerStats.customXColor()"
+                [customOColor]="playerStats.customOColor()"
+                [customBoardColor]="playerStats.customBoardColor()"
                 [disabled]="true"
               />
             } @else {
@@ -687,6 +693,9 @@
                 [theme]="playerStats.boardTheme()"
                 [pieceStyle]="playerStats.pieceStyle()"
                 [colorMode]="playerStats.colorMode()"
+                [customXColor]="playerStats.customXColor()"
+                [customOColor]="playerStats.customOColor()"
+                [customBoardColor]="playerStats.customBoardColor()"
                 [disabled]="true"
               />
             }
@@ -854,6 +863,9 @@
                 </button>
               </div>
             </div>
+
+            <!-- Full CSS Color Palette Picker -->
+            <app-color-palette-picker />
           </div>
         </div>
       </section>
@@ -1169,6 +1181,9 @@
                 [boardTheme]="playerStats.boardTheme()"
                 [pieceStyle]="playerStats.pieceStyle()"
                 [colorMode]="playerStats.colorMode()"
+                [customXColor]="playerStats.customXColor()"
+                [customOColor]="playerStats.customOColor()"
+                [customBoardColor]="playerStats.customBoardColor()"
                 [cameraPreset]="cameraPreset()"
                 (threeCellSelected)="onCellSelected($event)"
                 (morrisNodeSelected)="onMorrisNodeSelected($event)"
@@ -1225,6 +1240,8 @@
                   [theme]="playerStats.boardTheme()"
                   [pieceStyle]="playerStats.pieceStyle()"
                   [colorMode]="playerStats.colorMode()"
+                  [customPieceColor]="playerStats.customXColor()"
+                  [customBoardColor]="playerStats.customBoardColor()"
                   [expanded]="isFullscreenPlay()"
                 />
               }
@@ -1238,6 +1255,9 @@
                     [theme]="playerStats.boardTheme()"
                     [pieceStyle]="playerStats.pieceStyle()"
                     [colorMode]="playerStats.colorMode()"
+                    [customXColor]="playerStats.customXColor()"
+                    [customOColor]="playerStats.customOColor()"
+                    [customBoardColor]="playerStats.customBoardColor()"
                     [hintDecision]="morrisHintDecision()"
                     [expanded]="isFullscreenPlay()"
                     [disabled]="isBoardLocked()"
@@ -1252,6 +1272,9 @@
                     [theme]="playerStats.boardTheme()"
                     [pieceStyle]="playerStats.pieceStyle()"
                     [colorMode]="playerStats.colorMode()"
+                    [customXColor]="playerStats.customXColor()"
+                    [customOColor]="playerStats.customOColor()"
+                    [customBoardColor]="playerStats.customBoardColor()"
                     [hintIndex]="threeHintIndex()"
                     [expanded]="isFullscreenPlay()"
                     [disabled]="isBoardLocked()"
@@ -1277,6 +1300,8 @@
                   [theme]="playerStats.boardTheme()"
                   [pieceStyle]="playerStats.pieceStyle()"
                   [colorMode]="playerStats.colorMode()"
+                  [customPieceColor]="playerStats.customOColor()"
+                  [customBoardColor]="playerStats.customBoardColor()"
                   [expanded]="isFullscreenPlay()"
                 />
               }
@@ -1719,6 +1744,8 @@
                   </button>
                 </div>
               </div>
+
+              <app-color-palette-picker />
             </div>
           </div>
 

@@ -1,5 +1,6 @@
 import { isPlatformBrowser } from '@angular/common';
 import { Injectable, PLATFORM_ID, computed, inject, signal } from '@angular/core';
+import { normalizeHex } from './color-palette';
 import {
   BoardTheme,
   ColorMode,
@@ -26,6 +27,9 @@ const COLOR_MODE_KEY = 'dooz_color_mode_v1';
 const ENV_KEY = 'dooz_environment_theme_v1';
 const PIECE_STYLE_KEY = 'dooz_piece_style_v1';
 const VIEW_MODE_KEY = 'dooz_view_mode_v1';
+const CUSTOM_X_COLOR_KEY = 'dooz_custom_x_color_v1';
+const CUSTOM_O_COLOR_KEY = 'dooz_custom_o_color_v1';
+const CUSTOM_BOARD_COLOR_KEY = 'dooz_custom_board_color_v1';
 
 const DEFAULT_STATS: PersistentStats = {
   elo: 1200,
@@ -47,6 +51,16 @@ export class PlayerStats {
   readonly environment = signal<EnvironmentTheme>('carpet');
   readonly pieceStyle = signal<PieceStyle>('gemstone');
   readonly viewMode = signal<ViewMode>('3d');
+  readonly customXColor = signal<string | null>(null);
+  readonly customOColor = signal<string | null>(null);
+  readonly customBoardColor = signal<string | null>(null);
+
+  readonly hasCustomColors = computed<boolean>(
+    () =>
+      this.customXColor() !== null ||
+      this.customOColor() !== null ||
+      this.customBoardColor() !== null,
+  );
 
   readonly activeEnvironmentOption = computed<EnvironmentOption>(() => {
     const id = this.environment();
@@ -118,6 +132,41 @@ export class PlayerStats {
 
   toggleViewMode(): void {
     this.setViewMode(this.viewMode() === '3d' ? '2d' : '3d');
+  }
+
+  setCustomColor(target: 'X' | 'O' | 'BOARD', hex: string | null): void {
+    const clean = normalizeHex(hex);
+    const key =
+      target === 'X'
+        ? CUSTOM_X_COLOR_KEY
+        : target === 'O'
+          ? CUSTOM_O_COLOR_KEY
+          : CUSTOM_BOARD_COLOR_KEY;
+
+    if (target === 'X') {
+      this.customXColor.set(clean);
+    } else if (target === 'O') {
+      this.customOColor.set(clean);
+    } else {
+      this.customBoardColor.set(clean);
+    }
+
+    if (!isPlatformBrowser(this.platformId)) return;
+    try {
+      if (clean) {
+        window.localStorage.setItem(key, clean);
+      } else {
+        window.localStorage.removeItem(key);
+      }
+    } catch {
+      // Ignore storage errors
+    }
+  }
+
+  resetCustomColors(): void {
+    this.setCustomColor('X', null);
+    this.setCustomColor('O', null);
+    this.setCustomColor('BOARD', null);
   }
 
   /**
@@ -243,6 +292,10 @@ export class PlayerStats {
       if (rawView === '3d' || rawView === '2d') {
         this.viewMode.set(rawView);
       }
+
+      this.customXColor.set(normalizeHex(window.localStorage.getItem(CUSTOM_X_COLOR_KEY)));
+      this.customOColor.set(normalizeHex(window.localStorage.getItem(CUSTOM_O_COLOR_KEY)));
+      this.customBoardColor.set(normalizeHex(window.localStorage.getItem(CUSTOM_BOARD_COLOR_KEY)));
     } catch {
       // Ignore corrupted local storage
     }

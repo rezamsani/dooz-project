@@ -1,6 +1,8 @@
 import { ChangeDetectionStrategy, Component, computed, input, output } from '@angular/core';
+import { BoardColorTokens, resolveBoardColorTokens } from './color-palette';
 import { BoardTheme, ColorMode, PieceStyle } from './dooz.types';
 import { toPersianDigits } from './dooz-engine';
+import { DoozPieceSvg } from './dooz-piece-svg';
 import {
   MORRIS_NODES,
   MorrisAiDecision,
@@ -11,65 +13,29 @@ import {
 } from './morris-engine';
 import { MorrisEdge, MorrisMill, MorrisNodeCoord, MorrisState } from './morris.types';
 
-let nextMorrisBoardUid = 1;
-
 @Component({
   selector: 'app-morris-board',
   changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [DoozPieceSvg],
   template: `
     <div
       class="relative mx-auto w-full rounded-2xl border p-3 shadow-md transition-all duration-200 sm:p-4"
       [class.max-w-[440px]]="!expanded()"
       [class.max-w-[min(68dvh,620px)]]="expanded()"
-      [class.border-slate-300/90]="isLightNeutral()"
-      [class.bg-[#F4F6F9]]="isLightNeutral()"
-      [class.border-white/15]="isDarkNeutral()"
-      [class.bg-[#132234]]="isDarkNeutral()"
-      [class.border-amber-700/45]="theme() === 'walnut'"
-      [class.bg-[#321E16]]="theme() === 'walnut'"
-      [class.border-emerald-700/45]="theme() === 'felt'"
-      [class.bg-[#103828]]="theme() === 'felt'"
-      [class.border-cyan-500/35]="theme() === 'tile'"
-      [class.bg-[#0E3A47]]="theme() === 'tile'"
+      [style.background-color]="boardTokens().frameBg"
+      [style.border-color]="boardTokens().borderColor"
     >
+      <!-- Subtle luxury inlaid inner border line -->
+      <div
+        class="pointer-events-none absolute inset-2 rounded-xl border border-white/10"
+        aria-hidden="true"
+      ></div>
       <svg
         viewBox="0 0 400 400"
         role="group"
         [attr.aria-label]="boardAriaLabel()"
-        class="block aspect-square w-full select-none"
+        class="relative block aspect-square w-full select-none"
       >
-        <defs>
-          <radialGradient [attr.id]="gradId('ruby')" cx="34%" cy="30%" r="72%">
-            <stop offset="0%" stop-color="#FDA4AF" />
-            <stop offset="38%" stop-color="#E11D48" />
-            <stop offset="100%" stop-color="#881337" />
-          </radialGradient>
-          <radialGradient [attr.id]="gradId('turq')" cx="34%" cy="30%" r="72%">
-            <stop offset="0%" stop-color="#99F6E4" />
-            <stop offset="40%" stop-color="#0D9488" />
-            <stop offset="100%" stop-color="#115E59" />
-          </radialGradient>
-          <radialGradient [attr.id]="gradId('mahogany')" cx="34%" cy="28%" r="70%">
-            <stop offset="0%" stop-color="#B45309" />
-            <stop offset="48%" stop-color="#7C2D12" />
-            <stop offset="100%" stop-color="#431407" />
-          </radialGradient>
-          <radialGradient [attr.id]="gradId('ivory')" cx="32%" cy="28%" r="72%">
-            <stop offset="0%" stop-color="#FFFDF7" />
-            <stop offset="60%" stop-color="#F5EBD6" />
-            <stop offset="100%" stop-color="#D6C29F" />
-          </radialGradient>
-          <radialGradient [attr.id]="gradId('jade')" cx="34%" cy="28%" r="72%">
-            <stop offset="0%" stop-color="#A7F3D0" />
-            <stop offset="45%" stop-color="#059669" />
-            <stop offset="100%" stop-color="#065F46" />
-          </radialGradient>
-          <radialGradient [attr.id]="gradId('coral')" cx="35%" cy="30%" r="72%">
-            <stop offset="0%" stop-color="#FDE047" />
-            <stop offset="42%" stop-color="#FB7185" />
-            <stop offset="100%" stop-color="#E11D48" />
-          </radialGradient>
-        </defs>
 
         <!-- Board tracks / lines -->
         @for (edge of edges(); track $index) {
@@ -267,226 +233,16 @@ let nextMorrisBoardUid = 1;
 
               <!-- Sculpted Piece Body -->
               <g [attr.opacity]="isBlockedOwn ? 0.58 : 1">
-                <!-- Soft token drop shadow -->
-                <circle
-                  [attr.cx]="node.x"
-                  [attr.cy]="node.y + 2"
-                  r="15.5"
-                  fill="rgba(0, 0, 0, 0.24)"
-                />
-
-                @if (owner === 'X') {
-                  @switch (pieceStyle()) {
-                    @case ('gemstone') {
-                      <circle
-                        [attr.cx]="node.x"
-                        [attr.cy]="node.y"
-                        r="16"
-                        [attr.fill]="'url(#' + gradId('ruby') + ')'"
-                        stroke="#FDE68A"
-                        stroke-width="2.2"
-                      />
-                      <circle
-                        [attr.cx]="node.x - 4.5"
-                        [attr.cy]="node.y - 5"
-                        r="3"
-                        fill="rgba(255,255,255,0.38)"
-                      />
-                      <line
-                        [attr.x1]="node.x - 5.2"
-                        [attr.y1]="node.y - 5.2"
-                        [attr.x2]="node.x + 5.2"
-                        [attr.y2]="node.y + 5.2"
-                        stroke="#FFFDF7"
-                        stroke-width="2.8"
-                        stroke-linecap="round"
-                      />
-                      <line
-                        [attr.x1]="node.x + 5.2"
-                        [attr.y1]="node.y - 5.2"
-                        [attr.x2]="node.x - 5.2"
-                        [attr.y2]="node.y + 5.2"
-                        stroke="#FFFDF7"
-                        stroke-width="2.8"
-                        stroke-linecap="round"
-                      />
-                    }
-                    @case ('wood') {
-                      <circle
-                        [attr.cx]="node.x"
-                        [attr.cy]="node.y"
-                        r="16"
-                        [attr.fill]="'url(#' + gradId('mahogany') + ')'"
-                        stroke="#F59E0B"
-                        stroke-width="2.2"
-                      />
-                      <circle
-                        [attr.cx]="node.x"
-                        [attr.cy]="node.y"
-                        r="11.5"
-                        fill="none"
-                        stroke="rgba(253,230,138,0.45)"
-                        stroke-width="1.2"
-                        stroke-dasharray="3 2"
-                      />
-                      <line
-                        [attr.x1]="node.x - 5"
-                        [attr.y1]="node.y - 5"
-                        [attr.x2]="node.x + 5"
-                        [attr.y2]="node.y + 5"
-                        stroke="#FEF3C7"
-                        stroke-width="2.8"
-                        stroke-linecap="round"
-                      />
-                      <line
-                        [attr.x1]="node.x + 5"
-                        [attr.y1]="node.y - 5"
-                        [attr.x2]="node.x - 5"
-                        [attr.y2]="node.y + 5"
-                        stroke="#FEF3C7"
-                        stroke-width="2.8"
-                        stroke-linecap="round"
-                      />
-                    }
-                    @case ('nature') {
-                      <circle [attr.cx]="node.x" [attr.cy]="node.y - 7" r="8.5" [attr.fill]="'url(#' + gradId('coral') + ')'" stroke="#FFE4E6" stroke-width="1.2" />
-                      <circle [attr.cx]="node.x + 7" [attr.cy]="node.y" r="8.5" [attr.fill]="'url(#' + gradId('coral') + ')'" stroke="#FFE4E6" stroke-width="1.2" />
-                      <circle [attr.cx]="node.x" [attr.cy]="node.y + 7" r="8.5" [attr.fill]="'url(#' + gradId('coral') + ')'" stroke="#FFE4E6" stroke-width="1.2" />
-                      <circle [attr.cx]="node.x - 7" [attr.cy]="node.y" r="8.5" [attr.fill]="'url(#' + gradId('coral') + ')'" stroke="#FFE4E6" stroke-width="1.2" />
-                      <circle [attr.cx]="node.x" [attr.cy]="node.y" r="6.5" fill="#F59E0B" stroke="#FEF3C7" stroke-width="1.5" />
-                    }
-                    @default {
-                      <circle
-                        [attr.cx]="node.x"
-                        [attr.cy]="node.y"
-                        r="15.5"
-                        fill="#E11D48"
-                        stroke="#FDA4AF"
-                        stroke-width="2.2"
-                      />
-                      <line
-                        [attr.x1]="node.x - 5.5"
-                        [attr.y1]="node.y - 5.5"
-                        [attr.x2]="node.x + 5.5"
-                        [attr.y2]="node.y + 5.5"
-                        stroke="#FFF1F2"
-                        stroke-width="2.6"
-                        stroke-linecap="round"
-                      />
-                      <line
-                        [attr.x1]="node.x + 5.5"
-                        [attr.y1]="node.y - 5.5"
-                        [attr.x2]="node.x - 5.5"
-                        [attr.y2]="node.y + 5.5"
-                        stroke="#FFF1F2"
-                        stroke-width="2.6"
-                        stroke-linecap="round"
-                      />
-                    }
-                  }
-                } @else {
-                  @switch (pieceStyle()) {
-                    @case ('gemstone') {
-                      <circle
-                        [attr.cx]="node.x"
-                        [attr.cy]="node.y"
-                        r="16"
-                        [attr.fill]="'url(#' + gradId('turq') + ')'"
-                        stroke="#FDE68A"
-                        stroke-width="2.2"
-                      />
-                      <circle
-                        [attr.cx]="node.x - 4.5"
-                        [attr.cy]="node.y - 5"
-                        r="3"
-                        fill="rgba(255,255,255,0.4)"
-                      />
-                      <circle
-                        [attr.cx]="node.x"
-                        [attr.cy]="node.y"
-                        r="6"
-                        fill="none"
-                        stroke="#F0FDFA"
-                        stroke-width="2.7"
-                      />
-                    }
-                    @case ('wood') {
-                      <circle
-                        [attr.cx]="node.x"
-                        [attr.cy]="node.y"
-                        r="16"
-                        [attr.fill]="'url(#' + gradId('ivory') + ')'"
-                        stroke="#92400E"
-                        stroke-width="2.2"
-                      />
-                      <circle
-                        [attr.cx]="node.x"
-                        [attr.cy]="node.y"
-                        r="11.5"
-                        fill="none"
-                        stroke="#B45309"
-                        stroke-width="1.1"
-                        stroke-dasharray="3 2"
-                      />
-                      <circle
-                        [attr.cx]="node.x"
-                        [attr.cy]="node.y"
-                        r="6"
-                        fill="none"
-                        stroke="#78350F"
-                        stroke-width="2.7"
-                      />
-                    }
-                    @case ('nature') {
-                      <circle
-                        [attr.cx]="node.x"
-                        [attr.cy]="node.y"
-                        r="16"
-                        [attr.fill]="'url(#' + gradId('jade') + ')'"
-                        stroke="#D1FAE5"
-                        stroke-width="2.2"
-                      />
-                      <circle
-                        [attr.cx]="node.x - 4.5"
-                        [attr.cy]="node.y - 5"
-                        r="3"
-                        fill="rgba(255,255,255,0.36)"
-                      />
-                      <circle
-                        [attr.cx]="node.x"
-                        [attr.cy]="node.y"
-                        r="6.2"
-                        fill="none"
-                        stroke="#ECFDF5"
-                        stroke-width="2.5"
-                      />
-                      <circle
-                        [attr.cx]="node.x"
-                        [attr.cy]="node.y"
-                        r="2"
-                        fill="#A7F3D0"
-                      />
-                    }
-                    @default {
-                      <circle
-                        [attr.cx]="node.x"
-                        [attr.cy]="node.y"
-                        r="15.5"
-                        fill="#0D9488"
-                        stroke="#99F6E4"
-                        stroke-width="2.2"
-                      />
-                      <circle
-                        [attr.cx]="node.x"
-                        [attr.cy]="node.y"
-                        r="6"
-                        fill="none"
-                        stroke="#F0FDFA"
-                        stroke-width="2.6"
-                      />
-                    }
-                  }
-                }
+                <svg
+                  appPieceSvg
+                  [attr.x]="node.x - 19"
+                  [attr.y]="node.y - 19"
+                  width="38"
+                  height="38"
+                  [player]="owner"
+                  [style]="pieceStyle()"
+                  [customColor]="owner === 'X' ? customXColor() : customOColor()"
+                ></svg>
               </g>
             }
           </g>
@@ -496,14 +252,15 @@ let nextMorrisBoardUid = 1;
   `,
 })
 export class MorrisBoard {
-  private readonly uid = `mb${nextMorrisBoardUid++}`;
-
   readonly state = input.required<MorrisState>();
   readonly disabled = input<boolean>(false);
   readonly hintDecision = input<MorrisAiDecision | null>(null);
   readonly theme = input<BoardTheme>('navy');
   readonly pieceStyle = input<PieceStyle>('gemstone');
   readonly colorMode = input<ColorMode>('dark');
+  readonly customXColor = input<string | null>(null);
+  readonly customOColor = input<string | null>(null);
+  readonly customBoardColor = input<string | null>(null);
   readonly expanded = input<boolean>(false);
   readonly nodeSelected = output<number>();
 
@@ -513,65 +270,14 @@ export class MorrisBoard {
     () => this.theme() === 'navy' && this.colorMode() === 'light',
   );
 
-  readonly isDarkNeutral = computed<boolean>(
-    () => this.theme() === 'navy' && this.colorMode() === 'dark',
+  readonly boardTokens = computed<BoardColorTokens>(() =>
+    resolveBoardColorTokens(this.theme(), this.colorMode(), this.customBoardColor()),
   );
 
-  gradId(name: string): string {
-    return `${this.uid}-${name}`;
-  }
-
-  readonly trackStroke = computed<string>(() => {
-    switch (this.theme()) {
-      case 'walnut':
-        return '#855A47';
-      case 'felt':
-        return '#338060';
-      case 'tile':
-        return '#2D7E94';
-      default:
-        return this.colorMode() === 'light' ? '#94A3B8' : '#314966';
-    }
-  });
-
-  readonly diagonalStroke = computed<string>(() => {
-    switch (this.theme()) {
-      case 'walnut':
-        return '#A0705A';
-      case 'felt':
-        return '#419B77';
-      case 'tile':
-        return '#3A9CB6';
-      default:
-        return this.colorMode() === 'light' ? '#94A3B8' : '#3B5676';
-    }
-  });
-
-  readonly socketFill = computed<string>(() => {
-    switch (this.theme()) {
-      case 'walnut':
-        return '#472C21';
-      case 'felt':
-        return '#174D37';
-      case 'tile':
-        return '#154F61';
-      default:
-        return this.colorMode() === 'light' ? '#FFFFFF' : '#1C314A';
-    }
-  });
-
-  readonly socketStroke = computed<string>(() => {
-    switch (this.theme()) {
-      case 'walnut':
-        return '#B9876E';
-      case 'felt':
-        return '#57B690';
-      case 'tile':
-        return '#52C2DF';
-      default:
-        return this.colorMode() === 'light' ? '#64748B' : '#4E6D91';
-    }
-  });
+  readonly trackStroke = computed<string>(() => this.boardTokens().trackStroke);
+  readonly diagonalStroke = computed<string>(() => this.boardTokens().diagonalStroke);
+  readonly socketFill = computed<string>(() => this.boardTokens().socketFill);
+  readonly socketStroke = computed<string>(() => this.boardTokens().socketStroke);
 
   readonly edges = computed<readonly MorrisEdge[]>(() => getMorrisEdges(this.state().variant));
 

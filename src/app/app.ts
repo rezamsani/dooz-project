@@ -10,6 +10,7 @@ import {
 } from '@angular/core';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { MatIconModule } from '@angular/material/icon';
+import { ColorPalettePicker } from './game/color-palette-picker';
 import { CameraPreset, Dooz3DStage } from './game/dooz-3d-stage';
 import { DoozBoard } from './game/dooz-board';
 import {
@@ -92,7 +93,15 @@ function createPreviewMorrisState(variant: MorrisVariant): MorrisState {
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-root',
-  imports: [MatIconModule, ReactiveFormsModule, DoozBoard, MorrisBoard, PieceTray, Dooz3DStage],
+  imports: [
+    MatIconModule,
+    ReactiveFormsModule,
+    DoozBoard,
+    MorrisBoard,
+    PieceTray,
+    Dooz3DStage,
+    ColorPalettePicker,
+  ],
   templateUrl: './app.html',
   styleUrl: './app.css',
   host: {
