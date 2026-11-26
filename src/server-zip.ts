@@ -8,6 +8,9 @@ const ALLOWED_ROOT_FILES = new Set([
   'tsconfig.json',
   'tsconfig.app.json',
   'tsconfig.spec.json',
+  'tsconfig.online.json',
+  'proxy.conf.json',
+  'README.md',
   'eslint.config.js',
   '.postcssrc.json',
   '.gitignore',
@@ -15,7 +18,7 @@ const ALLOWED_ROOT_FILES = new Set([
   'metadata.json',
 ]);
 
-const ALLOWED_DIRS = ['src', 'public'] as const;
+const ALLOWED_DIRS = ['src', 'public', 'scripts'] as const;
 
 const CRC_TABLE = (() => {
   const table = new Uint32Array(256);

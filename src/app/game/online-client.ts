@@ -26,6 +26,8 @@ export class OnlineClient {
   private readonly destroyRef = inject(DestroyRef);
 
   private ws: WebSocket | null = null;
+  private isOpening = false;
+  private socketEpoch = 0;
   private pendingQueue: ClientWsMessage[] = [];
   private emoteTimerId: ReturnType<typeof setTimeout> | null = null;
   private stateListener: ((room: RoomSnapshotDto, role: Player) => void) | null = null;
@@ -124,6 +126,8 @@ export class OnlineClient {
   }
 
   disconnect(): void {
+    this.socketEpoch++;
+    this.isOpening = false;
     if (this.emoteTimerId !== null) {
       clearTimeout(this.emoteTimerId);
       this.emoteTimerId = null;
@@ -143,6 +147,31 @@ export class OnlineClient {
   }
 
   private ensureSocket(): void {
+    if (!isPlatformBrowser(this.platformId)) return;
+    if (
+      this.isOpening ||
+      (this.ws &&
+        (this.ws.readyState === WebSocket.OPEN || this.ws.readyState === WebSocket.CONNECTING))
+    ) {
+      return;
+    }
+
+    this.isOpening = true;
+    const epoch = this.socketEpoch;
+    this.connectionStatus.set('CONNECTING');
+
+    // Check the online endpoint before opening the WebSocket connection.
+    fetch('/api/health', { cache: 'no-store' })
+      .catch(() => undefined)
+      .finally(() => {
+        this.isOpening = false;
+        if (epoch === this.socketEpoch) {
+          this.openWebSocket();
+        }
+      });
+  }
+
+  private openWebSocket(): void {
     if (!isPlatformBrowser(this.platformId)) return;
     if (
       this.ws &&

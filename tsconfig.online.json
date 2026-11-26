@@ -1,0 +1,15 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "module": "CommonJS",
+    "moduleResolution": "node",
+    "esModuleInterop": true,
+    "types": ["node"],
+    "rootDir": "src",
+    "outDir": "out-tsc/online-server",
+    "noEmitOnError": true
+  },
+  "files": ["src/dev-online-server.ts"],
+  "include": [],
+  "references": []
+}

@@ -17,14 +17,11 @@ const angularApp = new AngularNodeAppEngine();
 const roomManager = new OnlineRoomManager();
 
 /**
- * Handle WebSocket upgrades for live multiplayer rooms before Angular SSR intercepts them.
+ * Health endpoint for the production server.
  */
-app.use('/api', (req, _res, next) => {
-  if (req.path === '/ws' && req.headers.upgrade?.toLowerCase() === 'websocket') {
-    roomManager.handleUpgrade(req, req.socket, Buffer.alloc(0));
-    return;
-  }
-  next();
+app.get('/api/health', (_req, res) => {
+  res.setHeader('Cache-Control', 'no-store');
+  res.json({ ok: true });
 });
 
 /**
