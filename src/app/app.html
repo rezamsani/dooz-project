@@ -1012,6 +1012,18 @@
                 </div>
               }
 
+              <!-- 2D / 3D View Mode Toggle -->
+              <button
+                type="button"
+                (click)="toggleViewMode()"
+                [title]="is3DView() ? 'تغییر به نمای دوبعدی' : 'تغییر به نمای سه‌بعدی'"
+                [attr.aria-label]="is3DView() ? 'تغییر به نمای دوبعدی' : 'تغییر به نمای سه‌بعدی'"
+                class="inline-flex h-10 items-center gap-1.5 rounded-xl border border-slate-300 bg-slate-100 px-3 text-xs font-bold text-slate-700 transition-colors hover:border-teal-500 hover:text-teal-700 dark:border-white/15 dark:bg-[#0B1623] dark:text-slate-200 dark:hover:border-teal-400 dark:hover:text-teal-300"
+              >
+                <mat-icon class="!h-[18px] !w-[18px] !text-[18px]">{{ is3DView() ? 'view_in_ar' : 'grid_view' }}</mat-icon>
+                <span>{{ is3DView() ? 'سه‌بعدی' : 'دوبعدی' }}</span>
+              </button>
+
               <!-- 1-Click Fullscreen Toggle beside Board Status -->
               @if (!isFullscreenPlay()) {
                 <button
@@ -1120,78 +1132,147 @@
             </div>
           }
 
-          <!-- Tabletop Arena: Board flanked by Physical Piece Trays (In-Hand + Knocked-Out Pieces) -->
-          <div class="flex w-full flex-col items-center justify-center gap-3 md:flex-row md:items-stretch">
-            <!-- Right Side Tray (Player X Reserve + Knocked-Out Pieces) -->
-            @if (showSidePieceTrays()) {
-              <app-piece-tray
-                class="order-2 w-full md:order-1 md:w-auto"
-                [player]="'X'"
-                [label]="playerXLabel()"
-                [inHandCount]="trayXInHand()"
-                [onBoardCount]="trayXOnBoard()"
-                [outCount]="trayXOutCount()"
-                [showReserve]="isMorrisVariant()"
-                [isActiveTurn]="gameState() === 'PLAYING' && !isWaitingForOnlineOpponent() && activeTurn() === 'X'"
-                [theme]="playerStats.boardTheme()"
+          @if (is3DView()) {
+            <!-- 3D Diorama Tabletop Stage -->
+            <div
+              class="relative w-full overflow-hidden rounded-3xl border border-slate-900/15 shadow-xl dark:border-white/10"
+              [class.h-[66dvh]]="isFullscreenPlay()"
+              [class.h-[420px]]="!isFullscreenPlay()"
+              [class.sm:h-[520px]]="!isFullscreenPlay()"
+              [class.lg:h-[580px]]="!isFullscreenPlay()"
+            >
+              <app-dooz-3d-stage
+                class="block h-full w-full"
+                [variant]="gameVariant()"
+                [threeBoard]="displayThreeBoard()"
+                [threeWin]="displayThreeWin()"
+                [threeHintIndex]="threeHintIndex()"
+                [expiringIndex]="expiringIndex()"
+                [morrisState]="displayMorrisState()"
+                [morrisHint]="morrisHintDecision()"
+                [disabled]="isBoardLocked()"
+                [showSideDishes]="showSidePieceTrays()"
+                [xInHand]="trayXInHand()"
+                [oInHand]="trayOInHand()"
+                [xOutCount]="trayXOutCount()"
+                [oOutCount]="trayOOutCount()"
+                [environment]="playerStats.environment()"
+                [boardTheme]="playerStats.boardTheme()"
                 [pieceStyle]="playerStats.pieceStyle()"
                 [colorMode]="playerStats.colorMode()"
-                [expanded]="isFullscreenPlay()"
+                [cameraPreset]="cameraPreset()"
+                (threeCellSelected)="onCellSelected($event)"
+                (morrisNodeSelected)="onMorrisNodeSelected($event)"
               />
-            }
 
-            <!-- Center Game Board -->
-            <div class="order-1 w-full min-w-0 flex-1 md:order-2">
-              @if (isMorrisVariant()) {
-                <app-morris-board
-                  class="w-full"
-                  [state]="displayMorrisState()"
+              <!-- Camera Preset Controls -->
+              <div class="pointer-events-auto absolute bottom-3 left-3 flex items-center gap-1 rounded-xl border border-white/15 bg-slate-950/70 p-1 text-xs text-slate-200 backdrop-blur-md">
+                <button
+                  type="button"
+                  (click)="setCameraPreset('TABLE')"
+                  class="rounded-lg px-2.5 py-1 font-semibold transition-colors"
+                  [class.bg-teal-500]="cameraPreset() === 'TABLE'"
+                  [class.text-slate-950]="cameraPreset() === 'TABLE'"
+                  [class.hover:bg-white/10]="cameraPreset() !== 'TABLE'"
+                >
+                  زاویه میز
+                </button>
+                <button
+                  type="button"
+                  (click)="setCameraPreset('TOP')"
+                  class="rounded-lg px-2.5 py-1 font-semibold transition-colors"
+                  [class.bg-teal-500]="cameraPreset() === 'TOP'"
+                  [class.text-slate-950]="cameraPreset() === 'TOP'"
+                  [class.hover:bg-white/10]="cameraPreset() !== 'TOP'"
+                >
+                  از بالا
+                </button>
+                <button
+                  type="button"
+                  (click)="setCameraPreset('CINEMA')"
+                  class="rounded-lg px-2.5 py-1 font-semibold transition-colors"
+                  [class.bg-teal-500]="cameraPreset() === 'CINEMA'"
+                  [class.text-slate-950]="cameraPreset() === 'CINEMA'"
+                  [class.hover:bg-white/10]="cameraPreset() !== 'CINEMA'"
+                >
+                  سینمایی
+                </button>
+              </div>
+            </div>
+          } @else {
+            <!-- Tabletop Arena: Board flanked by Physical Piece Trays (In-Hand + Knocked-Out Pieces) -->
+            <div class="flex w-full flex-col items-center justify-center gap-3 md:flex-row md:items-stretch">
+              <!-- Right Side Tray (Player X Reserve + Knocked-Out Pieces) -->
+              @if (showSidePieceTrays()) {
+                <app-piece-tray
+                  class="order-2 w-full md:order-1 md:w-auto"
+                  [player]="'X'"
+                  [label]="playerXLabel()"
+                  [inHandCount]="trayXInHand()"
+                  [onBoardCount]="trayXOnBoard()"
+                  [outCount]="trayXOutCount()"
+                  [showReserve]="isMorrisVariant()"
+                  [isActiveTurn]="gameState() === 'PLAYING' && !isWaitingForOnlineOpponent() && activeTurn() === 'X'"
                   [theme]="playerStats.boardTheme()"
                   [pieceStyle]="playerStats.pieceStyle()"
                   [colorMode]="playerStats.colorMode()"
-                  [hintDecision]="morrisHintDecision()"
                   [expanded]="isFullscreenPlay()"
-                  [disabled]="isBoardLocked()"
-                  (nodeSelected)="onMorrisNodeSelected($event)"
                 />
-              } @else {
-                <app-dooz-board
-                  class="w-full"
-                  [board]="displayThreeBoard()"
-                  [currentTurn]="activeTurn()"
-                  [winResult]="displayThreeWin()"
+              }
+
+              <!-- Center Game Board -->
+              <div class="order-1 w-full min-w-0 flex-1 md:order-2">
+                @if (isMorrisVariant()) {
+                  <app-morris-board
+                    class="w-full"
+                    [state]="displayMorrisState()"
+                    [theme]="playerStats.boardTheme()"
+                    [pieceStyle]="playerStats.pieceStyle()"
+                    [colorMode]="playerStats.colorMode()"
+                    [hintDecision]="morrisHintDecision()"
+                    [expanded]="isFullscreenPlay()"
+                    [disabled]="isBoardLocked()"
+                    (nodeSelected)="onMorrisNodeSelected($event)"
+                  />
+                } @else {
+                  <app-dooz-board
+                    class="w-full"
+                    [board]="displayThreeBoard()"
+                    [currentTurn]="activeTurn()"
+                    [winResult]="displayThreeWin()"
+                    [theme]="playerStats.boardTheme()"
+                    [pieceStyle]="playerStats.pieceStyle()"
+                    [colorMode]="playerStats.colorMode()"
+                    [hintIndex]="threeHintIndex()"
+                    [expanded]="isFullscreenPlay()"
+                    [disabled]="isBoardLocked()"
+                    [expiringIndex]="expiringIndex()"
+                    [lastMoveIndex]="displayThreeLastMove()"
+                    [showCellNumbers]="!replayActive()"
+                    (cellSelected)="onCellSelected($event)"
+                  />
+                }
+              </div>
+
+              <!-- Left Side Tray (Player O Reserve + Knocked-Out Pieces) -->
+              @if (showSidePieceTrays()) {
+                <app-piece-tray
+                  class="order-3 w-full md:order-3 md:w-auto"
+                  [player]="'O'"
+                  [label]="playerOLabel()"
+                  [inHandCount]="trayOInHand()"
+                  [onBoardCount]="trayOOnBoard()"
+                  [outCount]="trayOOutCount()"
+                  [showReserve]="isMorrisVariant()"
+                  [isActiveTurn]="gameState() === 'PLAYING' && !isWaitingForOnlineOpponent() && activeTurn() === 'O'"
                   [theme]="playerStats.boardTheme()"
                   [pieceStyle]="playerStats.pieceStyle()"
                   [colorMode]="playerStats.colorMode()"
-                  [hintIndex]="threeHintIndex()"
                   [expanded]="isFullscreenPlay()"
-                  [disabled]="isBoardLocked()"
-                  [expiringIndex]="expiringIndex()"
-                  [lastMoveIndex]="displayThreeLastMove()"
-                  [showCellNumbers]="!replayActive()"
-                  (cellSelected)="onCellSelected($event)"
                 />
               }
             </div>
-
-            <!-- Left Side Tray (Player O Reserve + Knocked-Out Pieces) -->
-            @if (showSidePieceTrays()) {
-              <app-piece-tray
-                class="order-3 w-full md:order-3 md:w-auto"
-                [player]="'O'"
-                [label]="playerOLabel()"
-                [inHandCount]="trayOInHand()"
-                [onBoardCount]="trayOOnBoard()"
-                [outCount]="trayOOutCount()"
-                [showReserve]="isMorrisVariant()"
-                [isActiveTurn]="gameState() === 'PLAYING' && !isWaitingForOnlineOpponent() && activeTurn() === 'O'"
-                [theme]="playerStats.boardTheme()"
-                [pieceStyle]="playerStats.pieceStyle()"
-                [colorMode]="playerStats.colorMode()"
-                [expanded]="isFullscreenPlay()"
-              />
-            }
-          </div>
+          }
 
           <!-- Step-by-Step Replay Controls -->
           @if (replayActive()) {
