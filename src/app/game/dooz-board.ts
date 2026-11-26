@@ -10,7 +10,7 @@ import { DoozPieceSvg } from './dooz-piece-svg';
   imports: [DoozPieceSvg],
   template: `
     <div
-      class="relative mx-auto w-full rounded-2xl border p-4 shadow-md transition-all duration-200 sm:p-5"
+      class="relative mx-auto w-full rounded-2xl border p-4 shadow-md transition-colors duration-200 sm:p-5"
       [class.max-w-[430px]]="!expanded()"
       [class.max-w-[min(68dvh,600px)]]="expanded()"
       [class.backdrop-blur-md]="theme() === 'glass'"
@@ -37,7 +37,7 @@ import { DoozPieceSvg } from './dooz-piece-svg';
             [disabled]="disabled() || cell !== null"
             [attr.aria-label]="getCellAriaLabel($index, cell)"
             (click)="onSelect($index)"
-            class="group relative flex aspect-square min-h-0 w-full items-center justify-center rounded-xl border transition-all duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-400"
+            class="group relative flex aspect-square min-h-0 w-full items-center justify-center rounded-xl border transition-colors duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-400"
             [style.background-color]="getCellBackground($index)"
             [style.border-color]="getCellBorderColor($index)"
             [class.backdrop-blur-sm]="theme() === 'glass'"
@@ -45,7 +45,6 @@ import { DoozPieceSvg } from './dooz-piece-svg';
             [class.shadow-[inset_0_1px_1px_rgba(255,255,255,0.38)]]="theme() === 'glass'"
             [class.shadow-xs]="isLightNeutral() && !customBoardColor()"
             [class.hover:brightness-110]="!disabled() && cell === null"
-            [class.active:scale-[0.97]]="!disabled() && cell === null"
             [class.border-dashed]="isExpiringCell($index) || isHintCell($index)"
             [class.opacity-45]="winResult() !== null && !isWinningCell($index)"
           >
@@ -66,9 +65,8 @@ import { DoozPieceSvg } from './dooz-piece-svg';
                 [player]="cell"
                 [style]="pieceStyle()"
                 [customColor]="cell === 'X' ? customXColor() : customOColor()"
-                class="animate-token-drop h-[76%] w-[76%] transition-all duration-150"
+                class="absolute inset-[12%] h-[76%] w-[76%] transition-opacity duration-150"
                 [class.opacity-45]="isExpiringCell($index)"
-                [class.scale-105]="isWinningCell($index)"
               ></svg>
             }
 

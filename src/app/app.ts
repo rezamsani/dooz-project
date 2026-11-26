@@ -534,7 +534,7 @@ export class App {
       if (this.isMorrisVariant() && this.morrisState().action === 'REMOVE') {
         return 'ربات دوز کرد — انتخاب مهره برای حذف...';
       }
-      return 'نوبت ربات — در حال انتخاب حرکت...';
+      return 'ربات فکر می‌کند...';
     }
 
     const turn = this.activeTurn();

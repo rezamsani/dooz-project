@@ -748,10 +748,10 @@
             [class.max-w-[440px]]="!isFullscreenPlay()"
             [class.max-w-[780px]]="isFullscreenPlay()"
           >
-            <div class="flex flex-col gap-1">
-              <div class="flex items-center gap-2.5">
+            <div class="flex min-w-0 flex-1 flex-col gap-1">
+              <div class="flex min-w-0 items-center gap-2.5">
                 <mat-icon
-                  class="!h-[26px] !w-[26px] !text-[26px]"
+                  class="!h-[26px] !w-[26px] shrink-0 !text-[26px]"
                   [class.text-sky-600]="replayActive()"
                   [class.dark:text-sky-300]="replayActive()"
                   [class.text-amber-600]="!replayActive() && (activeWinner() !== null || (isMorrisVariant() && displayMorrisState().action === 'REMOVE'))"
@@ -765,12 +765,12 @@
                 >
                   {{ statusIcon() }}
                 </mat-icon>
-                <h1 aria-live="polite" class="text-xl font-extrabold text-slate-950 dark:text-white sm:text-2xl">
+                <h1 aria-live="polite" [title]="statusHeadline()" class="min-w-0 truncate text-xl leading-7 font-extrabold text-slate-950 dark:text-white sm:text-2xl sm:leading-8">
                   {{ statusHeadline() }}
                 </h1>
               </div>
 
-              <div class="flex flex-wrap items-center gap-2 text-xs text-slate-600 dark:text-slate-300">
+              <div class="flex h-10 flex-wrap content-start items-center gap-2 overflow-hidden text-xs text-slate-600 dark:text-slate-300">
                 <span>{{ variantTitle() }}</span>
                 <span aria-hidden="true">·</span>
                 <span>
@@ -907,9 +907,10 @@
           }
 
           <!-- Prominent Step Guidance above Morris Board -->
-          @if (isMorrisVariant() && (gameState() === 'PLAYING' || replayActive()) && !isWaitingForOnlineOpponent() && morrisPhaseHint()) {
+          @if (isMorrisVariant() && !isWaitingForOnlineOpponent()) {
             <div
-              class="flex w-full max-w-[440px] items-center gap-2.5 rounded-xl border px-3.5 py-2.5 text-xs font-medium leading-relaxed backdrop-blur-md"
+              class="phase-guidance flex h-20 w-full max-w-[440px] items-center gap-2.5 rounded-xl border px-3.5 py-2.5 text-xs font-medium leading-relaxed backdrop-blur-md"
+              [style.visibility]="morrisPhaseHint() ? null : 'hidden'"
               [class.border-amber-500/45]="displayMorrisState().action === 'REMOVE' || displayMorrisState().selectedNode !== null"
               [class.bg-amber-50/95]="displayMorrisState().action === 'REMOVE'"
               [class.dark:bg-amber-950/80]="displayMorrisState().action === 'REMOVE'"
@@ -925,7 +926,7 @@
               <mat-icon class="!h-[18px] !w-[18px] shrink-0 !text-[18px] text-teal-600 dark:text-teal-300">
                 {{ replayActive() ? 'history' : displayMorrisState().action === 'REMOVE' ? 'auto_awesome' : displayMorrisState().action === 'PLACE' ? 'add_circle_outline' : 'open_with' }}
               </mat-icon>
-              <span>{{ morrisPhaseHint() }}</span>
+              <span class="line-clamp-3 leading-5" aria-live="polite">{{ morrisPhaseHint() }}</span>
             </div>
           }
 

@@ -19,7 +19,7 @@ import { MorrisEdge, MorrisMill, MorrisNodeCoord, MorrisState } from './morris.t
   imports: [DoozPieceSvg],
   template: `
     <div
-      class="relative mx-auto w-full rounded-2xl border p-3 shadow-md transition-all duration-200 sm:p-4"
+      class="relative mx-auto w-full rounded-2xl border p-3 shadow-md transition-colors duration-200 sm:p-4"
       [class.max-w-[440px]]="!expanded()"
       [class.max-w-[min(68dvh,620px)]]="expanded()"
       [class.backdrop-blur-md]="theme() === 'glass'"
