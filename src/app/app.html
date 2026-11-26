@@ -863,7 +863,8 @@
         <!-- Board Arena (Primary Focal Anchor) -->
         <div
           class="flex flex-col items-center gap-4"
-          [class.lg:col-span-7]="!isFullscreenPlay()"
+          [class.lg:col-span-8]="!isFullscreenPlay() && is3DView()"
+          [class.lg:col-span-7]="!isFullscreenPlay() && !is3DView()"
           [class.lg:col-span-12]="isFullscreenPlay()"
         >
           <!-- Compact Floating Fullscreen Cinema HUD Bar -->
@@ -1136,10 +1137,10 @@
             <!-- 3D Diorama Tabletop Stage -->
             <div
               class="relative w-full overflow-hidden rounded-3xl border border-slate-900/15 shadow-xl dark:border-white/10"
-              [class.h-[66dvh]]="isFullscreenPlay()"
-              [class.h-[420px]]="!isFullscreenPlay()"
-              [class.sm:h-[520px]]="!isFullscreenPlay()"
-              [class.lg:h-[580px]]="!isFullscreenPlay()"
+              [class.h-[68dvh]]="isFullscreenPlay()"
+              [class.h-[460px]]="!isFullscreenPlay()"
+              [class.sm:h-[560px]]="!isFullscreenPlay()"
+              [class.lg:h-[620px]]="!isFullscreenPlay()"
             >
               <app-dooz-3d-stage
                 class="block h-full w-full"
@@ -1413,7 +1414,11 @@
 
         <!-- Scoreboard & Tabletop Controls Sidebar (hidden in Fullscreen Cinema Play) -->
         @if (!isFullscreenPlay()) {
-          <aside class="space-y-5 lg:col-span-5">
+          <aside
+            class="space-y-5"
+            [class.lg:col-span-4]="is3DView()"
+            [class.lg:col-span-5]="!is3DView()"
+          >
           <!-- Scoreboard -->
           <div class="rounded-2xl border border-slate-900/10 bg-white/90 p-5 shadow-sm backdrop-blur-md dark:border-white/10 dark:bg-[#132234]/88">
             <div class="mb-4 flex items-baseline justify-between gap-4">

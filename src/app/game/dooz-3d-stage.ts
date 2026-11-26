@@ -40,7 +40,7 @@ import {
   createSideDishModel,
   disposeObject3D,
 } from './three/models';
-import { createBoardDeckMaterial } from './three/textures';
+import { createBoardDeckMaterial, createContactShadowTexture } from './three/textures';
 
 export type CameraPreset = 'TABLE' | 'TOP' | 'CINEMA';
 
@@ -110,12 +110,15 @@ function detectSoftwareGl(): boolean {
     const gl = canvas.getContext('webgl2');
     if (!gl) return true;
     const ext = gl.getExtension('WEBGL_debug_renderer_info');
-    const param = ext ? ext.UNMASKED_RENDERER_WEBGL : gl.RENDERER;
-    const gpu = String(gl.getParameter(param));
+    if (!ext) {
+      gl.getExtension('WEBGL_lose_context')?.loseContext();
+      return false;
+    }
+    const gpu = String(gl.getParameter(ext.UNMASKED_RENDERER_WEBGL));
     gl.getExtension('WEBGL_lose_context')?.loseContext();
     return /SwiftShader|llvmpipe|softpipe|Software|Basic Render/i.test(gpu);
   } catch {
-    return true;
+    return false;
   }
 }
 
@@ -211,6 +214,9 @@ export class Dooz3DStage implements AfterViewInit {
   private elapsedSeconds = 0;
   private resizeObserver: ResizeObserver | null = null;
   private destroyed = false;
+  private shadowsDirty = true;
+  private slowFrameStreak = 0;
+  private qualityTier: 2 | 1 | 0 = 2;
 
   constructor() {
     // 1. Rebuild 3D Environment Diorama when environment or colorMode changes
@@ -290,16 +296,20 @@ export class Dooz3DStage implements AfterViewInit {
     this.isSoftwareGl = detectSoftwareGl();
 
     const renderer = new THREE.WebGLRenderer({
-      antialias: !this.isSoftwareGl,
+      antialias: true,
       powerPreference: 'high-performance',
     });
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 1.08;
-    renderer.setPixelRatio(this.isSoftwareGl ? 1 : Math.min(window.devicePixelRatio, 2));
+    renderer.toneMappingExposure = 1.1;
+    renderer.setPixelRatio(
+      this.isSoftwareGl ? 1 : Math.min(window.devicePixelRatio || 1, 1.5),
+    );
     renderer.setSize(width, height);
     renderer.shadowMap.enabled = !this.isSoftwareGl;
-    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    renderer.shadowMap.type = THREE.PCFShadowMap;
+    renderer.shadowMap.autoUpdate = false;
+    renderer.shadowMap.needsUpdate = true;
     renderer.domElement.style.display = 'block';
     renderer.domElement.style.width = '100%';
     renderer.domElement.style.height = '100%';
@@ -315,21 +325,22 @@ export class Dooz3DStage implements AfterViewInit {
     const pmrem = new THREE.PMREMGenerator(renderer);
     this.envMapTex = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
     scene.environment = this.envMapTex;
+    scene.environmentIntensity = 1.1;
     pmrem.dispose();
 
-    const camera = new THREE.PerspectiveCamera(40, width / height, 0.2, 85);
-    camera.position.set(0, 7.8, 6.7);
+    const camera = new THREE.PerspectiveCamera(42, width / height, 0.2, 85);
+    camera.position.set(0, 8.8, 8.6);
     this.camera = camera;
 
     const controls = new OrbitControls(camera, renderer.domElement);
-    controls.enableDamping = !this.isSoftwareGl;
-    controls.dampingFactor = 0.07;
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.08;
     controls.enablePan = false;
-    controls.minDistance = 5.4;
-    controls.maxDistance = 15.5;
-    controls.minPolarAngle = 0.14;
-    controls.maxPolarAngle = Math.PI / 2.28;
-    controls.target.set(0, 0.08, -0.15);
+    controls.minDistance = 4.6;
+    controls.maxDistance = 21;
+    controls.minPolarAngle = 0.12;
+    controls.maxPolarAngle = Math.PI / 2.25;
+    controls.target.set(0, 0.08, -0.35);
     controls.addEventListener('start', () => {
       this.cameraAnimating = false;
     });
@@ -341,25 +352,25 @@ export class Dooz3DStage implements AfterViewInit {
     scene.add(hemiLight);
     this.hemiLight = hemiLight;
 
-    const keyLight = new THREE.DirectionalLight(0xffe6bd, 2.3);
+    const keyLight = new THREE.DirectionalLight(0xffe6bd, 2.35);
     keyLight.position.set(7.5, 11.5, 5.5);
     keyLight.castShadow = !this.isSoftwareGl;
     keyLight.shadow.mapSize.width = 1024;
     keyLight.shadow.mapSize.height = 1024;
     keyLight.shadow.camera.near = 2;
     keyLight.shadow.camera.far = 30;
-    const d = 8.5;
+    const d = 6.5;
     keyLight.shadow.camera.left = -d;
     keyLight.shadow.camera.right = d;
     keyLight.shadow.camera.top = d;
     keyLight.shadow.camera.bottom = -d;
-    keyLight.shadow.bias = -0.0005;
-    keyLight.shadow.normalBias = 0.025;
+    keyLight.shadow.bias = -0.0003;
+    keyLight.shadow.normalBias = 0.018;
     scene.add(keyLight);
     this.keyLight = keyLight;
 
-    const fillLight = new THREE.DirectionalLight(0x8ecae6, 0.55);
-    fillLight.position.set(-7, 6, -5);
+    const fillLight = new THREE.DirectionalLight(0x8ecae6, 0.65);
+    fillLight.position.set(-7, 6.5, -5);
     scene.add(fillLight);
     this.fillLight = fillLight;
 
@@ -452,6 +463,7 @@ export class Dooz3DStage implements AfterViewInit {
       this.hemiLight.groundColor.setHex(built.hemiGroundColor);
       this.hemiLight.intensity = built.hemiIntensity;
     }
+    this.shadowsDirty = true;
   }
 
   private rebuildBoardAndDishes(
@@ -615,6 +627,19 @@ export class Dooz3DStage implements AfterViewInit {
       }
     }
 
+    // Soft contact shadow grounding the main board onto the tabletop/carpet/stone
+    const contactTex = createContactShadowTexture();
+    const boardContactMat = new THREE.MeshBasicMaterial({
+      map: contactTex,
+      transparent: true,
+      opacity: 0.45,
+      depthWrite: false,
+    });
+    const boardContact = new THREE.Mesh(new THREE.PlaneGeometry(6.9, 6.9), boardContactMat);
+    boardContact.rotation.x = -Math.PI / 2;
+    boardContact.position.y = 0.004;
+    boardGroup.add(boardContact);
+
     this.boardGroup = boardGroup;
     scene.add(boardGroup);
 
@@ -625,10 +650,18 @@ export class Dooz3DStage implements AfterViewInit {
       rightDish.position.set(DISH_X_RIGHT, 0, 0);
       const leftDish = createSideDishModel(theme, colorMode, this.maxAnisotropy);
       leftDish.position.set(DISH_X_LEFT, 0, 0);
-      dishesGroup.add(rightDish, leftDish);
+      const dishShadowGeo = new THREE.PlaneGeometry(2.1, 5.1);
+      const rightShadow = new THREE.Mesh(dishShadowGeo, boardContactMat);
+      rightShadow.rotation.x = -Math.PI / 2;
+      rightShadow.position.set(DISH_X_RIGHT, 0.003, 0);
+      const leftShadow = new THREE.Mesh(dishShadowGeo, boardContactMat);
+      leftShadow.rotation.x = -Math.PI / 2;
+      leftShadow.position.set(DISH_X_LEFT, 0.003, 0);
+      dishesGroup.add(rightDish, leftDish, rightShadow, leftShadow);
     }
     this.sideDishesGroup = dishesGroup;
     scene.add(dishesGroup);
+    this.shadowsDirty = true;
   }
 
   private getSlotWorldPos(variant: GameVariant, index: number): THREE.Vector3 {
@@ -643,6 +676,7 @@ export class Dooz3DStage implements AfterViewInit {
   private syncPiecesFromState(forceRebuild: boolean): void {
     const group = this.piecesGroup;
     if (!group) return;
+    this.shadowsDirty = true;
 
     const variant = this.variant();
     const style = this.pieceStyle();
@@ -1014,15 +1048,18 @@ export class Dooz3DStage implements AfterViewInit {
   private applyCameraPreset(preset: CameraPreset, instant = false): void {
     if (!this.camera || !this.controls) return;
 
+    const aspect = Math.max(0.7, this.camera.aspect || 1.35);
+    const zoomOut = aspect < 1.38 ? Math.min(1.38, 1.38 / aspect) : 1.0;
+
     if (preset === 'TOP') {
-      _targetCamPos.set(0, 10.6, 1.35);
-      _targetCtrlPos.set(0, 0.05, 0);
+      _targetCamPos.set(0, 12.2 * zoomOut, 1.8 * zoomOut);
+      _targetCtrlPos.set(0, 0.05, -0.1);
     } else if (preset === 'CINEMA') {
-      _targetCamPos.set(4.5, 5.1, 6.5);
-      _targetCtrlPos.set(-0.2, 0.18, -0.35);
+      _targetCamPos.set(6.0 * zoomOut, 5.5 * zoomOut, 8.2 * zoomOut);
+      _targetCtrlPos.set(0, 0.15, -0.45);
     } else {
-      _targetCamPos.set(0, 7.6, 6.7);
-      _targetCtrlPos.set(0, 0.08, -0.15);
+      _targetCamPos.set(0, 8.8 * zoomOut, 8.5 * zoomOut);
+      _targetCtrlPos.set(0, 0.08, -0.35);
     }
 
     if (instant || this.isSoftwareGl) {
@@ -1133,7 +1170,7 @@ export class Dooz3DStage implements AfterViewInit {
     }
 
     const now = performance.now();
-    const delta = Math.min(0.05, Math.max(0.001, (now - this.lastTimeMs) / 1000));
+    const delta = Math.min(0.15, Math.max(0.001, (now - this.lastTimeMs) / 1000));
     this.lastTimeMs = now;
     this.elapsedSeconds += delta;
 
@@ -1208,6 +1245,7 @@ export class Dooz3DStage implements AfterViewInit {
           disposeObject3D(anim.mesh);
         }
         this.activeAnims.splice(i, 1);
+        this.shadowsDirty = true;
       }
     }
 
@@ -1270,7 +1308,32 @@ export class Dooz3DStage implements AfterViewInit {
       this.sparkPoints.rotation.y = this.elapsedSeconds * 0.5;
     }
 
+    if (this.renderer.shadowMap.enabled && (this.shadowsDirty || this.activeAnims.length > 0)) {
+      this.renderer.shadowMap.needsUpdate = true;
+      this.shadowsDirty = false;
+    }
+
+    const renderStart = performance.now();
     this.renderer.render(this.scene, this.camera);
+    const renderMs = performance.now() - renderStart;
+
+    // Auto-adapt if GPU struggles so gameplay stays responsive instead of slow-motion
+    if (renderMs > 36 && this.qualityTier > 0) {
+      this.slowFrameStreak++;
+      if (this.slowFrameStreak >= 4) {
+        this.slowFrameStreak = 0;
+        if (this.qualityTier === 2) {
+          this.qualityTier = 1;
+          this.renderer.shadowMap.enabled = false;
+          if (this.keyLight) this.keyLight.castShadow = false;
+        } else if (this.qualityTier === 1) {
+          this.qualityTier = 0;
+          this.renderer.setPixelRatio(1);
+        }
+      }
+    } else if (renderMs < 24) {
+      this.slowFrameStreak = 0;
+    }
 
     if (this.isSoftwareGl) {
       this.afterDraw(this.tick);
@@ -1294,7 +1357,7 @@ export class Dooz3DStage implements AfterViewInit {
         this.frameId = window.setTimeout(poll, 5);
       } else {
         if (sync) gl.deleteSync(sync);
-        this.frameId = window.setTimeout(cb, 80);
+        this.frameId = window.setTimeout(cb, 24);
       }
     };
     this.frameId = window.setTimeout(poll, 5);
@@ -1307,6 +1370,8 @@ export class Dooz3DStage implements AfterViewInit {
     const height = Math.max(container.clientHeight, 1);
     this.camera.aspect = width / height;
     this.camera.updateProjectionMatrix();
+    const maxDpr = this.isSoftwareGl || this.qualityTier === 0 ? 1 : 1.5;
+    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, maxDpr));
     this.renderer.setSize(width, height);
   }
 

@@ -48,7 +48,7 @@ export function createPieceModel(
   group.scale.setScalar(scale);
 
   // Subtle soft bottom felt pad so piece sits flush on wood/stone
-  const padGeo = new THREE.CylinderGeometry(0.32, 0.33, 0.03, 28);
+  const padGeo = new THREE.CylinderGeometry(0.32, 0.33, 0.03, 40);
   const padMat = new THREE.MeshStandardMaterial({
     color: 0x1e1916,
     roughness: 0.95,
@@ -68,7 +68,7 @@ export function createPieceModel(
       new THREE.Vector2(0.28, 0.18),
       new THREE.Vector2(0.0, 0.18),
     ];
-    const bezelGeo = new THREE.LatheGeometry(bezelProfile, 32);
+    const bezelGeo = new THREE.LatheGeometry(bezelProfile, 48);
     const brassMat = new THREE.MeshStandardMaterial({
       color: 0xd9a853,
       roughness: 0.22,
@@ -88,7 +88,7 @@ export function createPieceModel(
       new THREE.Vector2(0.11, 0.36),
       new THREE.Vector2(0.0, 0.37),
     ];
-    const gemGeo = new THREE.LatheGeometry(gemProfile, 32);
+    const gemGeo = new THREE.LatheGeometry(gemProfile, 48);
     const gemMat = new THREE.MeshPhysicalMaterial({
       color: player === 'X' ? 0xd91a46 : 0x0d9488,
       roughness: 0.12,
@@ -145,7 +145,7 @@ export function createPieceModel(
       new THREE.Vector2(0.18, 0.25),
       new THREE.Vector2(0.0, 0.26),
     ];
-    const bodyGeo = new THREE.LatheGeometry(profile, 32);
+    const bodyGeo = new THREE.LatheGeometry(profile, 48);
     const bodyMat = new THREE.MeshStandardMaterial({
       color: player === 'X' ? 0x5c2411 : 0xf2e6cc,
       roughness: player === 'X' ? 0.38 : 0.32,
@@ -157,7 +157,7 @@ export function createPieceModel(
     group.add(body);
 
     // Brushed brass inlay collar
-    const collarGeo = new THREE.TorusGeometry(0.315, 0.018, 10, 32);
+    const collarGeo = new THREE.TorusGeometry(0.315, 0.018, 12, 40);
     const brassMat = new THREE.MeshStandardMaterial({
       color: 0xdca74c,
       roughness: 0.2,
@@ -250,7 +250,7 @@ export function createPieceModel(
   }
 
   // 'classic': weighted ceramic disc with brushed metallic bezel & crisp 3D X/O emblem
-  const discGeo = new THREE.CylinderGeometry(0.34, 0.36, 0.18, 32);
+  const discGeo = new THREE.CylinderGeometry(0.34, 0.36, 0.18, 44);
   const discMat = new THREE.MeshStandardMaterial({
     color: player === 'X' ? 0xe11d48 : 0x0d9488,
     roughness: 0.42,

@@ -12,6 +12,9 @@ function configureColorTexture(
   tex.wrapS = THREE.RepeatWrapping;
   tex.wrapT = THREE.RepeatWrapping;
   tex.repeat.set(repeatX, repeatY);
+  tex.generateMipmaps = true;
+  tex.minFilter = THREE.LinearMipmapLinearFilter;
+  tex.magFilter = THREE.LinearFilter;
   tex.anisotropy = Math.max(1, maxAnisotropy);
   tex.needsUpdate = true;
   return tex;
@@ -21,12 +24,17 @@ function configureDataTexture(
   canvas: HTMLCanvasElement,
   repeatX = 1,
   repeatY = 1,
+  maxAnisotropy = 4,
 ): THREE.CanvasTexture {
   const tex = new THREE.CanvasTexture(canvas);
   tex.colorSpace = THREE.NoColorSpace;
   tex.wrapS = THREE.RepeatWrapping;
   tex.wrapT = THREE.RepeatWrapping;
   tex.repeat.set(repeatX, repeatY);
+  tex.generateMipmaps = true;
+  tex.minFilter = THREE.LinearMipmapLinearFilter;
+  tex.magFilter = THREE.LinearFilter;
+  tex.anisotropy = Math.max(1, maxAnisotropy);
   tex.needsUpdate = true;
   return tex;
 }
@@ -209,7 +217,7 @@ export function createPersianCarpetTextures(maxAnisotropy: number): {
 
   return {
     map: configureColorTexture(canvas, maxAnisotropy, 1, 1),
-    bumpMap: configureDataTexture(bumpCanvas, 6, 6),
+    bumpMap: configureDataTexture(bumpCanvas, 6, 6, maxAnisotropy),
   };
 }
 
@@ -262,14 +270,16 @@ export function createWalnutWoodTextures(
 ): { map: THREE.CanvasTexture; bumpMap: THREE.CanvasTexture } {
   const size = 512;
   const canvas = document.createElement('canvas');
-  canvas.width = size;
-  canvas.height = size;
+  canvas.width = size * 2;
+  canvas.height = size * 2;
   const ctx = canvas.getContext('2d')!;
+  ctx.scale(2, 2);
 
   const bumpCanvas = document.createElement('canvas');
-  bumpCanvas.width = size;
-  bumpCanvas.height = size;
+  bumpCanvas.width = size * 2;
+  bumpCanvas.height = size * 2;
   const bCtx = bumpCanvas.getContext('2d')!;
+  bCtx.scale(2, 2);
 
   const baseR = tone === 'warm' ? 98 : 66;
   const baseG = tone === 'warm' ? 58 : 39;
@@ -309,7 +319,7 @@ export function createWalnutWoodTextures(
 
   return {
     map: configureColorTexture(canvas, maxAnisotropy, 1, 1),
-    bumpMap: configureDataTexture(bumpCanvas, 1, 1),
+    bumpMap: configureDataTexture(bumpCanvas, 1, 1, maxAnisotropy),
   };
 }
 
@@ -319,9 +329,10 @@ export function createWalnutWoodTextures(
 export function createFeltTexture(maxAnisotropy: number): THREE.CanvasTexture {
   const size = 256;
   const canvas = document.createElement('canvas');
-  canvas.width = size;
-  canvas.height = size;
+  canvas.width = size * 2;
+  canvas.height = size * 2;
   const ctx = canvas.getContext('2d')!;
+  ctx.scale(2, 2);
 
   ctx.fillStyle = '#144D36';
   ctx.fillRect(0, 0, size, size);
@@ -342,9 +353,10 @@ export function createFeltTexture(maxAnisotropy: number): THREE.CanvasTexture {
 export function createPersianTileTexture(maxAnisotropy: number): THREE.CanvasTexture {
   const size = 512;
   const canvas = document.createElement('canvas');
-  canvas.width = size;
-  canvas.height = size;
+  canvas.width = size * 2;
+  canvas.height = size * 2;
   const ctx = canvas.getContext('2d')!;
+  ctx.scale(2, 2);
 
   ctx.fillStyle = '#0F4A59';
   ctx.fillRect(0, 0, size, size);
