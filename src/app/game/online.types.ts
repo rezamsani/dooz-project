@@ -19,6 +19,8 @@ export interface OnlinePlayerInfo {
 
 export interface RoomSnapshotDto {
   code: string;
+  roundId?: string;
+  roundRatings?: Record<Player, number>;
   variant: GameVariant;
   boardRule: BoardRule;
   allowFlying: boolean;
@@ -53,6 +55,7 @@ export type ClientWsMessage =
       type: 'room:create';
       playerName: string;
       avatar?: PlayerAvatar;
+      rating?: number;
       variant: GameVariant;
       boardRule: BoardRule;
       allowFlying: boolean;
@@ -63,6 +66,7 @@ export type ClientWsMessage =
       code: string;
       playerName: string;
       avatar?: PlayerAvatar;
+      rating?: number;
     }
   | { type: 'room:move_three'; index: number }
   | { type: 'room:morris_place'; nodeId: number }

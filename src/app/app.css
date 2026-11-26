@@ -52,12 +52,6 @@ details[open] > summary mat-icon { transform: rotate(180deg); }
 .appearance-content { padding-top: 12px; }
 .home-appearance .appearance-panel > summary { display: none; }
 .home-appearance .appearance-panel { border: 0; }
-.rank-card { display: flex; align-items: center; flex-direction: column; gap: 12px; background: var(--soft); border-radius: 24px; padding: 28px; }
-.rank-card mat-icon { width: 42px; height: 42px; font-size: 42px; color: #cc9f61; }
-.rank-card strong { font-size: 20px; }.rank-card span { color: var(--muted); font-size: 13px; }
-.stats-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; margin-block: 18px 24px; }
-.stats-grid > div { display: flex; flex-direction: column; gap: 8px; padding: 20px 4px; background: var(--surface); border: 1px solid var(--line); border-radius: 16px; text-align: center; }
-.stats-grid b { font-size: 24px; }.stats-grid span, .empty-note { color: var(--muted); font-size: 11px; }.empty-note { padding-bottom: 20px; text-align: center; line-height: 2; }
 .play-layout { display: flex; flex-direction: column; width: 100%; max-width: 780px; margin: auto; gap: 16px; }
 .play-layout > div, .play-layout > aside { width: 100%; min-width: 0; }
 .play-layout > aside { max-width: 540px; margin: auto; }

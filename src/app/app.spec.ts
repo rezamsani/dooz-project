@@ -1,8 +1,11 @@
 import {TestBed} from '@angular/core/testing';
 import {App} from './app';
+import { OnlineClient } from './game/online-client';
+import { RoomSnapshotDto } from './game/online.types';
 
 describe('App', () => {
   beforeEach(async () => {
+    localStorage.removeItem('dooz_player_stats_v1');
     await TestBed.configureTestingModule({
       imports: [App],
     }).compileComponents();
@@ -31,5 +34,32 @@ describe('App', () => {
     app.onNativeBack();
     expect(app.homeTab()).toBe('play');
     expect(app.gameState()).toBe('TITLE_MENU');
+  });
+
+  it('counts a local two-player win once without changing the personal rating',()=>{
+    const app=TestBed.createComponent(App).componentInstance;
+    app.setGameMode('LOCAL_2P');app.startGame();
+    for(const index of [0,3,1,4,2,2]) app.onCellSelected(index);
+    expect(app.scores()).toEqual({X:1,O:0,draws:0});
+    expect(app.playerStats.totalGames()).toBe(0);
+    expect(app.playerStats.stats().elo).toBe(1200);
+  });
+
+  it('records a participated online round once using the opponent rating, not a finished room visit',()=>{
+    const client=TestBed.inject(OnlineClient);
+    const registered=vi.spyOn(client,'onRoomState');
+    const app=TestBed.createComponent(App).componentInstance;
+    const listener=registered.mock.calls[0][0];
+    const room: RoomSnapshotDto={
+      code:'ABCDE',roundId:'unique-round',roundRatings:{X:1200,O:1400},variant:'THREE',boardRule:'CLASSIC',allowFlying:false,turnTimeLimit:0,status:'FINISHED',
+      players:{X:{name:'You',connected:true},O:{name:'Opponent',connected:true}},scores:{X:1,O:0,draws:0},rematchVotes:[],drawOfferFrom:null,
+      threeBoard:Array(9).fill(null),threeXQueue:[],threeOQueue:[],threeTurn:'X',threeMoveCount:5,threeLastMove:2,threeWin:null,threeDraw:false,morrisState:null,winner:'X',isDraw:false,endReason:'NORMAL',
+    };
+    const emit=(snapshot:RoomSnapshotDto)=>{client.room.set(snapshot);client.yourRole.set('X');listener(snapshot,'X');};
+    emit(room);expect(app.playerStats.totalGames()).toBe(0);
+    emit({...room,status:'PLAYING',winner:null});
+    emit(room);emit(room);
+    expect(app.playerStats.stats()).toMatchObject({wins:1,elo:1218});
+    expect(app.playerStats.totalGames()).toBe(1);
   });
 });

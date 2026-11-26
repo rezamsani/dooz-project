@@ -52,6 +52,7 @@ export class OnlineClient {
   createRoom(params: {
     playerName: string;
     avatar?: PlayerAvatar;
+    rating?: number;
     variant: GameVariant;
     boardRule: BoardRule;
     allowFlying: boolean;
@@ -62,6 +63,7 @@ export class OnlineClient {
       type: 'room:create',
       playerName: params.playerName,
       avatar: params.avatar,
+      rating: params.rating,
       variant: params.variant,
       boardRule: params.boardRule,
       allowFlying: params.allowFlying,
@@ -69,13 +71,14 @@ export class OnlineClient {
     });
   }
 
-  joinRoom(code: string, playerName: string, avatar?: PlayerAvatar): void {
+  joinRoom(code: string, playerName: string, avatar?: PlayerAvatar, rating?: number): void {
     this.errorMessage.set(null);
     this.send({
       type: 'room:join',
       code,
       playerName,
       avatar,
+      rating,
     });
   }
 

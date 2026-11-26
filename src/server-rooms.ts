@@ -1,5 +1,6 @@
 import { randomBytes } from 'node:crypto';
 import { normalizeAvatar, PlayerAvatar } from './app/game/avatar';
+import { ratingAfterMatch, validRating } from './app/game/player-score';
 import type { IncomingMessage } from 'node:http';
 import type { Duplex } from 'node:stream';
 import { WebSocket, WebSocketServer } from 'ws';
@@ -43,10 +44,13 @@ interface PlayerSlot {
   socket: WebSocket | null;
   name: string;
   avatar: PlayerAvatar;
+  rating: number;
 }
 
 interface ActiveRoom {
   code: string;
+  roundId: string;
+  roundRatings: Record<Player,number>;
   variant: GameVariant;
   boardRule: BoardRule;
   allowFlying: boolean;
@@ -155,7 +159,7 @@ export class OnlineRoomManager {
         this.createRoom(ws, msg);
         return;
       case 'room:join':
-        this.joinRoom(ws, msg.code, msg.playerName, msg.avatar);
+        this.joinRoom(ws, msg.code, msg.playerName, msg.avatar, msg.rating);
         return;
       case 'room:leave':
         this.detachSocket(ws);
@@ -220,13 +224,15 @@ export class OnlineRoomManager {
     const code = generateRoomCode(this.rooms);
     const room: ActiveRoom = {
       code,
+      roundId: randomBytes(12).toString('hex'),
+      roundRatings: {X: validRating(msg.rating), O:1200},
       variant,
       boardRule,
       allowFlying,
       turnTimeLimit,
       status: 'WAITING',
       players: {
-        X: { socket: ws, name: playerName, avatar: normalizeAvatar(msg.avatar) },
+        X: { socket: ws, name: playerName, avatar: normalizeAvatar(msg.avatar), rating:validRating(msg.rating) },
         O: null,
       },
       scores: { X: 0, O: 0, draws: 0 },
@@ -256,7 +262,7 @@ export class OnlineRoomManager {
     this.broadcastRoomState(room);
   }
 
-  private joinRoom(ws: WebSocket, rawCode: unknown, rawName: unknown, rawAvatar: unknown): void {
+  private joinRoom(ws: WebSocket, rawCode: unknown, rawName: unknown, rawAvatar: unknown, rawRating: unknown): void {
     const code = sanitizeRoomCode(rawCode);
     if (!code) {
       sendJson(ws, { type: 'room:error', message: 'کد اتاق باید ۵ حرف یا عدد معتبر باشد.' });
@@ -272,10 +278,11 @@ export class OnlineRoomManager {
     this.detachSocket(ws);
     const name = sanitizePlayerName(rawName, 'بازیکن ۲');
     const avatar = rawAvatar === undefined ? normalizeAvatar({cartoon:'sky'}) : normalizeAvatar(rawAvatar);
+    const rating = validRating(rawRating);
 
     let assignedRole: Player | null = null;
     if (!room.players.O) {
-      room.players.O = { socket: ws, name, avatar };
+      room.players.O = { socket: ws, name, avatar, rating };
       assignedRole = 'O';
     } else if (!room.players.O.socket) {
       room.players.O.socket = ws;
@@ -283,7 +290,7 @@ export class OnlineRoomManager {
       room.players.O.avatar = avatar;
       assignedRole = 'O';
     } else if (!room.players.X || !room.players.X.socket) {
-      room.players.X = { socket: ws, name, avatar };
+      room.players.X = { socket: ws, name, avatar, rating };
       assignedRole = 'X';
     }
 
@@ -294,6 +301,7 @@ export class OnlineRoomManager {
 
     room.lastActivityAt = Date.now();
     if (room.status === 'WAITING' && room.players.X?.socket && room.players.O?.socket) {
+      room.roundRatings = {X:room.players.X.rating,O:room.players.O.rating};
       room.status = 'PLAYING';
     }
 
@@ -463,6 +471,13 @@ export class OnlineRoomManager {
     room.lastActivityAt = Date.now();
 
     if (room.rematchVotes.has('X') && room.rematchVotes.has('O')) {
+      const before=room.roundRatings;
+      const x=ratingAfterMatch(before.X,before.O,room.isDraw?'DRAW':room.winner==='X'?'WIN':'LOSS');
+      const o=ratingAfterMatch(before.O,before.X,room.isDraw?'DRAW':room.winner==='O'?'WIN':'LOSS');
+      room.roundRatings={X:x,O:o};
+      if(room.players.X) room.players.X.rating=x;
+      if(room.players.O) room.players.O.rating=o;
+      room.roundId=randomBytes(12).toString('hex');
       room.starter = getOpponent(room.starter);
       room.rematchVotes.clear();
       room.drawOfferFrom = null;
@@ -513,6 +528,7 @@ export class OnlineRoomManager {
     isDraw: boolean,
     reason: 'NORMAL' | 'RESIGN' | 'TIMEOUT' | 'DRAW_AGREED',
   ): void {
+    if (room.status !== 'PLAYING') return;
     room.status = 'FINISHED';
     room.winner = winner;
     room.isDraw = isDraw;
@@ -557,6 +573,8 @@ export class OnlineRoomManager {
   private toDto(room: ActiveRoom): RoomSnapshotDto {
     return {
       code: room.code,
+      roundId: room.roundId,
+      roundRatings: {...room.roundRatings},
       variant: room.variant,
       boardRule: room.boardRule,
       allowFlying: room.allowFlying,

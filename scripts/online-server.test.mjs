@@ -57,6 +57,7 @@ test('online server: health, create room, join and synchronize moves', { timeout
   const created = nextMessage(host, (msg) => msg.type === 'room:state');
   host.send(JSON.stringify({
     type: 'room:create', playerName: 'Host', variant: 'THREE',
+    rating: 1400,
     avatar: {cartoon:'peach',gravatarHash:'a'.repeat(64)},
     boardRule: 'CLASSIC', allowFlying: false, turnTimeLimit: 0,
   }));
@@ -74,6 +75,7 @@ test('online server: health, create room, join and synchronize moves', { timeout
   const [hostRoom, guestRoom] = await Promise.all([hostJoined, guestJoined]);
   assert.equal(guestRoom.yourRole, 'O');
   assert.equal(hostRoom.room.status, 'PLAYING');
+  assert.deepEqual(hostRoom.room.roundRatings,{X:1400,O:1200});
   assert.deepEqual(hostRoom.room.players.O.avatar, {cartoon:'lilac',gravatarHash:null});
   assert.deepEqual(hostRoom.room, guestRoom.room);
 
@@ -92,4 +94,43 @@ test('online server: health, create room, join and synchronize moves', { timeout
   assert.equal(hostFinal.room.threeBoard[4], 'O');
   assert.equal(hostFinal.room.threeTurn, 'X');
   assert.deepEqual(hostFinal.room, guestFinal.room);
+
+  let finished;
+  for(const [socket,index] of [[host,1],[guest,8],[host,2]]) {
+    const a=nextMessage(host,msg=>msg.type==='room:state');
+    const b=nextMessage(guest,msg=>msg.type==='room:state');
+    socket.send(JSON.stringify({type:'room:move_three',index}));
+    [finished]=await Promise.all([a,b]);
+  }
+  assert.equal(finished.room.status,'FINISHED');
+  assert.deepEqual(finished.room.scores,{X:1,O:0,draws:0});
+  assert.equal(finished.room.roundId,hostRoom.room.roundId);
+  assert.deepEqual(finished.room.roundRatings,{X:1400,O:1200});
+  for(const socket of [host,host,guest]) {
+    const a=nextMessage(host,msg=>msg.type==='room:state');
+    const b=nextMessage(guest,msg=>msg.type==='room:state');
+    socket.send(JSON.stringify({type:'room:rematch'}));
+    [finished]=await Promise.all([a,b]);
+    assert.deepEqual(finished.room.scores,{X:1,O:0,draws:0});
+  }
+  assert.equal(finished.room.status,'PLAYING');
+  assert.notEqual(finished.room.roundId,hostRoom.room.roundId);
+  assert.deepEqual(finished.room.roundRatings,{X:1406,O:1194});
+
+  const exchange=async(socket,message)=>{
+    const a=nextMessage(host,msg=>msg.type==='room:state');
+    const b=nextMessage(guest,msg=>msg.type==='room:state');
+    socket.send(JSON.stringify(message));
+    const [response]=await Promise.all([a,b]);return response.room;
+  };
+  await exchange(guest,{type:'room:draw_offer'});
+  let result=await exchange(host,{type:'room:draw_respond',accept:true});
+  assert.deepEqual(result.scores,{X:1,O:0,draws:1});
+  assert.equal(result.isDraw,true);
+  await exchange(host,{type:'room:rematch'});
+  result=await exchange(guest,{type:'room:rematch'});
+  assert.deepEqual(result.roundRatings,{X:1399,O:1201});
+  result=await exchange(host,{type:'room:resign'});
+  assert.equal(result.winner,'O');
+  assert.deepEqual(result.scores,{X:1,O:1,draws:1});
 });

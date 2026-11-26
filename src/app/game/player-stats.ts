@@ -1,6 +1,8 @@
 import { isPlatformBrowser } from '@angular/common';
 import { Injectable, PLATFORM_ID, computed, inject, signal } from '@angular/core';
 import { normalizeHex } from './color-palette';
+import { DeviceStorage } from './device-storage';
+import { PlayerRecord, MatchOutcome, emptyRecord, restoreRecord, ratingAfterMatch } from './player-score';
 import {
   BoardTheme,
   ColorMode,
@@ -12,14 +14,7 @@ import {
   ViewMode,
 } from './dooz.types';
 
-export interface PersistentStats {
-  elo: number;
-  wins: number;
-  losses: number;
-  draws: number;
-  currentStreak: number;
-  bestStreak: number;
-}
+export type PersistentStats = PlayerRecord;
 
 const STATS_KEY = 'dooz_player_stats_v1';
 const THEME_KEY = 'dooz_board_theme_v1';
@@ -31,20 +26,12 @@ const CUSTOM_X_COLOR_KEY = 'dooz_custom_x_color_v1';
 const CUSTOM_O_COLOR_KEY = 'dooz_custom_o_color_v1';
 const CUSTOM_BOARD_COLOR_KEY = 'dooz_custom_board_color_v1';
 
-const DEFAULT_STATS: PersistentStats = {
-  elo: 1200,
-  wins: 0,
-  losses: 0,
-  draws: 0,
-  currentStreak: 0,
-  bestStreak: 0,
-};
-
 @Injectable({ providedIn: 'root' })
 export class PlayerStats {
   private readonly platformId = inject(PLATFORM_ID);
+  readonly storage = inject(DeviceStorage);
 
-  readonly stats = signal<PersistentStats>(DEFAULT_STATS);
+  readonly stats = signal<PersistentStats>(emptyRecord());
   readonly lastEloDelta = signal<number | null>(null);
   readonly boardTheme = signal<BoardTheme>('navy');
   readonly colorMode = signal<ColorMode>('dark');
@@ -154,9 +141,9 @@ export class PlayerStats {
     if (!isPlatformBrowser(this.platformId)) return;
     try {
       if (clean) {
-        window.localStorage.setItem(key, clean);
+        this.storage.setItem(key, clean);
       } else {
-        window.localStorage.removeItem(key);
+        this.storage.removeItem(key);
       }
     } catch {
       // Ignore storage errors
@@ -169,35 +156,32 @@ export class PlayerStats {
     this.setCustomColor('BOARD', null);
   }
 
-  /**
-   * Updates real standard Elo rating and streaks after an AI or Online match.
-   */
-  recordMatchOutcome(
-    outcome: 'WIN' | 'LOSS' | 'DRAW',
-    opponentRating: number,
-  ): void {
-    const current = this.stats();
-    const expected = 1 / (1 + Math.pow(10, (opponentRating - current.elo) / 400));
-    const actual = outcome === 'WIN' ? 1 : outcome === 'DRAW' ? 0.5 : 0;
-    const kFactor = 24;
-    const delta = Math.round(kFactor * (actual - expected));
-    const nextElo = Math.max(800, current.elo + delta);
+  beginOnlineMatch(id: string): void {
+    const current=this.stats();
+    if (!this.storage.canReadStats() || current.processedMatchIds.includes(id) || current.pendingOnlineMatches.includes(id)) return;
+    const updated={...current,pendingOnlineMatches:[...current.pendingOnlineMatches,id].slice(-10)};
+    this.stats.set(updated); this.persistStats(updated);
+  }
 
-    const nextStreak = outcome === 'WIN' ? current.currentStreak + 1 : 0;
-    const nextBestStreak = Math.max(current.bestStreak, nextStreak);
-
-    const updated: PersistentStats = {
-      elo: nextElo,
-      wins: current.wins + (outcome === 'WIN' ? 1 : 0),
-      losses: current.losses + (outcome === 'LOSS' ? 1 : 0),
-      draws: current.draws + (outcome === 'DRAW' ? 1 : 0),
-      currentStreak: nextStreak,
-      bestStreak: nextBestStreak,
+  recordMatchOutcome(outcome: MatchOutcome, opponentRating: number, matchId: string, mode: 'AI' | 'ONLINE' = 'AI'): boolean {
+    const current=this.stats();
+    if (!this.storage.canReadStats() || !matchId || current.processedMatchIds.includes(matchId)) return false;
+    if (mode === 'ONLINE' && !current.pendingOnlineMatches.includes(matchId)) return false;
+    const nextElo=ratingAfterMatch(current.elo,opponentRating,outcome);
+    const delta=nextElo-current.elo;
+    const nextStreak=outcome === 'WIN' ? current.currentStreak+1 : 0;
+    const updated: PersistentStats={
+      elo:nextElo,
+      wins:current.wins+(outcome==='WIN'?1:0),
+      losses:current.losses+(outcome==='LOSS'?1:0),
+      draws:current.draws+(outcome==='DRAW'?1:0),
+      currentStreak:nextStreak,bestStreak:Math.max(current.bestStreak,nextStreak),
+      processedMatchIds:[...current.processedMatchIds,matchId].slice(-100),
+      pendingOnlineMatches:current.pendingOnlineMatches.filter(id=>id!==matchId),
+      recentResults:[...current.recentResults,{id:matchId,outcome,mode,rating:nextElo,delta,at:Date.now()}].slice(-12),
     };
-
-    this.stats.set(updated);
-    this.lastEloDelta.set(delta);
-    this.persistStats(updated);
+    this.stats.set(updated); this.lastEloDelta.set(delta); this.persistStats(updated);
+    return true;
   }
 
   getAiOpponentRating(difficulty: Difficulty): number {
@@ -212,9 +196,10 @@ export class PlayerStats {
   }
 
   resetStats(): void {
-    this.stats.set(DEFAULT_STATS);
+    const reset={...emptyRecord(),processedMatchIds:this.stats().processedMatchIds,pendingOnlineMatches:this.stats().pendingOnlineMatches};
+    this.stats.set(reset);
     this.lastEloDelta.set(null);
-    this.persistStats(DEFAULT_STATS);
+    this.persistStats(reset);
   }
 
   private applyColorModeClass(mode: ColorMode): void {
@@ -229,7 +214,7 @@ export class PlayerStats {
   private writeStorage(key: string, value: string): void {
     if (!isPlatformBrowser(this.platformId)) return;
     try {
-      window.localStorage.setItem(key, value);
+      this.storage.setItem(key, value);
     } catch {
       // Ignore storage errors
     }
@@ -237,22 +222,12 @@ export class PlayerStats {
 
   private loadFromStorage(): void {
     try {
-      const rawStats = window.localStorage.getItem(STATS_KEY);
+      const rawStats = this.storage.getItem(STATS_KEY);
       if (rawStats) {
-        const parsed = JSON.parse(rawStats) as Partial<PersistentStats>;
-        if (typeof parsed.elo === 'number' && Number.isFinite(parsed.elo)) {
-          this.stats.set({
-            elo: Math.max(800, Math.round(parsed.elo)),
-            wins: Math.max(0, Number(parsed.wins) || 0),
-            losses: Math.max(0, Number(parsed.losses) || 0),
-            draws: Math.max(0, Number(parsed.draws) || 0),
-            currentStreak: Math.max(0, Number(parsed.currentStreak) || 0),
-            bestStreak: Math.max(0, Number(parsed.bestStreak) || 0),
-          });
-        }
+        try { this.stats.set(restoreRecord(JSON.parse(rawStats))); } catch { /* Keep defaults for invalid JSON. */ }
       }
 
-      const rawTheme = window.localStorage.getItem(THEME_KEY);
+      const rawTheme = this.storage.getItem(THEME_KEY);
       if (
         rawTheme === 'navy' ||
         rawTheme === 'walnut' ||
@@ -263,12 +238,12 @@ export class PlayerStats {
         this.boardTheme.set(rawTheme);
       }
 
-      const rawColorMode = window.localStorage.getItem(COLOR_MODE_KEY);
+      const rawColorMode = this.storage.getItem(COLOR_MODE_KEY);
       if (rawColorMode === 'dark' || rawColorMode === 'light') {
         this.colorMode.set(rawColorMode);
       }
 
-      const rawEnv = window.localStorage.getItem(ENV_KEY);
+      const rawEnv = this.storage.getItem(ENV_KEY);
       if (
         rawEnv === 'simple' ||
         rawEnv === 'carpet' ||
@@ -279,7 +254,7 @@ export class PlayerStats {
         this.environment.set(rawEnv);
       }
 
-      const rawPiece = window.localStorage.getItem(PIECE_STYLE_KEY);
+      const rawPiece = this.storage.getItem(PIECE_STYLE_KEY);
       if (
         rawPiece === 'gemstone' ||
         rawPiece === 'wood' ||
@@ -289,14 +264,14 @@ export class PlayerStats {
         this.pieceStyle.set(rawPiece);
       }
 
-      const rawView = window.localStorage.getItem(VIEW_MODE_KEY);
+      const rawView = this.storage.getItem(VIEW_MODE_KEY);
       if (rawView === '3d' || rawView === '2d') {
         this.viewMode.set(rawView);
       }
 
-      this.customXColor.set(normalizeHex(window.localStorage.getItem(CUSTOM_X_COLOR_KEY)));
-      this.customOColor.set(normalizeHex(window.localStorage.getItem(CUSTOM_O_COLOR_KEY)));
-      this.customBoardColor.set(normalizeHex(window.localStorage.getItem(CUSTOM_BOARD_COLOR_KEY)));
+      this.customXColor.set(normalizeHex(this.storage.getItem(CUSTOM_X_COLOR_KEY)));
+      this.customOColor.set(normalizeHex(this.storage.getItem(CUSTOM_O_COLOR_KEY)));
+      this.customBoardColor.set(normalizeHex(this.storage.getItem(CUSTOM_BOARD_COLOR_KEY)));
     } catch {
       // Ignore corrupted local storage
     }
@@ -305,7 +280,7 @@ export class PlayerStats {
   private persistStats(stats: PersistentStats): void {
     if (!isPlatformBrowser(this.platformId)) return;
     try {
-      window.localStorage.setItem(STATS_KEY, JSON.stringify(stats));
+      this.storage.setItem(STATS_KEY, JSON.stringify(stats));
     } catch {
       // Ignore storage quota errors
     }

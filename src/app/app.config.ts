@@ -9,10 +9,12 @@ import {provideRouter} from '@angular/router';
 
 import {routes} from './app.routes';
 import { RuntimeConfig } from './runtime-config';
+import { DeviceStorage } from './game/device-storage';
 
 export const appConfig: ApplicationConfig = {
   providers: [
     provideAppInitializer(() => inject(RuntimeConfig).load()),
+    provideAppInitializer(() => inject(DeviceStorage).load()),
     provideBrowserGlobalErrorListeners(),
     provideRouter(routes),
     provideHttpClient(withFetch()),

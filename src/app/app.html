@@ -44,6 +44,11 @@
     </header>
   }
 
+  @if (playerStats.storage.issue()==='load') {
+    <p role="alert" class="mx-auto max-w-lg px-5 py-3 text-sm text-amber-700 dark:text-amber-300">اطلاعات ذخیره‌شده خوانده نشد. برای محافظت از امتیازها، برنامه را ببندید و دوباره باز کنید.</p>
+  } @else if (playerStats.storage.issue()==='write' && (gameState() !== 'TITLE_MENU' || homeTab() !== 'stats')) {
+    <div role="alert" class="mx-auto max-w-lg px-5 py-3 text-sm text-amber-700 dark:text-amber-300">ذخیرهٔ آمار کامل نشد. <button type="button" class="min-h-11 underline" (click)="playerStats.storage.retry()">تلاش دوباره برای ذخیره</button></div>
+  }
   <!-- Main Workspace -->
   <main
     class="app-main mx-auto flex w-full max-w-6xl flex-1 flex-col justify-center px-4 sm:px-6"
@@ -637,11 +642,9 @@
 
           </section>
         } @else {
-          <section class="home-stats animate-panel-in" aria-label="پروفایل و آمار بازیکن"><div class="page-heading"><span class="eyebrow">هر دست، یک تجربه</span><h1>پروفایل تو</h1><p>نام، عکس و آمار بازی‌هات، یک‌جا.</p></div>
-            <app-profile-panel />
-            <div class="rank-card"><mat-icon>emoji_events</mat-icon><strong>{{ playerStats.rankTitle() }}</strong><span>{{ formatNumber(playerStats.stats().elo) }} امتیاز</span></div>
-            <div class="stats-grid"><div><b>{{ formatNumber(playerStats.stats().wins) }}</b><span>برد</span></div><div><b>{{ formatNumber(playerStats.stats().losses) }}</b><span>باخت</span></div><div><b>{{ formatNumber(playerStats.stats().draws) }}</b><span>مساوی</span></div><div><b>{{ formatNumber(playerStats.winRate()) }}٪</b><span>نرخ برد</span></div><div><b>{{ formatNumber(playerStats.stats().currentStreak) }}</b><span>برد پیاپی</span></div><div><b>{{ formatNumber(playerStats.stats().bestStreak) }}</b><span>بهترین رکورد</span></div></div>
-            @if (playerStats.totalGames() === 0) { <p class="empty-note">اولین بازی رو شروع کن؛ داستانت از همین‌جا شروع می‌شه.</p> }
+          <section class="home-stats animate-panel-in" aria-label="پروفایل و آمار بازیکن"><div class="page-heading"><span class="eyebrow">هر دست، یک تجربه</span><h1>پروفایل تو</h1><p>هر مسابقه، یک قدم در مسیر بهتر شدن.</p></div>
+            <app-player-dashboard />
+            <details class="advanced-settings mb-6"><summary>ویرایش نام و عکس پروفایل<mat-icon aria-hidden="true">expand_more</mat-icon></summary><app-profile-panel /></details>
             <button type="button" class="launch-button" (click)="homeTab.set('play')">برگشت به بازی<mat-icon>arrow_back</mat-icon></button>
           </section>
         }

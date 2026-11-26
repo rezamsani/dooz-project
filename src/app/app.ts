@@ -70,6 +70,7 @@ import { PlayerProfile } from './game/player-profile';
 import { ProfilePanel } from './game/profile-panel';
 import { PlayerAvatarComponent } from './game/player-avatar';
 import { PlayerAvatar } from './game/avatar';
+import { PlayerDashboard } from './game/player-dashboard';
 
 function createPreviewMorrisState(variant: MorrisVariant): MorrisState {
   const base = createInitialMorrisState(variant, 'X', true);
@@ -110,6 +111,7 @@ function createPreviewMorrisState(variant: MorrisVariant): MorrisState {
     ColorPalettePicker,
     ProfilePanel,
     PlayerAvatarComponent,
+    PlayerDashboard,
   ],
   templateUrl: './app.html',
   styleUrl: './app.css',
@@ -133,6 +135,7 @@ export class App {
   private replayIntervalId: ReturnType<typeof setInterval> | null = null;
   private copyToastTimerId: ReturnType<typeof setTimeout> | null = null;
   private roundCounter = 0;
+  private offlineMatchId = '';
   private lastOnlineTurnKey = '';
   private lastOnlineStatus: 'WAITING' | 'PLAYING' | 'FINISHED' | null = null;
   private wasNativeFullscreen = false;
@@ -896,6 +899,7 @@ export class App {
   // ---------- ONLINE MULTIPLAYER ACTIONS ----------
 
   createOnlineRoom(): void {
+    if (!this.playerStats.storage.canReadStats()) return;
     this.soundFx.playClick();
     this.gameMode.set('ONLINE');
     this.lastOnlineStatus = null;
@@ -903,6 +907,7 @@ export class App {
     this.onlineClient.createRoom({
       playerName: this.playerNameControl.value.trim() || this.profile.name() || 'بازیکن ۱',
       avatar: this.profile.avatar(),
+      rating: this.playerStats.stats().elo,
       variant: this.gameVariant(),
       boardRule: this.boardRule(),
       allowFlying: this.allowFlying(),
@@ -911,13 +916,14 @@ export class App {
   }
 
   joinOnlineRoom(): void {
+    if (!this.playerStats.storage.canReadStats()) return;
     this.soundFx.playClick();
     const code = this.joinCodeControl.value.trim().toUpperCase();
     this.joinCodeControl.setValue(code);
     this.gameMode.set('ONLINE');
     this.lastOnlineStatus = null;
     this.lastOnlineTurnKey = '';
-    this.onlineClient.joinRoom(code, this.playerNameControl.value.trim() || this.profile.name() || 'بازیکن ۲', this.profile.avatar());
+    this.onlineClient.joinRoom(code, this.playerNameControl.value.trim() || this.profile.name() || 'بازیکن ۲', this.profile.avatar(), this.playerStats.stats().elo);
   }
 
   avatarForPlayer(player: Player): PlayerAvatar {
@@ -1010,6 +1016,7 @@ export class App {
   // ---------- OFFLINE MATCH FLOW ----------
 
   startGame(): void {
+    if (this.gameMode() !== 'LOCAL_2P' && !this.playerStats.storage.canReadStats()) return;
     if (this.isOnlineMode()) {
       this.createOnlineRoom();
       return;
@@ -1355,6 +1362,9 @@ export class App {
   // ---------- INTERNAL SYNC & ENGINE HELPERS ----------
 
   private syncFromOnlineRoom(room: RoomSnapshotDto, role: Player): void {
+    const roundNumber=room.scores.X+room.scores.O+room.scores.draws+(room.status==='FINISHED'?0:1);
+    const matchId=`online:${room.roundId ?? `${room.code}:${roundNumber}`}:${role}`;
+    if(room.status==='PLAYING') this.playerStats.beginOnlineMatch(matchId);
     this.gameMode.set('ONLINE');
     this.gameVariant.set(room.variant);
     this.boardRule.set(room.boardRule);
@@ -1394,10 +1404,10 @@ export class App {
         if (room.winner) {
           this.soundFx.playWin();
           const outcome = room.winner === role ? 'WIN' : 'LOSS';
-          this.playerStats.recordMatchOutcome(outcome, 1240);
+          this.playerStats.recordMatchOutcome(outcome, room.roundRatings?.[getOpponent(role)] ?? 1200, matchId, 'ONLINE');
         } else if (room.isDraw) {
           this.soundFx.playDraw();
-          this.playerStats.recordMatchOutcome('DRAW', 1240);
+          this.playerStats.recordMatchOutcome('DRAW', room.roundRatings?.[getOpponent(role)] ?? 1200, matchId, 'ONLINE');
         }
       }
     } else {
@@ -1440,6 +1450,7 @@ export class App {
   }
 
   private resetRoundState(starter: Player): void {
+    this.offlineMatchId=`ai:${Date.now()}:${Math.random().toString(36).slice(2)}`;
     this.clearAiTimer();
     this.stopTurnTimer();
     this.exitReplay();
@@ -1608,6 +1619,7 @@ export class App {
     draw: boolean,
     moves: number,
   ): void {
+    if (this.gameState() !== 'PLAYING') return;
     this.clearAiTimer();
     this.stopTurnTimer();
     this.clearHints();
@@ -1636,7 +1648,7 @@ export class App {
         : winnerPlayer === this.humanSymbol()
           ? 'WIN'
           : 'LOSS';
-      this.playerStats.recordMatchOutcome(outcome, oppElo);
+      this.playerStats.recordMatchOutcome(outcome, oppElo, this.offlineMatchId);
     }
 
     this.roundCounter += 1;
