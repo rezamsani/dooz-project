@@ -1,6 +1,7 @@
 import { isPlatformBrowser } from '@angular/common';
 import { DestroyRef, Injectable, PLATFORM_ID, inject, signal } from '@angular/core';
 import { RuntimeConfig } from '../runtime-config';
+import { PlayerAvatar } from './avatar';
 import {
   BoardRule,
   GameVariant,
@@ -50,6 +51,7 @@ export class OnlineClient {
 
   createRoom(params: {
     playerName: string;
+    avatar?: PlayerAvatar;
     variant: GameVariant;
     boardRule: BoardRule;
     allowFlying: boolean;
@@ -59,6 +61,7 @@ export class OnlineClient {
     this.send({
       type: 'room:create',
       playerName: params.playerName,
+      avatar: params.avatar,
       variant: params.variant,
       boardRule: params.boardRule,
       allowFlying: params.allowFlying,
@@ -66,12 +69,13 @@ export class OnlineClient {
     });
   }
 
-  joinRoom(code: string, playerName: string): void {
+  joinRoom(code: string, playerName: string, avatar?: PlayerAvatar): void {
     this.errorMessage.set(null);
     this.send({
       type: 'room:join',
       code,
       playerName,
+      avatar,
     });
   }
 

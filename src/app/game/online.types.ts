@@ -9,10 +9,12 @@ import {
   WinResult,
 } from './dooz.types';
 import { MorrisState } from './morris.types';
+import { PlayerAvatar } from './avatar';
 
 export interface OnlinePlayerInfo {
   name: string;
   connected: boolean;
+  avatar?: PlayerAvatar;
 }
 
 export interface RoomSnapshotDto {
@@ -50,6 +52,7 @@ export type ClientWsMessage =
   | {
       type: 'room:create';
       playerName: string;
+      avatar?: PlayerAvatar;
       variant: GameVariant;
       boardRule: BoardRule;
       allowFlying: boolean;
@@ -59,6 +62,7 @@ export type ClientWsMessage =
       type: 'room:join';
       code: string;
       playerName: string;
+      avatar?: PlayerAvatar;
     }
   | { type: 'room:move_three'; index: number }
   | { type: 'room:morris_place'; nodeId: number }

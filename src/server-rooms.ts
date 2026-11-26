@@ -1,4 +1,5 @@
 import { randomBytes } from 'node:crypto';
+import { normalizeAvatar, PlayerAvatar } from './app/game/avatar';
 import type { IncomingMessage } from 'node:http';
 import type { Duplex } from 'node:stream';
 import { WebSocket, WebSocketServer } from 'ws';
@@ -41,6 +42,7 @@ const ROOM_IDLE_TTL_MS = 30 * 60 * 1000;
 interface PlayerSlot {
   socket: WebSocket | null;
   name: string;
+  avatar: PlayerAvatar;
 }
 
 interface ActiveRoom {
@@ -153,7 +155,7 @@ export class OnlineRoomManager {
         this.createRoom(ws, msg);
         return;
       case 'room:join':
-        this.joinRoom(ws, msg.code, msg.playerName);
+        this.joinRoom(ws, msg.code, msg.playerName, msg.avatar);
         return;
       case 'room:leave':
         this.detachSocket(ws);
@@ -224,7 +226,7 @@ export class OnlineRoomManager {
       turnTimeLimit,
       status: 'WAITING',
       players: {
-        X: { socket: ws, name: playerName },
+        X: { socket: ws, name: playerName, avatar: normalizeAvatar(msg.avatar) },
         O: null,
       },
       scores: { X: 0, O: 0, draws: 0 },
@@ -254,7 +256,7 @@ export class OnlineRoomManager {
     this.broadcastRoomState(room);
   }
 
-  private joinRoom(ws: WebSocket, rawCode: unknown, rawName: unknown): void {
+  private joinRoom(ws: WebSocket, rawCode: unknown, rawName: unknown, rawAvatar: unknown): void {
     const code = sanitizeRoomCode(rawCode);
     if (!code) {
       sendJson(ws, { type: 'room:error', message: 'کد اتاق باید ۵ حرف یا عدد معتبر باشد.' });
@@ -269,17 +271,19 @@ export class OnlineRoomManager {
 
     this.detachSocket(ws);
     const name = sanitizePlayerName(rawName, 'بازیکن ۲');
+    const avatar = rawAvatar === undefined ? normalizeAvatar({cartoon:'sky'}) : normalizeAvatar(rawAvatar);
 
     let assignedRole: Player | null = null;
     if (!room.players.O) {
-      room.players.O = { socket: ws, name };
+      room.players.O = { socket: ws, name, avatar };
       assignedRole = 'O';
     } else if (!room.players.O.socket) {
       room.players.O.socket = ws;
       room.players.O.name = name;
+      room.players.O.avatar = avatar;
       assignedRole = 'O';
     } else if (!room.players.X || !room.players.X.socket) {
-      room.players.X = { socket: ws, name };
+      room.players.X = { socket: ws, name, avatar };
       assignedRole = 'X';
     }
 
@@ -560,10 +564,10 @@ export class OnlineRoomManager {
       status: room.status,
       players: {
         X: room.players.X
-          ? { name: room.players.X.name, connected: Boolean(room.players.X.socket) }
+          ? { name: room.players.X.name, connected: Boolean(room.players.X.socket), avatar: {...room.players.X.avatar} }
           : null,
         O: room.players.O
-          ? { name: room.players.O.name, connected: Boolean(room.players.O.socket) }
+          ? { name: room.players.O.name, connected: Boolean(room.players.O.socket), avatar: {...room.players.O.avatar} }
           : null,
       },
       scores: { ...room.scores },

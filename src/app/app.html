@@ -32,6 +32,9 @@
         <span class="brand-mark" aria-hidden="true">✕<i></i></span><span>دوز<span class="brand-caption">یک بازی، هزار فکر</span></span>
       </button>
       <div class="header-tools">
+        @if (gameState() === 'TITLE_MENU') {
+          <button class="icon-button" type="button" (click)="homeTab.set('stats')" aria-label="پروفایل من"><app-player-avatar [avatar]="profile.avatar()" label="عکس پروفایل شما" /></button>
+        }
         @if (gameState() !== 'TITLE_MENU') {
           <button class="icon-button" type="button" (click)="goToTitleMenu()" aria-label="بازگشت به منو"><mat-icon>arrow_forward</mat-icon></button>
         }
@@ -55,7 +58,7 @@
         <nav class="home-navigation" aria-label="بخش‌های بازی">
           <button type="button" [class.selected]="homeTab() === 'play'" [attr.aria-current]="homeTab() === 'play' ? 'page' : null" (click)="homeTab.set('play')"><mat-icon>sports_esports</mat-icon>بازی</button>
           <button type="button" [class.selected]="homeTab() === 'appearance'" [attr.aria-current]="homeTab() === 'appearance' ? 'page' : null" (click)="homeTab.set('appearance')"><mat-icon>palette</mat-icon>ظاهر</button>
-          <button type="button" [class.selected]="homeTab() === 'stats'" [attr.aria-current]="homeTab() === 'stats' ? 'page' : null" (click)="homeTab.set('stats')"><mat-icon>bar_chart</mat-icon>آمار من</button>
+          <button type="button" [class.selected]="homeTab() === 'stats'" [attr.aria-current]="homeTab() === 'stats' ? 'page' : null" (click)="homeTab.set('stats')"><mat-icon>person_outline</mat-icon>پروفایل</button>
         </nav>
         @if (homeTab() === 'play') {
           <section class="home-play animate-panel-in" aria-label="آماده‌سازی بازی">
@@ -634,7 +637,8 @@
 
           </section>
         } @else {
-          <section class="home-stats animate-panel-in" aria-label="آمار بازیکن"><div class="page-heading"><span class="eyebrow">هر دست، یک تجربه</span><h1>مسیر بازی تو</h1><p>آمار مسابقه‌ها روی همین دستگاه ذخیره می‌شه.</p></div>
+          <section class="home-stats animate-panel-in" aria-label="پروفایل و آمار بازیکن"><div class="page-heading"><span class="eyebrow">هر دست، یک تجربه</span><h1>پروفایل تو</h1><p>نام، عکس و آمار بازی‌هات، یک‌جا.</p></div>
+            <app-profile-panel />
             <div class="rank-card"><mat-icon>emoji_events</mat-icon><strong>{{ playerStats.rankTitle() }}</strong><span>{{ formatNumber(playerStats.stats().elo) }} امتیاز</span></div>
             <div class="stats-grid"><div><b>{{ formatNumber(playerStats.stats().wins) }}</b><span>برد</span></div><div><b>{{ formatNumber(playerStats.stats().losses) }}</b><span>باخت</span></div><div><b>{{ formatNumber(playerStats.stats().draws) }}</b><span>مساوی</span></div><div><b>{{ formatNumber(playerStats.winRate()) }}٪</b><span>نرخ برد</span></div><div><b>{{ formatNumber(playerStats.stats().currentStreak) }}</b><span>برد پیاپی</span></div><div><b>{{ formatNumber(playerStats.stats().bestStreak) }}</b><span>بهترین رکورد</span></div></div>
             @if (playerStats.totalGames() === 0) { <p class="empty-note">اولین بازی رو شروع کن؛ داستانت از همین‌جا شروع می‌شه.</p> }
@@ -733,9 +737,9 @@
 
           @if (!isFullscreenPlay()) {
             <div class="match-players" aria-label="امتیاز و نوبت بازیکن‌ها">
-              <div [class.current]="activeTurn() === 'X' && gameState() === 'PLAYING'"><span class="player-symbol">✕</span><span><strong>{{ playerXLabel() }}</strong><small>{{ formatNumber(displayScores().X) }} برد @if (isMorrisVariant()) { · {{ formatNumber(trayXInHand()) }} در دست }</small></span></div>
+              <div [class.current]="activeTurn() === 'X' && gameState() === 'PLAYING'"><app-player-avatar [avatar]="avatarForPlayer('X')" [robot]="robotForPlayer('X')" [label]="playerXLabel()" /><span><strong>{{ playerXLabel() }}</strong><small>{{ formatNumber(displayScores().X) }} برد @if (isMorrisVariant()) { · {{ formatNumber(trayXInHand()) }} در دست }</small></span></div>
               <span class="match-versus">{{ formatNumber(displayScores().draws) }} مساوی</span>
-              <div [class.current]="activeTurn() === 'O' && gameState() === 'PLAYING'"><span class="player-symbol o">○</span><span><strong>{{ playerOLabel() }}</strong><small>{{ formatNumber(displayScores().O) }} برد @if (isMorrisVariant()) { · {{ formatNumber(trayOInHand()) }} در دست }</small></span></div>
+              <div [class.current]="activeTurn() === 'O' && gameState() === 'PLAYING'"><app-player-avatar [avatar]="avatarForPlayer('O')" [robot]="robotForPlayer('O')" [label]="playerOLabel()" /><span><strong>{{ playerOLabel() }}</strong><small>{{ formatNumber(displayScores().O) }} برد @if (isMorrisVariant()) { · {{ formatNumber(trayOInHand()) }} در دست }</small></span></div>
             </div>
           }
           <!-- Turn / Result Status Header + Turn Clock + Quick Fullscreen Trigger -->

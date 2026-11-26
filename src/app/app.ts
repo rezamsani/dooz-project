@@ -66,6 +66,10 @@ import { PlayerStats } from './game/player-stats';
 import { SoundFx } from './game/sound-fx';
 import { App as NativeApp } from '@capacitor/app';
 import { RuntimeConfig } from './runtime-config';
+import { PlayerProfile } from './game/player-profile';
+import { ProfilePanel } from './game/profile-panel';
+import { PlayerAvatarComponent } from './game/player-avatar';
+import { PlayerAvatar } from './game/avatar';
 
 function createPreviewMorrisState(variant: MorrisVariant): MorrisState {
   const base = createInitialMorrisState(variant, 'X', true);
@@ -104,6 +108,8 @@ function createPreviewMorrisState(variant: MorrisVariant): MorrisState {
     PieceTray,
     Dooz3DStage,
     ColorPalettePicker,
+    ProfilePanel,
+    PlayerAvatarComponent,
   ],
   templateUrl: './app.html',
   styleUrl: './app.css',
@@ -119,6 +125,7 @@ export class App {
   readonly playerStats = inject(PlayerStats);
   readonly onlineClient = inject(OnlineClient);
   readonly runtimeConfig = inject(RuntimeConfig);
+  readonly profile = inject(PlayerProfile);
   private readonly zone = inject(NgZone);
 
   private aiTimerId: ReturnType<typeof setTimeout> | null = null;
@@ -395,7 +402,7 @@ export class App {
       return this.onlineRole() === 'X' ? `${name} (شما)` : name;
     }
     if (this.gameMode() === 'LOCAL_2P') return 'بازیکن X';
-    return this.humanSymbol() === 'X' ? 'شما (X)' : 'ربات (X)';
+    return this.humanSymbol() === 'X' ? `${this.profile.name() || 'شما'} (X)` : 'ربات (X)';
   });
 
   readonly playerOLabel = computed<string>(() => {
@@ -404,7 +411,7 @@ export class App {
       return this.onlineRole() === 'O' ? `${name} (شما)` : name;
     }
     if (this.gameMode() === 'LOCAL_2P') return 'بازیکن O';
-    return this.humanSymbol() === 'O' ? 'شما (O)' : 'ربات (O)';
+    return this.humanSymbol() === 'O' ? `${this.profile.name() || 'شما'} (O)` : 'ربات (O)';
   });
 
   readonly morrisOnBoardX = computed<number>(() =>
@@ -894,7 +901,8 @@ export class App {
     this.lastOnlineStatus = null;
     this.lastOnlineTurnKey = '';
     this.onlineClient.createRoom({
-      playerName: this.playerNameControl.value || 'بازیکن ۱',
+      playerName: this.playerNameControl.value.trim() || this.profile.name() || 'بازیکن ۱',
+      avatar: this.profile.avatar(),
       variant: this.gameVariant(),
       boardRule: this.boardRule(),
       allowFlying: this.allowFlying(),
@@ -909,7 +917,17 @@ export class App {
     this.gameMode.set('ONLINE');
     this.lastOnlineStatus = null;
     this.lastOnlineTurnKey = '';
-    this.onlineClient.joinRoom(code, this.playerNameControl.value || 'بازیکن ۲');
+    this.onlineClient.joinRoom(code, this.playerNameControl.value.trim() || this.profile.name() || 'بازیکن ۲', this.profile.avatar());
+  }
+
+  avatarForPlayer(player: Player): PlayerAvatar {
+    if (this.isOnlineMode()) return this.onlineRoom()?.players[player]?.avatar ?? {cartoon: player === 'X' ? 'mint' : 'sky', gravatarHash:null};
+    if (this.gameMode() === 'AI' || player === 'X') return this.profile.avatar();
+    return {cartoon:'sky',gravatarHash:null};
+  }
+
+  robotForPlayer(player: Player): Difficulty | null {
+    return this.gameMode() === 'AI' && player !== this.humanSymbol() ? this.difficulty() : null;
   }
 
   async copyRoomCode(): Promise<void> {

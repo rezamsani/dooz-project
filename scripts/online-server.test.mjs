@@ -57,21 +57,24 @@ test('online server: health, create room, join and synchronize moves', { timeout
   const created = nextMessage(host, (msg) => msg.type === 'room:state');
   host.send(JSON.stringify({
     type: 'room:create', playerName: 'Host', variant: 'THREE',
+    avatar: {cartoon:'peach',gravatarHash:'a'.repeat(64)},
     boardRule: 'CLASSIC', allowFlying: false, turnTimeLimit: 0,
   }));
   const initial = await created;
   assert.equal(initial.yourRole, 'X');
   assert.equal(initial.room.status, 'WAITING');
+  assert.deepEqual(initial.room.players.X.avatar, {cartoon:'peach',gravatarHash:'a'.repeat(64)});
 
   const guest = new WebSocket(url);
   sockets.push(guest);
   await once(guest, 'open');
   const hostJoined = nextMessage(host, (msg) => msg.type === 'room:state');
   const guestJoined = nextMessage(guest, (msg) => msg.type === 'room:state');
-  guest.send(JSON.stringify({ type: 'room:join', code: initial.room.code, playerName: 'Guest' }));
+  guest.send(JSON.stringify({ type: 'room:join', code: initial.room.code, playerName: 'Guest', avatar: {cartoon:'lilac',gravatarHash:'https://untrusted.example/photo'} }));
   const [hostRoom, guestRoom] = await Promise.all([hostJoined, guestJoined]);
   assert.equal(guestRoom.yourRole, 'O');
   assert.equal(hostRoom.room.status, 'PLAYING');
+  assert.deepEqual(hostRoom.room.players.O.avatar, {cartoon:'lilac',gravatarHash:null});
   assert.deepEqual(hostRoom.room, guestRoom.room);
 
   const hostMoved = nextMessage(host, (msg) => msg.type === 'room:state');

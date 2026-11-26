@@ -8,6 +8,7 @@
 .brand-mark { display: flex; align-items: center; gap: 2px; color: var(--accent); font-size: 26px; }
 .brand-mark i { width: 15px; height: 15px; border: 4px solid #d5a66d; border-radius: 50%; }
 .header-tools { display: flex; gap: 4px; }
+.header-tools app-player-avatar { width: 32px; height: 32px; }
 .icon-button { width: 44px; height: 44px; display: grid; place-items: center; border-radius: 50%; color: var(--muted); }
 .icon-button:hover { background: var(--soft); color: var(--accent); }
 .app-main { justify-content: flex-start; padding-top: 8px; padding-bottom: 32px; }
