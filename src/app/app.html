@@ -1,6 +1,6 @@
-<div class="relative flex min-h-dvh flex-col text-slate-900 transition-colors duration-300 dark:text-slate-100">
+<div class="dooz-app relative flex min-h-dvh flex-col text-slate-900 transition-colors duration-300 dark:text-slate-100" [class.environment-live]="gameState() !== 'TITLE_MENU' && playerStats.environment() !== 'simple'">
   <!-- Atmospheric Environment Backdrop Layer -->
-  @if (playerStats.activeEnvironmentOption(); as activeEnv) {
+  @if (gameState() !== 'TITLE_MENU' && playerStats.activeEnvironmentOption(); as activeEnv) {
     <div
       class="pointer-events-none fixed inset-0 -z-10 overflow-hidden transition-opacity duration-500"
       aria-hidden="true"
@@ -25,289 +25,109 @@
     </div>
   }
 
-  <!-- Top Bar (3-zone contract; hidden during Fullscreen Cinema play) -->
+
   @if (!isFullscreenPlay()) {
-    <header class="border-b border-slate-900/10 bg-white/85 backdrop-blur-md transition-colors duration-300 dark:border-white/10 dark:bg-[#0E0E0E]/85">
-    <div class="mx-auto flex max-w-6xl items-center justify-between gap-8 px-4 py-3.5 sm:px-6">
-      <!-- Zone 1: Single brand wordmark -->
-      <button
-        type="button"
-        (click)="goToTitleMenu()"
-        class="shrink-0 whitespace-nowrap text-xl font-extrabold tracking-tight text-slate-900 transition-colors hover:text-teal-600 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-amber-500 dark:text-white dark:hover:text-teal-300"
-      >
-        دوز
+    <header class="mobile-header">
+      <button class="brand" type="button" (click)="goToTitleMenu(); homeTab.set('play')" aria-label="دوز، صفحهٔ اصلی">
+        <span class="brand-mark" aria-hidden="true">✕<i></i></span><span>دوز<span class="brand-caption">یک بازی، هزار فکر</span></span>
       </button>
-
-      <!-- Zone 2: Clean single-line navigation links (5 concise items) -->
-      <nav aria-label="ناوبری اصلی" class="hidden items-center gap-6 text-sm font-medium text-slate-600 dark:text-slate-300 md:flex">
-        <button
-          type="button"
-          (click)="goToTitleMenu()"
-          class="shrink-0 whitespace-nowrap border-b-2 py-1 transition-colors hover:text-slate-950 dark:hover:text-white"
-          [class.border-teal-600]="gameState() === 'TITLE_MENU'"
-          [class.dark:border-teal-400]="gameState() === 'TITLE_MENU'"
-          [class.text-slate-950]="gameState() === 'TITLE_MENU'"
-          [class.dark:text-white]="gameState() === 'TITLE_MENU'"
-          [class.border-transparent]="gameState() !== 'TITLE_MENU'"
-        >
-          منوی شروع
-        </button>
-        <button
-          type="button"
-          (click)="quickLaunchVariant('THREE')"
-          class="shrink-0 whitespace-nowrap border-b-2 py-1 transition-colors hover:text-slate-950 dark:hover:text-white"
-          [class.border-teal-600]="gameState() !== 'TITLE_MENU' && gameVariant() === 'THREE'"
-          [class.dark:border-teal-400]="gameState() !== 'TITLE_MENU' && gameVariant() === 'THREE'"
-          [class.text-slate-950]="gameState() !== 'TITLE_MENU' && gameVariant() === 'THREE'"
-          [class.dark:text-white]="gameState() !== 'TITLE_MENU' && gameVariant() === 'THREE'"
-          [class.border-transparent]="!(gameState() !== 'TITLE_MENU' && gameVariant() === 'THREE')"
-        >
-          دوز ۳ تایی
-        </button>
-        <button
-          type="button"
-          (click)="quickLaunchVariant('NINE')"
-          class="shrink-0 whitespace-nowrap border-b-2 py-1 transition-colors hover:text-slate-950 dark:hover:text-white"
-          [class.border-teal-600]="gameState() !== 'TITLE_MENU' && gameVariant() === 'NINE'"
-          [class.dark:border-teal-400]="gameState() !== 'TITLE_MENU' && gameVariant() === 'NINE'"
-          [class.text-slate-950]="gameState() !== 'TITLE_MENU' && gameVariant() === 'NINE'"
-          [class.dark:text-white]="gameState() !== 'TITLE_MENU' && gameVariant() === 'NINE'"
-          [class.border-transparent]="!(gameState() !== 'TITLE_MENU' && gameVariant() === 'NINE')"
-        >
-          دوز ۹ تایی
-        </button>
-        <button
-          type="button"
-          (click)="quickLaunchVariant('TWELVE')"
-          class="shrink-0 whitespace-nowrap border-b-2 py-1 transition-colors hover:text-slate-950 dark:hover:text-white"
-          [class.border-teal-600]="gameState() !== 'TITLE_MENU' && gameVariant() === 'TWELVE'"
-          [class.dark:border-teal-400]="gameState() !== 'TITLE_MENU' && gameVariant() === 'TWELVE'"
-          [class.text-slate-950]="gameState() !== 'TITLE_MENU' && gameVariant() === 'TWELVE'"
-          [class.dark:text-white]="gameState() !== 'TITLE_MENU' && gameVariant() === 'TWELVE'"
-          [class.border-transparent]="!(gameState() !== 'TITLE_MENU' && gameVariant() === 'TWELVE')"
-        >
-          دوز ۱۲ تایی
-        </button>
-        <button
-          type="button"
-          (click)="openHelp()"
-          class="shrink-0 whitespace-nowrap border-b-2 border-transparent py-1 transition-colors hover:text-slate-950 dark:hover:text-white"
-        >
-          راهنما
-        </button>
-      </nav>
-
-      <!-- Zone 3: Single primary action -->
-      <div class="shrink-0">
-        @if (gameState() === 'TITLE_MENU') {
-          <button
-            type="button"
-            (click)="startGame()"
-            class="inline-flex shrink-0 items-center gap-2 whitespace-nowrap rounded-xl bg-teal-600 px-4 py-2 text-sm font-bold text-white shadow-xs transition-colors hover:bg-teal-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-400 dark:bg-teal-400 dark:text-slate-950 dark:hover:bg-teal-300"
-          >
-            <mat-icon class="!h-[18px] !w-[18px] !text-[18px]">play_arrow</mat-icon>
-            <span>{{ isOnlineMode() ? 'ساخت اتاق آنلاین' : 'شروع بازی' }}</span>
-          </button>
-        } @else if (isOnlineMode()) {
-          <button
-            type="button"
-            (click)="goToTitleMenu()"
-            class="inline-flex shrink-0 items-center gap-2 whitespace-nowrap rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-bold text-slate-800 transition-colors hover:border-rose-400 hover:text-rose-700 dark:border-white/15 dark:bg-[#171717] dark:text-slate-100 dark:hover:border-rose-400/50 dark:hover:text-rose-200"
-          >
-            <mat-icon class="!h-[18px] !w-[18px] !text-[18px]">logout</mat-icon>
-            <span>خروج از اتاق</span>
-          </button>
-        } @else {
-          <button
-            type="button"
-            (click)="gameState() === 'ROUND_SUMMARY' ? nextRound() : restartCurrentRound()"
-            class="inline-flex shrink-0 items-center gap-2 whitespace-nowrap rounded-xl bg-teal-600 px-4 py-2 text-sm font-bold text-white shadow-xs transition-colors hover:bg-teal-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-400 dark:bg-teal-400 dark:text-slate-950 dark:hover:bg-teal-300"
-          >
-            <mat-icon class="!h-[18px] !w-[18px] !text-[18px]">replay</mat-icon>
-            <span>{{ gameState() === 'ROUND_SUMMARY' ? 'دست بعدی' : 'شروع مجدد' }}</span>
-          </button>
+      <div class="header-tools">
+        @if (gameState() !== 'TITLE_MENU') {
+          <button class="icon-button" type="button" (click)="goToTitleMenu()" aria-label="بازگشت به منو"><mat-icon>arrow_forward</mat-icon></button>
         }
+        <button class="icon-button" type="button" (click)="toggleColorMode()" [attr.aria-label]="playerStats.colorMode() === 'dark' ? 'ظاهر روشن' : 'ظاهر تیره'"><mat-icon>{{ playerStats.colorMode() === 'dark' ? 'light_mode' : 'dark_mode' }}</mat-icon></button>
+        <button class="icon-button" type="button" (click)="openHelp()" aria-label="راهنمای بازی"><mat-icon>help_outline</mat-icon></button>
       </div>
-    </div>
-  </header>
+    </header>
   }
 
   <!-- Main Workspace -->
   <main
-    class="mx-auto flex w-full max-w-6xl flex-1 flex-col justify-center px-4 sm:px-6"
+    class="app-main mx-auto flex w-full max-w-6xl flex-1 flex-col justify-center px-4 sm:px-6"
     [class.py-4]="isFullscreenPlay()"
     [class.sm:py-5]="isFullscreenPlay()"
     [class.py-8]="!isFullscreenPlay()"
     [class.sm:py-10]="!isFullscreenPlay()"
   >
     @if (gameState() === 'TITLE_MENU') {
-      <!-- TITLE MENU -->
-      <section class="animate-panel-in grid grid-cols-1 items-start gap-8 lg:grid-cols-12">
-        <!-- Setup Column -->
-        <div class="space-y-6 lg:col-span-7">
-          <div class="space-y-3">
-            <h1 class="text-balance text-4xl font-extrabold tracking-tight text-slate-950 dark:text-white sm:text-5xl">
-              بازی آنلاین و کلاسیک دوز
-            </h1>
-            <p class="max-w-xl text-base leading-relaxed text-slate-700 dark:text-slate-200">
-              هر سه نسخه دوز (۳ تایی، ۹ تایی و ۱۲ تایی) با فضاهای سنتی و طبیعی، مهره‌های جواهر و چوبی، بازی آنلاین زنده و هوش مصنوعی سه‌سطحی.
-            </p>
-          </div>
 
-          <!-- Compact Persistent Elo & Rank Strip (Unboxed tabular typography) -->
-          <div class="flex flex-wrap items-center gap-x-5 gap-y-2 border-y border-slate-900/10 py-3 text-xs text-slate-700 dark:border-white/10 dark:text-slate-300">
-            <div class="flex items-center gap-1.5">
-              <span class="text-slate-500 dark:text-slate-400">رتبه:</span>
-              <span class="font-bold text-amber-700 dark:text-amber-300">{{ playerStats.rankTitle() }}</span>
+      <div class="home-shell">
+        <nav class="home-navigation" aria-label="بخش‌های بازی">
+          <button type="button" [class.selected]="homeTab() === 'play'" [attr.aria-current]="homeTab() === 'play' ? 'page' : null" (click)="homeTab.set('play')"><mat-icon>sports_esports</mat-icon>بازی</button>
+          <button type="button" [class.selected]="homeTab() === 'appearance'" [attr.aria-current]="homeTab() === 'appearance' ? 'page' : null" (click)="homeTab.set('appearance')"><mat-icon>palette</mat-icon>ظاهر</button>
+          <button type="button" [class.selected]="homeTab() === 'stats'" [attr.aria-current]="homeTab() === 'stats' ? 'page' : null" (click)="homeTab.set('stats')"><mat-icon>bar_chart</mat-icon>آمار من</button>
+        </nav>
+        @if (homeTab() === 'play') {
+          <section class="home-play animate-panel-in" aria-label="آماده‌سازی بازی">
+            <div class="welcome">
+              <div><span class="eyebrow">ساده شروع کن. هوشمندانه بازی کن.</span><h1>نوبتِ یک<br>فکر تازه‌ست.</h1><p>یک هم‌بازی انتخاب کن؛<br>بقیه‌اش روی صفحه معلوم می‌شه.</p></div>
+              <svg class="welcome-board" viewBox="0 0 160 170" aria-hidden="true"><g transform="translate(12 16) rotate(-9 68 68)"><rect x="0" y="0" width="136" height="136" rx="25" fill="currentColor" opacity=".05"/><path d="M47 15v106M89 15v106M15 47h106M15 89h106" fill="none" stroke="currentColor" stroke-opacity=".16" stroke-width="2"/><g stroke="#63c9b2" stroke-width="7" stroke-linecap="round"><path d="m22 22 15 15m0-15L22 37m42 27 15 15m0-15L64 79m42 27 15 15m0-15-15 15"/></g><g fill="none" stroke="#e9b77b" stroke-width="7"><circle cx="111" cy="29" r="11"/><circle cx="29" cy="111" r="11"/></g></g></svg>
             </div>
-            <span aria-hidden="true" class="text-slate-400 dark:text-slate-600">·</span>
-            <div class="flex items-center gap-1.5 tabular-nums">
-              <span class="text-slate-500 dark:text-slate-400">امتیاز ELO:</span>
-              <span class="font-bold text-slate-950 dark:text-white">{{ formatNumber(playerStats.stats().elo) }}</span>
+            <div class="setup-section">
+              <div class="section-label"><h2>با کی بازی می‌کنی؟</h2><span>۰۱</span></div>
+              <div class="mode-options" role="group" aria-label="هم‌بازی">
+                <button type="button" (click)="setGameMode('AI')" [class.chosen]="gameMode() === 'AI'" [attr.aria-pressed]="gameMode() === 'AI'"><mat-icon>smart_toy</mat-icon><strong>با ربات</strong><small>تمرین و چالش</small></button>
+                <button type="button" (click)="setGameMode('LOCAL_2P')" [class.chosen]="gameMode() === 'LOCAL_2P'" [attr.aria-pressed]="gameMode() === 'LOCAL_2P'"><mat-icon>people_outline</mat-icon><strong>کنار هم</strong><small>روی یک گوشی</small></button>
+                <button type="button" (click)="setGameMode('ONLINE')" [class.chosen]="gameMode() === 'ONLINE'" [attr.aria-pressed]="gameMode() === 'ONLINE'"><mat-icon>public</mat-icon><strong>از راه دور</strong><small>با کد دعوت</small></button>
+              </div>
             </div>
-            <span aria-hidden="true" class="text-slate-400 dark:text-slate-600">·</span>
-            <div class="flex items-center gap-1.5 tabular-nums">
-              <span class="text-slate-500 dark:text-slate-400">برد پیاپی:</span>
-              <span class="font-bold text-teal-700 dark:text-teal-300">{{ formatNumber(playerStats.stats().currentStreak) }}</span>
+            <div class="setup-section">
+              <div class="section-label"><h2>کدوم دوز؟</h2><span>۰۲</span></div>
+              <div class="variant-options" role="group" aria-label="نوع بازی">
+                <button type="button" (click)="setGameVariant('THREE')" [class.chosen]="gameVariant() === 'THREE'" [attr.aria-pressed]="gameVariant() === 'THREE'"><b>۳</b><span>کلاسیک</span></button>
+                <button type="button" (click)="setGameVariant('NINE')" [class.chosen]="gameVariant() === 'NINE'" [attr.aria-pressed]="gameVariant() === 'NINE'"><b>۹</b><span>استراتژیک</span></button>
+                <button type="button" (click)="setGameVariant('TWELVE')" [class.chosen]="gameVariant() === 'TWELVE'" [attr.aria-pressed]="gameVariant() === 'TWELVE'"><b>۱۲</b><span>حرفه‌ای</span></button>
+              </div>
             </div>
-            @if (playerStats.totalGames() > 0) {
-              <span aria-hidden="true" class="text-slate-400 dark:text-slate-600">·</span>
-              <div class="flex items-center gap-1.5 tabular-nums">
-                <span class="text-slate-500 dark:text-slate-400">نرخ پیروزی:</span>
-                <span class="font-bold text-slate-900 dark:text-slate-100">{{ formatNumber(playerStats.winRate()) }}٪</span>
+                        <!-- Online Room Lobby Panel -->
+            @if (gameMode() === 'ONLINE') {
+              <div class="space-y-4 border-t border-slate-900/10 pt-4 dark:border-white/10">
+                <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  <label class="block space-y-1.5">
+                    <span class="text-xs font-semibold text-slate-700 dark:text-slate-300">نام نمایشی شما</span>
+                    <input
+                      type="text"
+                      [formControl]="playerNameControl"
+                      maxlength="18"
+                      placeholder="مثلاً: رضا"
+                      class="min-h-[44px] w-full rounded-xl border border-slate-300 bg-white px-3.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-teal-500 focus:outline-none dark:border-white/15 dark:bg-[#0E0E0E] dark:text-white dark:placeholder:text-slate-500 dark:focus:border-teal-400"
+                    />
+                  </label>
+                  <label class="block space-y-1.5">
+                    <span class="text-xs font-semibold text-slate-700 dark:text-slate-300">ورود با کد اتاق ۵ رقمی</span>
+                    <div class="flex gap-2">
+                      <input
+                        type="text"
+                        dir="ltr"
+                        [formControl]="joinCodeControl"
+                        maxlength="5"
+                        placeholder="K7M4P"
+                        class="min-h-[44px] w-full rounded-xl border border-slate-300 bg-white px-3.5 font-mono text-sm uppercase tracking-widest text-slate-900 placeholder:text-slate-400 focus:border-teal-500 focus:outline-none dark:border-white/15 dark:bg-[#0E0E0E] dark:text-white dark:placeholder:text-slate-500 dark:focus:border-teal-400"
+                      />
+                      <button
+                        type="button"
+                        (click)="joinOnlineRoom()"
+                        class="inline-flex min-h-[44px] shrink-0 items-center gap-1.5 whitespace-nowrap rounded-xl border border-teal-600/40 bg-teal-600/10 px-4 text-sm font-bold text-teal-800 transition-colors hover:bg-teal-600/20 dark:border-teal-400/50 dark:bg-teal-500/15 dark:text-teal-200 dark:hover:bg-teal-500/25"
+                      >
+                        <mat-icon class="!h-[18px] !w-[18px] !text-[18px]">login</mat-icon>
+                        <span>ورود</span>
+                      </button>
+                    </div>
+                  </label>
+                </div>
+
+                @if (onlineClient.errorMessage(); as roomErr) {
+                  <p role="alert" class="text-xs font-medium text-rose-600 dark:text-rose-300">
+                    {{ roomErr }}
+                  </p>
+                }
               </div>
             }
-          </div>
 
-          <!-- Configuration Card -->
-          <div class="space-y-5 rounded-2xl border border-slate-900/10 bg-white/90 p-5 shadow-sm backdrop-blur-md dark:border-white/10 dark:bg-[#171717]/88 sm:p-6">
-            <!-- Game Mode: AI / Local 2P / Online Room -->
-            <div class="space-y-2.5">
-              <div class="text-sm font-semibold text-slate-800 dark:text-slate-200">حالت بازی</div>
-              <div class="grid grid-cols-3 gap-1.5 rounded-xl bg-slate-100 p-1.5 dark:bg-[#0E0E0E]">
-                <button
-                  type="button"
-                  (click)="setGameMode('AI')"
-                  class="flex min-h-[44px] items-center justify-center gap-1.5 whitespace-nowrap rounded-lg px-2 py-2 text-sm font-semibold transition-colors"
-                  [class.bg-white]="gameMode() === 'AI'"
-                  [class.dark:bg-[#2A2A2A]]="gameMode() === 'AI'"
-                  [class.text-slate-950]="gameMode() === 'AI'"
-                  [class.dark:text-white]="gameMode() === 'AI'"
-                  [class.shadow-xs]="gameMode() === 'AI'"
-                  [class.text-slate-500]="gameMode() !== 'AI'"
-                  [class.dark:text-slate-400]="gameMode() !== 'AI'"
-                  [class.hover:text-slate-800]="gameMode() !== 'AI'"
-                  [class.dark:hover:text-slate-200]="gameMode() !== 'AI'"
-                >
-                  <mat-icon class="!h-[18px] !w-[18px] !text-[18px]">smart_toy</mat-icon>
-                  <span>با ربات</span>
-                </button>
-                <button
-                  type="button"
-                  (click)="setGameMode('LOCAL_2P')"
-                  class="flex min-h-[44px] items-center justify-center gap-1.5 whitespace-nowrap rounded-lg px-2 py-2 text-sm font-semibold transition-colors"
-                  [class.bg-white]="gameMode() === 'LOCAL_2P'"
-                  [class.dark:bg-[#2A2A2A]]="gameMode() === 'LOCAL_2P'"
-                  [class.text-slate-950]="gameMode() === 'LOCAL_2P'"
-                  [class.dark:text-white]="gameMode() === 'LOCAL_2P'"
-                  [class.shadow-xs]="gameMode() === 'LOCAL_2P'"
-                  [class.text-slate-500]="gameMode() !== 'LOCAL_2P'"
-                  [class.dark:text-slate-400]="gameMode() !== 'LOCAL_2P'"
-                  [class.hover:text-slate-800]="gameMode() !== 'LOCAL_2P'"
-                  [class.dark:hover:text-slate-200]="gameMode() !== 'LOCAL_2P'"
-                >
-                  <mat-icon class="!h-[18px] !w-[18px] !text-[18px]">group</mat-icon>
-                  <span>دو نفره</span>
-                </button>
-                <button
-                  type="button"
-                  (click)="setGameMode('ONLINE')"
-                  class="flex min-h-[44px] items-center justify-center gap-1.5 whitespace-nowrap rounded-lg px-2 py-2 text-sm font-semibold transition-colors"
-                  [class.bg-white]="gameMode() === 'ONLINE'"
-                  [class.dark:bg-[#2A2A2A]]="gameMode() === 'ONLINE'"
-                  [class.text-teal-700]="gameMode() === 'ONLINE'"
-                  [class.dark:text-teal-300]="gameMode() === 'ONLINE'"
-                  [class.shadow-xs]="gameMode() === 'ONLINE'"
-                  [class.text-slate-500]="gameMode() !== 'ONLINE'"
-                  [class.dark:text-slate-400]="gameMode() !== 'ONLINE'"
-                  [class.hover:text-slate-800]="gameMode() !== 'ONLINE'"
-                  [class.dark:hover:text-slate-200]="gameMode() !== 'ONLINE'"
-                >
-                  <mat-icon class="!h-[18px] !w-[18px] !text-[18px]">public</mat-icon>
-                  <span>آنلاین با دوست</span>
-                </button>
-              </div>
-            </div>
 
-            <!-- Game Variant (3, 9, 12) -->
-            <div class="space-y-2.5">
-              <div class="flex items-baseline justify-between gap-4">
-                <span class="text-sm font-semibold text-slate-800 dark:text-slate-200">نسخه بازی دوز</span>
-                <span class="text-xs text-slate-500 dark:text-slate-400">
-                  @if (gameVariant() === 'THREE') {
-                    صفحه ۳×۳ (کلاسیک و بی‌نهایت)
-                  } @else if (gameVariant() === 'NINE') {
-                    صفحه ۲۴ خانه · ۹ مهره · بدون خط مورب
-                  } @else {
-                    صفحه ۲۴ خانه · ۱۲ مهره · با خطوط مورب
-                  }
-                </span>
-              </div>
-              <div class="grid grid-cols-3 gap-1.5 rounded-xl bg-slate-100 p-1.5 dark:bg-[#0E0E0E]">
-                <button
-                  type="button"
-                  (click)="setGameVariant('THREE')"
-                  class="flex min-h-[44px] items-center justify-center gap-1.5 whitespace-nowrap rounded-lg px-2 py-2 text-sm font-semibold transition-colors"
-                  [class.bg-white]="gameVariant() === 'THREE'"
-                  [class.dark:bg-[#2A2A2A]]="gameVariant() === 'THREE'"
-                  [class.text-slate-950]="gameVariant() === 'THREE'"
-                  [class.dark:text-white]="gameVariant() === 'THREE'"
-                  [class.shadow-xs]="gameVariant() === 'THREE'"
-                  [class.text-slate-500]="gameVariant() !== 'THREE'"
-                  [class.dark:text-slate-400]="gameVariant() !== 'THREE'"
-                  [class.hover:text-slate-800]="gameVariant() !== 'THREE'"
-                  [class.dark:hover:text-slate-200]="gameVariant() !== 'THREE'"
-                >
-                  <mat-icon class="!h-[18px] !w-[18px] !text-[18px]">grid_on</mat-icon>
-                  <span>دوز ۳ تایی</span>
-                </button>
-                <button
-                  type="button"
-                  (click)="setGameVariant('NINE')"
-                  class="flex min-h-[44px] items-center justify-center gap-1.5 whitespace-nowrap rounded-lg px-2 py-2 text-sm font-semibold transition-colors"
-                  [class.bg-white]="gameVariant() === 'NINE'"
-                  [class.dark:bg-[#2A2A2A]]="gameVariant() === 'NINE'"
-                  [class.text-slate-950]="gameVariant() === 'NINE'"
-                  [class.dark:text-white]="gameVariant() === 'NINE'"
-                  [class.shadow-xs]="gameVariant() === 'NINE'"
-                  [class.text-slate-500]="gameVariant() !== 'NINE'"
-                  [class.dark:text-slate-400]="gameVariant() !== 'NINE'"
-                  [class.hover:text-slate-800]="gameVariant() !== 'NINE'"
-                  [class.dark:hover:text-slate-200]="gameVariant() !== 'NINE'"
-                >
-                  <mat-icon class="!h-[18px] !w-[18px] !text-[18px]">crop_square</mat-icon>
-                  <span>دوز ۹ تایی</span>
-                </button>
-                <button
-                  type="button"
-                  (click)="setGameVariant('TWELVE')"
-                  class="flex min-h-[44px] items-center justify-center gap-1.5 whitespace-nowrap rounded-lg px-2 py-2 text-sm font-semibold transition-colors"
-                  [class.bg-white]="gameVariant() === 'TWELVE'"
-                  [class.dark:bg-[#2A2A2A]]="gameVariant() === 'TWELVE'"
-                  [class.text-slate-950]="gameVariant() === 'TWELVE'"
-                  [class.dark:text-white]="gameVariant() === 'TWELVE'"
-                  [class.shadow-xs]="gameVariant() === 'TWELVE'"
-                  [class.text-slate-500]="gameVariant() !== 'TWELVE'"
-                  [class.dark:text-slate-400]="gameVariant() !== 'TWELVE'"
-                  [class.hover:text-slate-800]="gameVariant() !== 'TWELVE'"
-                  [class.dark:hover:text-slate-200]="gameVariant() !== 'TWELVE'"
-                >
-                  <mat-icon class="!h-[18px] !w-[18px] !text-[18px]">hub</mat-icon>
-                  <span>دوز ۱۲ تایی</span>
-                </button>
-              </div>
-            </div>
-
+                        <details class="advanced-settings">
+              <summary><span>تنظیمات بیشتر بازی</span><mat-icon aria-hidden="true">expand_more</mat-icon></summary>
+              <div class="advanced-content space-y-5">
             <!-- Variant-specific rule toggle -->
             @if (gameVariant() === 'THREE') {
               <div class="space-y-2.5">
@@ -575,93 +395,19 @@
               </div>
             }
 
-            <!-- Online Room Lobby Panel -->
-            @if (gameMode() === 'ONLINE') {
-              <div class="space-y-4 border-t border-slate-900/10 pt-4 dark:border-white/10">
-                <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                  <label class="block space-y-1.5">
-                    <span class="text-xs font-semibold text-slate-700 dark:text-slate-300">نام نمایشی شما</span>
-                    <input
-                      type="text"
-                      [formControl]="playerNameControl"
-                      maxlength="18"
-                      placeholder="مثلاً: رضا"
-                      class="min-h-[44px] w-full rounded-xl border border-slate-300 bg-white px-3.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-teal-500 focus:outline-none dark:border-white/15 dark:bg-[#0E0E0E] dark:text-white dark:placeholder:text-slate-500 dark:focus:border-teal-400"
-                    />
-                  </label>
-                  <label class="block space-y-1.5">
-                    <span class="text-xs font-semibold text-slate-700 dark:text-slate-300">ورود با کد اتاق ۵ رقمی</span>
-                    <div class="flex gap-2">
-                      <input
-                        type="text"
-                        dir="ltr"
-                        [formControl]="joinCodeControl"
-                        maxlength="5"
-                        placeholder="K7M4P"
-                        class="min-h-[44px] w-full rounded-xl border border-slate-300 bg-white px-3.5 font-mono text-sm uppercase tracking-widest text-slate-900 placeholder:text-slate-400 focus:border-teal-500 focus:outline-none dark:border-white/15 dark:bg-[#0E0E0E] dark:text-white dark:placeholder:text-slate-500 dark:focus:border-teal-400"
-                      />
-                      <button
-                        type="button"
-                        (click)="joinOnlineRoom()"
-                        class="inline-flex min-h-[44px] shrink-0 items-center gap-1.5 whitespace-nowrap rounded-xl border border-teal-600/40 bg-teal-600/10 px-4 text-sm font-bold text-teal-800 transition-colors hover:bg-teal-600/20 dark:border-teal-400/50 dark:bg-teal-500/15 dark:text-teal-200 dark:hover:bg-teal-500/25"
-                      >
-                        <mat-icon class="!h-[18px] !w-[18px] !text-[18px]">login</mat-icon>
-                        <span>ورود</span>
-                      </button>
-                    </div>
-                  </label>
-                </div>
-
-                @if (onlineClient.errorMessage(); as roomErr) {
-                  <p role="alert" class="text-xs font-medium text-rose-600 dark:text-rose-300">
-                    {{ roomErr }}
-                  </p>
-                }
               </div>
-            }
+            </details>
 
-            <!-- Start / Create CTA Row -->
-            <div class="flex flex-wrap items-center gap-3 pt-2">
-              <button
-                type="button"
-                (click)="startGame()"
-                class="inline-flex min-h-[48px] flex-1 items-center justify-center gap-2 whitespace-nowrap rounded-xl bg-teal-600 px-6 py-3 text-base font-bold text-white shadow-xs transition-colors hover:bg-teal-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-400 dark:bg-teal-400 dark:text-slate-950 dark:hover:bg-teal-300 sm:flex-initial"
-              >
-                <mat-icon class="!h-[22px] !w-[22px] !text-[22px]">
-                  {{ isOnlineMode() ? 'add_circle' : 'play_arrow' }}
-                </mat-icon>
-                <span>{{ isOnlineMode() ? 'ساخت اتاق آنلاین جدید' : 'شروع بازی' }}</span>
-              </button>
-              <button
-                type="button"
-                (click)="openHelp()"
-                class="inline-flex min-h-[48px] items-center justify-center gap-2 whitespace-nowrap rounded-xl border border-slate-300 bg-white/70 px-5 py-3 text-sm font-semibold text-slate-800 transition-colors hover:border-slate-400 hover:bg-slate-50 dark:border-white/15 dark:bg-transparent dark:text-slate-200 dark:hover:border-white/30 dark:hover:bg-white/5"
-              >
-                <mat-icon class="!h-[18px] !w-[18px] !text-[18px]">help_outline</mat-icon>
-                <span>قوانین بازی</span>
-              </button>
-              @if (!runtimeConfig.isNative) {
-              <button
-                type="button"
-                [disabled]="isDownloadingProject()"
-                (click)="downloadProjectZip()"
-                class="inline-flex min-h-[48px] items-center justify-center gap-2 whitespace-nowrap rounded-xl border border-slate-300 bg-white/70 px-5 py-3 text-sm font-semibold text-slate-800 transition-colors hover:border-teal-500 hover:text-teal-700 disabled:opacity-50 dark:border-white/15 dark:bg-transparent dark:text-slate-200 dark:hover:border-teal-400/50 dark:hover:text-teal-200"
-              >
-                <mat-icon class="!h-[18px] !w-[18px] !text-[18px]">download</mat-icon>
-                <span>{{ isDownloadingProject() ? 'در حال آماده‌سازی...' : 'دانلود پروژه (ZIP)' }}</span>
-              </button>
-              }
+            <div class="launch-area">
+              <button class="launch-button" type="button" (click)="startGame()"><span>{{ isOnlineMode() ? 'ساخت اتاق و دعوت دوست' : 'بزن بریم' }}</span><mat-icon>arrow_back</mat-icon></button>
+              <p>{{ isOnlineMode() ? 'برای بازی آنلاین به اینترنت نیاز داری' : 'بدون اینترنت هم می‌تونی بازی کنی' }}</p>
             </div>
-            @if (downloadError(); as errMsg) {
-              <p role="alert" class="text-xs font-medium text-rose-600 dark:text-rose-300">
-                {{ errMsg }}
-              </p>
-            }
-          </div>
-        </div>
-
-        <!-- Live Preview + Appearance Studio Column -->
-        <div class="space-y-5 lg:col-span-5">
+          </section>
+        } @else if (homeTab() === 'appearance') {
+          <section class="home-appearance animate-panel-in" aria-label="تنظیمات ظاهر"><div class="page-heading"><span class="eyebrow">به سلیقهٔ خودت</span><h1>میز بازی تو</h1><p>محیط، صفحه و مهره‌ها رو انتخاب کن.</p></div>
+                    <details open class="appearance-panel lg:col-span-5">
+          <summary><span>شخصی‌سازی صفحه و مهره‌ها</span><mat-icon aria-hidden="true">expand_more</mat-icon></summary>
+          <div class="appearance-content space-y-5">
           <!-- Interactive Live Board Preview -->
           <div class="mx-auto max-w-[340px]">
             @if (gameVariant() === 'THREE') {
@@ -883,11 +629,22 @@
             <!-- Full CSS Color Palette Picker -->
             <app-color-palette-picker />
           </div>
-        </div>
-      </section>
+          </div>
+        </details>
+
+          </section>
+        } @else {
+          <section class="home-stats animate-panel-in" aria-label="آمار بازیکن"><div class="page-heading"><span class="eyebrow">هر دست، یک تجربه</span><h1>مسیر بازی تو</h1><p>آمار مسابقه‌ها روی همین دستگاه ذخیره می‌شه.</p></div>
+            <div class="rank-card"><mat-icon>emoji_events</mat-icon><strong>{{ playerStats.rankTitle() }}</strong><span>{{ formatNumber(playerStats.stats().elo) }} امتیاز</span></div>
+            <div class="stats-grid"><div><b>{{ formatNumber(playerStats.stats().wins) }}</b><span>برد</span></div><div><b>{{ formatNumber(playerStats.stats().losses) }}</b><span>باخت</span></div><div><b>{{ formatNumber(playerStats.stats().draws) }}</b><span>مساوی</span></div><div><b>{{ formatNumber(playerStats.winRate()) }}٪</b><span>نرخ برد</span></div><div><b>{{ formatNumber(playerStats.stats().currentStreak) }}</b><span>برد پیاپی</span></div><div><b>{{ formatNumber(playerStats.stats().bestStreak) }}</b><span>بهترین رکورد</span></div></div>
+            @if (playerStats.totalGames() === 0) { <p class="empty-note">اولین بازی رو شروع کن؛ داستانت از همین‌جا شروع می‌شه.</p> }
+            <button type="button" class="launch-button" (click)="homeTab.set('play')">برگشت به بازی<mat-icon>arrow_back</mat-icon></button>
+          </section>
+        }
+      </div>
     } @else {
       <!-- ACTIVE PLAY & ROUND SUMMARY VIEW -->
-      <section class="animate-panel-in grid grid-cols-1 items-start gap-6 lg:grid-cols-12">
+      <section class="play-layout animate-panel-in grid grid-cols-1 items-start gap-6 lg:grid-cols-12">
         <!-- Board Arena (Primary Focal Anchor) -->
         <div
           class="flex flex-col items-center gap-4"
@@ -974,9 +731,16 @@
             </div>
           }
 
+          @if (!isFullscreenPlay()) {
+            <div class="match-players" aria-label="امتیاز و نوبت بازیکن‌ها">
+              <div [class.current]="activeTurn() === 'X' && gameState() === 'PLAYING'"><span class="player-symbol">✕</span><span><strong>{{ playerXLabel() }}</strong><small>{{ formatNumber(displayScores().X) }} برد @if (isMorrisVariant()) { · {{ formatNumber(trayXInHand()) }} در دست }</small></span></div>
+              <span class="match-versus">{{ formatNumber(displayScores().draws) }} مساوی</span>
+              <div [class.current]="activeTurn() === 'O' && gameState() === 'PLAYING'"><span class="player-symbol o">○</span><span><strong>{{ playerOLabel() }}</strong><small>{{ formatNumber(displayScores().O) }} برد @if (isMorrisVariant()) { · {{ formatNumber(trayOInHand()) }} در دست }</small></span></div>
+            </div>
+          }
           <!-- Turn / Result Status Header + Turn Clock + Quick Fullscreen Trigger -->
           <div
-            class="flex w-full items-start justify-between gap-3 rounded-2xl border border-slate-900/10 bg-white/88 px-4 py-3 shadow-xs backdrop-blur-md dark:border-white/10 dark:bg-[#171717]/85"
+            class="match-status flex w-full items-start justify-between gap-3 rounded-2xl border border-slate-900/10 bg-white/88 px-4 py-3 shadow-xs backdrop-blur-md dark:border-white/10 dark:bg-[#171717]/85"
             [class.max-w-[440px]]="!isFullscreenPlay()"
             [class.max-w-[780px]]="isFullscreenPlay()"
           >
@@ -997,7 +761,7 @@
                 >
                   {{ statusIcon() }}
                 </mat-icon>
-                <h1 class="text-xl font-extrabold text-slate-950 dark:text-white sm:text-2xl">
+                <h1 aria-live="polite" class="text-xl font-extrabold text-slate-950 dark:text-white sm:text-2xl">
                   {{ statusHeadline() }}
                 </h1>
               </div>
@@ -1179,7 +943,7 @@
                 [threeHintIndex]="threeHintIndex()"
                 [expiringIndex]="expiringIndex()"
                 [lastMoveIndex]="displayThreeLastMove()"
-                [showCellNumbers]="!replayActive()"
+                [showCellNumbers]="false"
                 [morrisState]="displayMorrisState()"
                 [morrisHint]="morrisHintDecision()"
                 [disabled]="isBoardLocked()"
@@ -1296,7 +1060,7 @@
                     [disabled]="isBoardLocked()"
                     [expiringIndex]="expiringIndex()"
                     [lastMoveIndex]="displayThreeLastMove()"
-                    [showCellNumbers]="!replayActive()"
+                    [showCellNumbers]="false"
                     (cellSelected)="onCellSelected($event)"
                   />
                 }
@@ -1324,6 +1088,16 @@
             </div>
           }
 
+          @if (!isFullscreenPlay()) {
+            <div class="match-toolbar" aria-label="ابزار بازی">
+              @if (!isOnlineMode()) {
+                <button type="button" (click)="undoLastMove()" [disabled]="!canUndo()"><mat-icon>undo</mat-icon><span>برگشت</span></button>
+                <button type="button" (click)="requestSmartHint()" [disabled]="!canRequestHint()"><mat-icon>lightbulb_outline</mat-icon><span>راهنمایی</span></button>
+              }
+              <button type="button" (click)="soundFx.toggleMute()" [attr.aria-pressed]="soundFx.muted()"><mat-icon>{{ soundFx.muted() ? 'volume_off' : 'volume_up' }}</mat-icon><span>{{ soundFx.muted() ? 'صدا خاموش' : 'صدا روشن' }}</span></button>
+              <button type="button" (click)="openHelp()"><mat-icon>help_outline</mat-icon><span>قوانین</span></button>
+            </div>
+          }
           <!-- Step-by-Step Replay Controls -->
           @if (replayActive()) {
             <div class="animate-panel-in flex w-full max-w-[440px] flex-col gap-3 rounded-2xl border border-sky-500/40 bg-white/92 p-4 shadow-sm backdrop-blur-md dark:border-sky-400/35 dark:bg-[#171717]/92">
@@ -1468,6 +1242,7 @@
             [class.lg:col-span-4]="is3DView()"
             [class.lg:col-span-5]="!is3DView()"
           >
+          <details class="match-extras"><summary>تنظیمات و جزئیات مسابقه<mat-icon aria-hidden="true">expand_more</mat-icon></summary><div class="space-y-5 pt-4">
           <!-- Scoreboard -->
           <div class="rounded-2xl border border-slate-900/10 bg-white/90 p-5 shadow-sm backdrop-blur-md dark:border-white/10 dark:bg-[#171717]/88">
             <div class="mb-4 flex items-baseline justify-between gap-4">
@@ -1858,71 +1633,14 @@
               }
             </div>
           }
+          </div></details>
         </aside>
         }
       </section>
     }
   </main>
 
-  <!-- Quiet Minimal Footer (hidden during Fullscreen Cinema play) -->
-  @if (!isFullscreenPlay()) {
-    <footer class="border-t border-slate-900/10 bg-white/75 py-4 text-center text-xs text-slate-600 backdrop-blur-sm dark:border-white/5 dark:bg-[#0E0E0E]/75 dark:text-slate-400">
-      <div class="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-4 px-4 sm:px-6">
-        <span>بازی آنلاین و کلاسیک دوز — ۳ تایی، ۹ تایی و ۱۲ تایی</span>
-        <div class="flex flex-wrap items-center gap-4">
-          <button
-            type="button"
-            (click)="toggleFullscreen()"
-            class="inline-flex items-center gap-1 transition-colors hover:text-teal-700 dark:hover:text-teal-300"
-          >
-            <mat-icon class="!h-[15px] !w-[15px] !text-[15px]">
-              {{ isFullscreen() ? 'fullscreen_exit' : 'fullscreen' }}
-            </mat-icon>
-            <span>{{ isFullscreen() ? 'خروج از تمام‌صفحه' : 'حالت تمام‌صفحه' }}</span>
-          </button>
-          <span aria-hidden="true">·</span>
-          <button
-            type="button"
-            (click)="toggleColorMode()"
-            class="inline-flex items-center gap-1 transition-colors hover:text-teal-700 dark:hover:text-teal-300"
-          >
-            <mat-icon class="!h-[15px] !w-[15px] !text-[15px]">
-              {{ playerStats.colorMode() === 'dark' ? 'light_mode' : 'dark_mode' }}
-            </mat-icon>
-            <span>{{ playerStats.colorMode() === 'dark' ? 'حالت روشن' : 'حالت تاریک' }}</span>
-          </button>
-        @if (!runtimeConfig.isNative) {
-        <span aria-hidden="true">·</span>
-        <button
-          type="button"
-          [disabled]="isDownloadingProject()"
-          (click)="downloadProjectZip()"
-          class="inline-flex items-center gap-1 transition-colors hover:text-teal-700 disabled:opacity-50 dark:hover:text-teal-300"
-        >
-          <mat-icon class="!h-[15px] !w-[15px] !text-[15px]">download</mat-icon>
-          <span>{{ isDownloadingProject() ? 'در حال دانلود...' : 'دانلود پروژه (ZIP)' }}</span>
-        </button>
-        }
-        <span aria-hidden="true">·</span>
-        <button
-          type="button"
-          (click)="openHelp()"
-          class="transition-colors hover:text-slate-950 dark:hover:text-slate-200"
-        >
-          راهنمای بازی
-        </button>
-        <span aria-hidden="true">·</span>
-        <button
-          type="button"
-          (click)="soundFx.toggleMute()"
-          class="transition-colors hover:text-slate-950 dark:hover:text-slate-200"
-        >
-          {{ soundFx.muted() ? 'فعال‌سازی صدا' : 'قطع صدا' }}
-        </button>
-        </div>
-      </div>
-    </footer>
-  }
+
 
   <!-- Help & Rules Dialog -->
   @if (showHelp()) {

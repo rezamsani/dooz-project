@@ -46,11 +46,11 @@ export class PlayerStats {
 
   readonly stats = signal<PersistentStats>(DEFAULT_STATS);
   readonly lastEloDelta = signal<number | null>(null);
-  readonly boardTheme = signal<BoardTheme>('walnut');
+  readonly boardTheme = signal<BoardTheme>('navy');
   readonly colorMode = signal<ColorMode>('dark');
-  readonly environment = signal<EnvironmentTheme>('carpet');
-  readonly pieceStyle = signal<PieceStyle>('gemstone');
-  readonly viewMode = signal<ViewMode>('3d');
+  readonly environment = signal<EnvironmentTheme>('simple');
+  readonly pieceStyle = signal<PieceStyle>('classic');
+  readonly viewMode = signal<ViewMode>('2d');
   readonly customXColor = signal<string | null>(null);
   readonly customOColor = signal<string | null>(null);
   readonly customBoardColor = signal<string | null>(null);

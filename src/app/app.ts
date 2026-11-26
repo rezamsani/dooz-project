@@ -140,6 +140,7 @@ export class App {
 
   // Game state machine
   readonly gameState = signal<GameState>('TITLE_MENU');
+  readonly homeTab = signal<'play' | 'appearance' | 'stats'>('play');
 
   // Match settings
   readonly gameVariant = signal<GameVariant>('THREE');
@@ -710,6 +711,7 @@ export class App {
     else if (this.replayActive()) this.exitReplay();
     else if (this.isFullscreen()) this.exitFullscreen();
     else if (this.gameState() !== 'TITLE_MENU') this.goToTitleMenu();
+    else if (this.homeTab() !== 'play') this.homeTab.set('play');
     else void NativeApp.minimizeApp();
   }
 
@@ -807,6 +809,7 @@ export class App {
     this.soundFx.playClick();
     this.showHelp.set(false);
     this.gameState.set('TITLE_MENU');
+    this.homeTab.set('play');
   }
 
   quickLaunchVariant(variant: GameVariant): void {

@@ -37,7 +37,7 @@ import { DoozPieceSvg } from './dooz-piece-svg';
             [disabled]="disabled() || cell !== null"
             [attr.aria-label]="getCellAriaLabel($index, cell)"
             (click)="onSelect($index)"
-            class="group relative flex aspect-square min-h-[76px] w-full items-center justify-center rounded-xl border transition-all duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-400"
+            class="group relative flex aspect-square min-h-0 w-full items-center justify-center rounded-xl border transition-all duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-400"
             [style.background-color]="getCellBackground($index)"
             [style.border-color]="getCellBorderColor($index)"
             [class.backdrop-blur-sm]="theme() === 'glass'"

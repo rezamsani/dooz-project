@@ -24,4 +24,12 @@ describe('App', () => {
     app.onNativeBack();
     expect(app.gameState()).toBe('TITLE_MENU');
   });
+
+  it('returns from appearance to play before minimizing on Android back', () => {
+    const app = TestBed.createComponent(App).componentInstance;
+    app.homeTab.set('appearance');
+    app.onNativeBack();
+    expect(app.homeTab()).toBe('play');
+    expect(app.gameState()).toBe('TITLE_MENU');
+  });
 });

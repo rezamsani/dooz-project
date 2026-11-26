@@ -185,54 +185,13 @@ let nextPieceSvgUid = 1;
       }
 
       @default {
-        <!-- Tournament weighted ceramic chip -->
-        <svg:ellipse cx="50" cy="55" rx="41" ry="39" fill="rgba(0,0,0,0.34)" />
-
-        <!-- Outer ceramic body -->
-        <svg:circle
-          cx="50"
-          cy="50"
-          r="40"
-          [attr.fill]="'url(#' + uid('body') + ')'"
-          [attr.stroke]="shades().stroke"
-          stroke-width="2.5"
-        />
-
-        <!-- Dual-tone casino / tournament edge ticks -->
-        <svg:circle
-          cx="50"
-          cy="50"
-          r="35.5"
-          fill="none"
-          [attr.stroke]="shades().emblem"
-          stroke-width="3.6"
-          stroke-dasharray="7 8.5"
-          opacity="0.72"
-        />
-
-        <!-- Recessed center medallion -->
-        <svg:circle
-          cx="50"
-          cy="50"
-          r="28.5"
-          [attr.fill]="'url(#' + uid('body') + ')'"
-          [attr.stroke]="shades().innerRing"
-          stroke-width="1.8"
-        />
-        <svg:circle cx="50" cy="50" r="28.5" [attr.fill]="'url(#' + uid('sheen') + ')'" opacity="0.35" />
-
         @if (player() === 'X') {
-          <svg:g stroke="rgba(0,0,0,0.32)" stroke-width="8.5" stroke-linecap="round">
-            <svg:line x1="36" y1="37.5" x2="64" y2="65.5" />
-            <svg:line x1="64" y1="37.5" x2="36" y2="65.5" />
-          </svg:g>
-          <svg:g [attr.stroke]="shades().emblem" stroke-width="7.5" stroke-linecap="round">
-            <svg:line x1="36" y1="36" x2="64" y2="64" />
-            <svg:line x1="64" y1="36" x2="36" y2="64" />
+          <svg:g [attr.stroke]="shades().mid" stroke-width="10" stroke-linecap="round">
+            <svg:line x1="26" y1="26" x2="74" y2="74" />
+            <svg:line x1="74" y1="26" x2="26" y2="74" />
           </svg:g>
         } @else {
-          <svg:circle cx="50" cy="51.5" r="14.5" fill="none" stroke="rgba(0,0,0,0.3)" stroke-width="8" />
-          <svg:circle cx="50" cy="50" r="14.5" fill="none" [attr.stroke]="shades().emblem" stroke-width="7" />
+          <svg:circle cx="50" cy="50" r="29" fill="none" [attr.stroke]="shades().mid" stroke-width="10" />
         }
       }
     }
