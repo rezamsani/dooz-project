@@ -1,0 +1,6 @@
+{
+  "name": "دوز — بازی فکری کلاسیک",
+  "description": "بازی ساده و کلاسیک دوز (کلاسیک و بی‌نهایت) با هوش مصنوعی سه‌سطحی و حالت دونفره محلی",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

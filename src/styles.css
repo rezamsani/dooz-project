@@ -1,0 +1,124 @@
+@import url('https://fonts.googleapis.com/icon?family=Material+Icons');
+@import "tailwindcss";
+@custom-variant dark (&:where(.dark, .dark *));
+
+@layer base {
+  html {
+    font-family: 'Vazirmatn', system-ui, -apple-system, sans-serif;
+    background-color: #F6F8F6;
+    color: #0F172A;
+  }
+
+  html.dark {
+    background-color: #0B1623;
+    color: #F1F5F9;
+  }
+
+  body {
+    margin: 0;
+    min-height: 100dvh;
+    background-image:
+      radial-gradient(circle at 18% 12%, rgba(20, 184, 166, 0.12), transparent 44%),
+      radial-gradient(circle at 82% 85%, rgba(245, 158, 11, 0.1), transparent 45%);
+  }
+
+  html.dark body {
+    background-image:
+      radial-gradient(circle at 20% 10%, rgba(20, 184, 166, 0.1), transparent 45%),
+      radial-gradient(circle at 80% 85%, rgba(244, 63, 94, 0.08), transparent 45%);
+  }
+
+  button {
+    cursor: pointer;
+  }
+
+  button:disabled {
+    cursor: not-allowed;
+  }
+}
+
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+@keyframes strokeDraw {
+  from {
+    stroke-dashoffset: 180;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes winLineDraw {
+  from {
+    stroke-dashoffset: 450;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes popIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.86);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes tokenDrop {
+  0% {
+    opacity: 0;
+    transform: scale(0.72);
+  }
+  70% {
+    opacity: 1;
+    transform: scale(1.06);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.animate-piece-draw {
+  stroke-dasharray: 180;
+  stroke-dashoffset: 0;
+  animation: strokeDraw 190ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.animate-piece-draw-delay {
+  stroke-dasharray: 180;
+  stroke-dashoffset: 0;
+  animation: strokeDraw 180ms cubic-bezier(0.16, 1, 0.3, 1) 70ms both;
+}
+
+.animate-token-drop {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: tokenDrop 240ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.animate-win-line {
+  stroke-dasharray: 450;
+  stroke-dashoffset: 0;
+  animation: winLineDraw 280ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.animate-panel-in {
+  animation: popIn 180ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-piece-draw,
+  .animate-piece-draw-delay,
+  .animate-token-drop,
+  .animate-win-line,
+  .animate-panel-in {
+    animation: none !important;
+  }
+}
