@@ -75,6 +75,12 @@ function rgbToHex(r: number, g: number, b: number): string {
   );
 }
 
+export function hexToRgba(hex: string, alpha: number): string {
+  const [r, g, b] = hexToRgb(hex);
+  const a = Math.max(0, Math.min(1, alpha));
+  return `rgba(${r}, ${g}, ${b}, ${a})`;
+}
+
 export function mixHex(hexA: string, hexB: string, ratioB: number): string {
   const [r1, g1, b1] = hexToRgb(hexA);
   const [r2, g2, b2] = hexToRgb(hexB);
@@ -136,6 +142,33 @@ export function resolveBoardColorTokens(
   customBoardHex: string | null,
 ): BoardColorTokens {
   const custom = normalizeHex(customBoardHex);
+  if (theme === 'glass') {
+    const isLight = colorMode === 'light';
+    if (custom) {
+      const isCustomLight = relativeLuminance(custom) > 0.5;
+      return {
+        frameBg: hexToRgba(custom, 0.34),
+        cellBg: hexToRgba(custom, 0.22),
+        borderColor: 'rgba(255, 255, 255, 0.42)',
+        trackStroke: isCustomLight ? 'rgba(15, 23, 42, 0.5)' : 'rgba(255, 255, 255, 0.62)',
+        diagonalStroke: isCustomLight ? 'rgba(15, 23, 42, 0.32)' : 'rgba(255, 255, 255, 0.35)',
+        socketFill: hexToRgba(custom, 0.26),
+        socketStroke: 'rgba(255, 255, 255, 0.52)',
+        slabEdge: hexToRgba(mixHex(custom, '#FFFFFF', 0.25), 0.45),
+      };
+    }
+    return {
+      frameBg: isLight ? 'rgba(255, 255, 255, 0.34)' : 'rgba(15, 23, 42, 0.34)',
+      cellBg: isLight ? 'rgba(255, 255, 255, 0.24)' : 'rgba(255, 255, 255, 0.09)',
+      borderColor: isLight ? 'rgba(255, 255, 255, 0.72)' : 'rgba(255, 255, 255, 0.32)',
+      trackStroke: isLight ? 'rgba(15, 23, 42, 0.44)' : 'rgba(241, 245, 249, 0.62)',
+      diagonalStroke: isLight ? 'rgba(15, 23, 42, 0.24)' : 'rgba(226, 232, 240, 0.34)',
+      socketFill: isLight ? 'rgba(255, 255, 255, 0.38)' : 'rgba(15, 23, 42, 0.36)',
+      socketStroke: isLight ? 'rgba(15, 23, 42, 0.38)' : 'rgba(255, 255, 255, 0.5)',
+      slabEdge: isLight ? 'rgba(255, 255, 255, 0.48)' : 'rgba(148, 163, 184, 0.36)',
+    };
+  }
+
   if (custom) {
     const isLight = relativeLuminance(custom) > 0.48;
     return {
@@ -201,13 +234,13 @@ export function resolveBoardColorTokens(
   }
 
   return {
-    frameBg: '#132234',
-    cellBg: '#1A2D44',
-    borderColor: 'rgba(255, 255, 255, 0.15)',
-    trackStroke: '#4B6B8F',
-    diagonalStroke: '#385270',
-    socketFill: '#0D1928',
-    socketStroke: '#5B7C9F',
-    slabEdge: '#09121D',
+    frameBg: '#171717',
+    cellBg: '#202020',
+    borderColor: 'rgba(255, 255, 255, 0.14)',
+    trackStroke: '#525252',
+    diagonalStroke: '#3B3B3B',
+    socketFill: '#121212',
+    socketStroke: '#737373',
+    slabEdge: '#0A0A0A',
   };
 }

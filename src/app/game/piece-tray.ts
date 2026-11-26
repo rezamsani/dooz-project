@@ -14,6 +14,8 @@ import { BoardTheme, ColorMode, PieceStyle, Player } from './dooz.types';
       [class.md:w-[88px]]="!expanded()"
       [class.md:w-[108px]]="expanded()"
       [class.md:p-3]="expanded()"
+      [class.backdrop-blur-md]="true"
+      [class.shadow-[inset_0_1px_1px_rgba(255,255,255,0.4)]]="theme() === 'glass'"
       [style.background-color]="trayBg()"
       [style.border-color]="boardTokens().borderColor"
       [class.ring-2]="isActiveTurn()"

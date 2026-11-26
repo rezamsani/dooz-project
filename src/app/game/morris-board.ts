@@ -22,6 +22,8 @@ import { MorrisEdge, MorrisMill, MorrisNodeCoord, MorrisState } from './morris.t
       class="relative mx-auto w-full rounded-2xl border p-3 shadow-md transition-all duration-200 sm:p-4"
       [class.max-w-[440px]]="!expanded()"
       [class.max-w-[min(68dvh,620px)]]="expanded()"
+      [class.backdrop-blur-md]="theme() === 'glass'"
+      [class.shadow-[inset_0_1px_1px_rgba(255,255,255,0.45),0_10px_30px_rgba(0,0,0,0.28)]]="theme() === 'glass'"
       [style.background-color]="boardTokens().frameBg"
       [style.border-color]="boardTokens().borderColor"
     >

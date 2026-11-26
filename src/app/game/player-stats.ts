@@ -257,7 +257,8 @@ export class PlayerStats {
         rawTheme === 'navy' ||
         rawTheme === 'walnut' ||
         rawTheme === 'felt' ||
-        rawTheme === 'tile'
+        rawTheme === 'tile' ||
+        rawTheme === 'glass'
       ) {
         this.boardTheme.set(rawTheme);
       }

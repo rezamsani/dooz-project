@@ -6,7 +6,7 @@ export type GameState = 'TITLE_MENU' | 'PLAYING' | 'ROUND_SUMMARY';
 export type GameMode = 'AI' | 'LOCAL_2P' | 'ONLINE';
 export type Difficulty = 'EASY' | 'MEDIUM' | 'HARD';
 export type BoardRule = 'CLASSIC' | 'INFINITE';
-export type BoardTheme = 'navy' | 'walnut' | 'felt' | 'tile';
+export type BoardTheme = 'navy' | 'walnut' | 'felt' | 'tile' | 'glass';
 export type ColorMode = 'dark' | 'light';
 export type EnvironmentTheme = 'simple' | 'carpet' | 'meadow' | 'waterfall' | 'lounge';
 export type PieceStyle = 'gemstone' | 'wood' | 'nature' | 'classic';
@@ -29,7 +29,7 @@ export const ENVIRONMENT_THEMES: readonly EnvironmentOption[] = [
     label: 'ساده و مدرن',
     subtitle: 'مینیمال و خلوت',
     imagePath: null,
-    fallbackGradient: 'linear-gradient(135deg, #0F172A 0%, #134E4A 50%, #1E293B 100%)',
+    fallbackGradient: 'linear-gradient(135deg, #0E0E0E 0%, #171717 50%, #202020 100%)',
     recommendedBoard: 'navy',
     icon: 'contrast',
   },

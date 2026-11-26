@@ -137,7 +137,7 @@ const STAGE_ENV_CONFIG: Record<EnvironmentTheme, StageEnvironmentConfig> = {
         <div
           class="pointer-events-none absolute inset-0 transition-colors duration-300"
           [class.bg-[radial-gradient(circle_at_50%_40%,#F8FAFC_0%,#CBD5E1_100%)]]="colorMode() === 'light'"
-          [class.bg-[radial-gradient(circle_at_50%_40%,#173247_0%,#08111D_100%)]]="colorMode() === 'dark'"
+          [class.bg-[radial-gradient(circle_at_50%_40%,#1C1C1C_0%,#0E0E0E_100%)]]="colorMode() === 'dark'"
         ></div>
       }
 
@@ -180,6 +180,7 @@ const STAGE_ENV_CONFIG: Record<EnvironmentTheme, StageEnvironmentConfig> = {
           <div
             class="pointer-events-none absolute -inset-x-3 -bottom-6 top-4 rounded-[34px] blur-xl"
             style="transform: translateZ(-22px) translateY(16px);"
+            [class.opacity-50]="boardTheme() === 'glass'"
             [style.background]="envConfig().shadowTint"
           ></div>
 
@@ -260,7 +261,9 @@ const STAGE_ENV_CONFIG: Record<EnvironmentTheme, StageEnvironmentConfig> = {
 
               <!-- Subtle Realistic Surface Specular Reflection -->
               <div
-                class="pointer-events-none absolute inset-0 rounded-2xl bg-[linear-gradient(155deg,rgba(255,248,230,0.16)_0%,transparent_42%,rgba(0,0,0,0.16)_100%)]"
+                class="pointer-events-none absolute inset-0 rounded-2xl"
+                [class.bg-[linear-gradient(135deg,rgba(255,255,255,0.3)_0%,rgba(255,255,255,0.06)_36%,transparent_54%,rgba(255,255,255,0.16)_100%)]]="boardTheme() === 'glass'"
+                [class.bg-[linear-gradient(155deg,rgba(255,248,230,0.16)_0%,transparent_42%,rgba(0,0,0,0.16)_100%)]]="boardTheme() !== 'glass'"
               ></div>
             </div>
 
