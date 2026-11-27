@@ -1155,15 +1155,9 @@
                 <div class="text-sm font-semibold text-slate-900 dark:text-slate-100">
                   {{ summaryDescription() }}
                 </div>
-                @if (formattedEloDelta(); as delta) {
-                  <span
-                    class="text-xs font-bold tabular-nums"
-                    [class.text-teal-700]="(playerStats.lastEloDelta() ?? 0) >= 0"
-                    [class.dark:text-teal-300]="(playerStats.lastEloDelta() ?? 0) >= 0"
-                    [class.text-rose-700]="(playerStats.lastEloDelta() ?? 0) < 0"
-                    [class.dark:text-rose-300]="(playerStats.lastEloDelta() ?? 0) < 0"
-                  >
-                    {{ 'تغییر ELO: {0}' | t: [delta] }}
+                @if (roundCoins(); as earned) {
+                  <span role="status" class="inline-flex items-center gap-1.5 rounded-full bg-amber-100 px-2.5 py-1 text-xs font-bold tabular-nums text-amber-900 dark:bg-amber-400/15 dark:text-amber-200">
+                    <app-dooz-icon name="coin" />{{ '{0} سکه گرفتی' | t: [formatNumber(earned)] }}
                   </span>
                 }
               </div>
@@ -1230,7 +1224,7 @@
           <!-- Scoreboard -->
           <div class="rounded-2xl border border-slate-900/10 bg-white/90 p-5 shadow-sm backdrop-blur-md dark:border-white/10 dark:bg-[#171717]/88">
             <div class="mb-4 flex items-baseline justify-between gap-4">
-              <h2 class="text-base font-bold text-slate-950 dark:text-white">{{ 'جدول امتیازها' | t }}</h2>
+              <h2 class="text-base font-bold text-slate-950 dark:text-white">{{ 'نتایج دست‌ها' | t }}</h2>
               <span class="text-xs text-slate-500 tabular-nums dark:text-slate-400">
                 {{ 'مجموع {0} دست' | t: [formatNumber(totalRounds())] }}
               </span>
@@ -1541,9 +1535,9 @@
             </div>
             <div class="grid grid-cols-3 divide-x divide-x-reverse divide-slate-900/10 text-center text-xs dark:divide-white/10">
               <div class="flex flex-col gap-1 px-2">
-                <span class="text-slate-500 dark:text-slate-400">{{ 'امتیاز ELO' | t }}</span>
-                <span class="text-lg font-extrabold text-slate-950 tabular-nums dark:text-white">
-                  {{ formatNumber(playerStats.stats().elo) }}
+                <span class="text-slate-500 dark:text-slate-400">{{ 'موجودی سکه' | t }}</span>
+                <span class="inline-flex items-center justify-center gap-1 text-lg font-extrabold text-amber-700 tabular-nums dark:text-amber-300">
+                  <app-dooz-icon name="coin" />{{ formatNumber(playerStats.stats().coins) }}
                 </span>
               </div>
               <div class="flex flex-col gap-1 px-2">

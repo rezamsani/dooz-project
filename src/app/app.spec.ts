@@ -77,13 +77,22 @@ describe('App', () => {
     expect(app.homeTab()).toBe('play');
   });
 
-  it('counts a local two-player win once without changing the personal rating',()=>{
-    const app=TestBed.createComponent(App).componentInstance;
+  it('awards a coin for a completed local round without changing the personal rating',()=>{
+    const fixture = TestBed.createComponent(App);
+    const app = fixture.componentInstance;
     app.setGameMode('LOCAL_2P');app.startGame();
+    app.onCellSelected(5);
+    app.restartCurrentRound();
+    expect(app.playerStats.stats().coins).toBe(0);
     for(const index of [0,3,1,4,2,2]) app.onCellSelected(index);
     expect(app.scores()).toEqual({X:1,O:0,draws:0});
     expect(app.playerStats.totalGames()).toBe(0);
     expect(app.playerStats.stats().elo).toBe(1200);
+    expect(app.playerStats.stats().coins).toBe(1);
+    fixture.detectChanges();
+    expect(fixture.nativeElement.textContent).toContain('۱ سکه گرفتی');
+    app.nextRound();
+    expect(app.roundCoins()).toBe(0);
   });
 
   it('awards progress from an actual AI win and reveals coaching after an actual loss',()=>{
@@ -97,13 +106,15 @@ describe('App', () => {
       app.restartCurrentRound();
       for(const index of [0,1,4]){app.onCellSelected(index);vi.advanceTimersByTime(1000);}
       expect(app.gameState()).toBe('ROUND_SUMMARY');expect(app.threeLesson()).toBeTruthy();
+      expect(app.playerStats.stats().coins).toBe(2);
       fixture.detectChanges();expect(fixture.nativeElement.querySelector('app-coach-review')).toBeTruthy();
       expect(app.journey.state().wins.baran).toBe(1);
     }finally{random.mockRestore();vi.useRealTimers();}
   });
 
-  it('records a participated online round once using the opponent rating, not a finished room visit',()=>{
+  it.each(['ONLINE', 'LAN'] as const)('awards coins once for a participated %s round', (mode)=>{
     const client=TestBed.inject(OnlineClient);
+    client.localMode.set(mode === 'LAN');
     const registered=vi.spyOn(client,'onRoomState');
     const app=TestBed.createComponent(App).componentInstance;
     const listener=registered.mock.calls[0][0];
@@ -113,10 +124,12 @@ describe('App', () => {
       threeBoard:Array(9).fill(null),threeXQueue:[],threeOQueue:[],threeTurn:'X',threeMoveCount:5,threeLastMove:2,threeWin:null,threeDraw:false,morrisState:null,winner:'X',isDraw:false,endReason:'NORMAL',
     };
     const emit=(snapshot:RoomSnapshotDto)=>{client.room.set(snapshot);client.yourRole.set('X');listener(snapshot,'X');};
-    emit(room);expect(app.playerStats.totalGames()).toBe(0);
+    emit(room);expect(app.playerStats.stats().coins).toBe(0);
     emit({...room,status:'PLAYING',winner:null});
     emit(room);emit(room);
-    expect(app.playerStats.stats()).toMatchObject({wins:1,elo:1218});
-    expect(app.playerStats.totalGames()).toBe(1);
+    expect(app.playerStats.stats()).toMatchObject(mode === 'LAN'
+      ? {coins:1,wins:0,elo:1200}
+      : {coins:1,wins:1,elo:1218});
+    expect(app.roundCoins()).toBe(1);
   });
 });

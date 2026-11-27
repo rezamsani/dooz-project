@@ -29,6 +29,7 @@ describe('personal score accounting',()=>{
     let stats=TestBed.inject(PlayerStats);
     stats.recordMatchOutcome('WIN',1200,'same-match');
     const first={...stats.stats()};
+    expect(first.coins).toBe(1);
     expect(stats.recordMatchOutcome('WIN',1200,'same-match')).toBe(false);
     expect(stats.stats()).toEqual(first);
     TestBed.resetTestingModule();stats=TestBed.inject(PlayerStats);
@@ -40,7 +41,7 @@ describe('personal score accounting',()=>{
     const stats=TestBed.inject(PlayerStats);
     ['WIN','WIN','DRAW','LOSS'].forEach((outcome,i)=>stats.recordMatchOutcome(outcome as 'WIN'|'DRAW'|'LOSS',1200,`match-${i}`));
     expect(stats.totalGames()).toBe(4);expect(stats.winRate()).toBe(50);
-    expect(stats.stats()).toMatchObject({wins:2,draws:1,losses:1,currentStreak:0,bestStreak:2});
+    expect(stats.stats()).toMatchObject({wins:2,draws:1,losses:1,coins:4,currentStreak:0,bestStreak:2});
     expect(stats.stats().recentResults).toHaveLength(4);
   });
 
@@ -56,7 +57,8 @@ describe('personal score accounting',()=>{
   });
 
   it('sanitizes legacy data into finite integer counters and consistent streaks',()=>{
-    expect(restoreRecord({elo:Infinity,wins:2.9,draws:-1,losses:NaN,currentStreak:8,bestStreak:1})).toMatchObject({elo:1200,wins:2,draws:0,losses:0,currentStreak:2,bestStreak:2});
+    expect(restoreRecord({elo:Infinity,wins:2.9,draws:-1,losses:NaN,currentStreak:8,bestStreak:1})).toMatchObject({elo:1200,wins:2,draws:0,losses:0,coins:2,currentStreak:2,bestStreak:2});
+    expect(restoreRecord({wins:2,coins:5}).coins).toBe(5);
     expect(restoreRecord(null).elo).toBe(1200);
   });
 });

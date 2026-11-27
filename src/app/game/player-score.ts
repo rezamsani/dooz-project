@@ -1,4 +1,5 @@
 export type MatchOutcome = 'WIN' | 'LOSS' | 'DRAW';
+export const COINS_PER_ROUND = 1;
 export const INITIAL_RATING = 1200;
 export const MIN_RATING = 800;
 export const MAX_RATING = 4000;
@@ -24,20 +25,27 @@ export interface MatchResult {
 }
 export interface PlayerRecord {
   elo: number; wins: number; losses: number; draws: number;
+  coins: number;
   currentStreak: number; bestStreak: number;
   processedMatchIds: string[];
   pendingOnlineMatches: string[];
   recentResults: MatchResult[];
 }
 export function emptyRecord(): PlayerRecord {
-  return {elo:1200,wins:0,losses:0,draws:0,currentStreak:0,bestStreak:0,processedMatchIds:[],pendingOnlineMatches:[],recentResults:[]};
+  return {elo:1200,wins:0,losses:0,draws:0,coins:0,currentStreak:0,bestStreak:0,processedMatchIds:[],pendingOnlineMatches:[],recentResults:[]};
 }
 function count(value: unknown): number { return typeof value === 'number' && Number.isFinite(value) ? Math.max(0,Math.min(1e9,Math.floor(value))) : 0; }
 export function restoreRecord(raw: unknown): PlayerRecord {
   const v = raw && typeof raw === 'object' ? raw as Record<string,unknown> : {};
   const wins=count(v['wins']);
+  const losses=count(v['losses']);
+  const draws=count(v['draws']);
+  const storedCoins = v['coins'];
+  const coins = typeof storedCoins === 'number' && Number.isFinite(storedCoins)
+    ? Math.max(0, Math.min(Number.MAX_SAFE_INTEGER, Math.floor(storedCoins)))
+    : (wins + losses + draws) * COINS_PER_ROUND;
   const streak=Math.min(wins,count(v['currentStreak']));
   const ids=(value:unknown,limit:number) => Array.isArray(value) ? [...new Set(value.filter((x): x is string=>typeof x === 'string' && x.length>0 && x.length<=160))].slice(-limit) : [];
   const recentResults: MatchResult[] = Array.isArray(v['recentResults']) ? v['recentResults'].filter((r):r is MatchResult=>r && typeof r.id==='string' && ['WIN','LOSS','DRAW'].includes(r.outcome) && ['AI','ONLINE'].includes(r.mode) && Number.isFinite(r.rating) && Number.isFinite(r.delta) && Number.isFinite(r.at)).slice(-12) : [];
-  return {elo:validRating(v['elo']),wins,losses:count(v['losses']),draws:count(v['draws']),currentStreak:streak,bestStreak:Math.min(wins,Math.max(streak,count(v['bestStreak']))),processedMatchIds:ids(v['processedMatchIds'],100),pendingOnlineMatches:ids(v['pendingOnlineMatches'],10),recentResults};
+  return {elo:validRating(v['elo']),wins,losses,draws,coins,currentStreak:streak,bestStreak:Math.min(wins,Math.max(streak,count(v['bestStreak']))),processedMatchIds:ids(v['processedMatchIds'],100),pendingOnlineMatches:ids(v['pendingOnlineMatches'],10),recentResults};
 }

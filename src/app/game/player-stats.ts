@@ -2,7 +2,7 @@ import { isPlatformBrowser } from '@angular/common';
 import { Injectable, PLATFORM_ID, computed, inject, signal } from '@angular/core';
 import { normalizeHex } from './color-palette';
 import { DeviceStorage } from './device-storage';
-import { PlayerRecord, MatchOutcome, emptyRecord, restoreRecord, ratingAfterMatch } from './player-score';
+import { COINS_PER_ROUND, PlayerRecord, MatchOutcome, emptyRecord, restoreRecord, ratingAfterMatch } from './player-score';
 import {
   BoardTheme,
   ColorMode,
@@ -165,23 +165,45 @@ export class PlayerStats {
 
   recordMatchOutcome(outcome: MatchOutcome, opponentRating: number, matchId: string, mode: 'AI' | 'ONLINE' = 'AI'): boolean {
     const current=this.stats();
-    if (!this.storage.canReadStats() || !matchId || current.processedMatchIds.includes(matchId)) return false;
-    if (mode === 'ONLINE' && !current.pendingOnlineMatches.includes(matchId)) return false;
+    if (!this.canCompleteRound(matchId, mode === 'ONLINE')) return false;
     const nextElo=ratingAfterMatch(current.elo,opponentRating,outcome);
     const delta=nextElo-current.elo;
     const nextStreak=outcome === 'WIN' ? current.currentStreak+1 : 0;
-    const updated: PersistentStats={
+    this.completeRound(matchId, {
       elo:nextElo,
       wins:current.wins+(outcome==='WIN'?1:0),
       losses:current.losses+(outcome==='LOSS'?1:0),
       draws:current.draws+(outcome==='DRAW'?1:0),
       currentStreak:nextStreak,bestStreak:Math.max(current.bestStreak,nextStreak),
-      processedMatchIds:[...current.processedMatchIds,matchId].slice(-100),
-      pendingOnlineMatches:current.pendingOnlineMatches.filter(id=>id!==matchId),
       recentResults:[...current.recentResults,{id:matchId,outcome,mode,rating:nextElo,delta,at:Date.now()}].slice(-12),
-    };
-    this.stats.set(updated); this.lastEloDelta.set(delta); this.persistStats(updated);
+    });
+    this.lastEloDelta.set(delta);
     return true;
+  }
+
+  recordUnratedRound(matchId: string, mode: 'LOCAL_2P' | 'LAN'): boolean {
+    if (!this.canCompleteRound(matchId, mode === 'LAN')) return false;
+    this.completeRound(matchId);
+    return true;
+  }
+
+  private canCompleteRound(matchId: string, requireParticipation: boolean): boolean {
+    const current = this.stats();
+    return this.storage.canReadStats() && !!matchId && !current.processedMatchIds.includes(matchId)
+      && (!requireParticipation || current.pendingOnlineMatches.includes(matchId));
+  }
+
+  private completeRound(matchId: string, result: Partial<PersistentStats> = {}): void {
+    const current = this.stats();
+    const updated = {
+      ...current,
+      ...result,
+      coins: Math.min(Number.MAX_SAFE_INTEGER, current.coins + COINS_PER_ROUND),
+      processedMatchIds: [...current.processedMatchIds, matchId].slice(-100),
+      pendingOnlineMatches: current.pendingOnlineMatches.filter(id => id !== matchId),
+    };
+    this.stats.set(updated);
+    this.persistStats(updated);
   }
 
   getAiOpponentRating(difficulty: Difficulty): number {

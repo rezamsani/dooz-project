@@ -74,6 +74,7 @@ import { PlayerAvatar } from './game/avatar';
 import { PlayerJourney, BADGES } from './game/player-journey';
 import { BotRoster, JourneyPanel } from './game/journey-panel';
 import { DailyChallenge } from './game/daily-challenge';
+import { COINS_PER_ROUND } from './game/player-score';
 import { DoozHistoryPanel } from './game/dooz-history-panel';
 import { CoachReview, MorrisLesson, reviewMorris } from './game/coach-review';
 import { RivalryPanel } from './game/rivalry-panel';
@@ -677,13 +678,7 @@ export class App {
     return this.i18n.text("دست با پیروزی مهره {0} به پایان رسید.", [winner]);
   });
 
-  readonly formattedEloDelta = computed<string | null>(() => {
-    const delta = this.playerStats.lastEloDelta();
-    if (delta === null) return null;
-    if (delta > 0) return `+${this.i18n.digits(delta)}`;
-    if (delta < 0) return `-${this.i18n.digits(Math.abs(delta))}`;
-    return this.i18n.text("۰");
-  });
+  readonly roundCoins = signal(0);
 
   readonly activeReaction = computed(() => {
     const em = this.onlineClient.activeEmote();
@@ -1450,9 +1445,14 @@ export class App {
   private syncFromOnlineRoom(room: RoomSnapshotDto, role: Player): void {
     const local = this.onlineClient.localMode();
     const roundNumber=room.scores.X+room.scores.O+room.scores.draws+(room.status==='FINISHED'?0:1);
-    const matchId=`online:${room.roundId ?? `${room.code}:${roundNumber}`}:${role}`;
-    if(this.journeyOnlineRound!==matchId){this.journeyOnlineRound=matchId;this.freshBadges.set([]);}
-    if(!local && room.status==='PLAYING') this.playerStats.beginOnlineMatch(matchId);
+    const roundId = room.roundId ?? `${room.code}:${roundNumber}`;
+    const matchId = local ? `lan:${roundId}` : `online:${roundId}:${role}`;
+    if (this.journeyOnlineRound !== matchId) {
+      this.journeyOnlineRound = matchId;
+      this.freshBadges.set([]);
+      this.roundCoins.set(0);
+    }
+    if (room.status === 'PLAYING') this.playerStats.beginOnlineMatch(matchId);
     this.gameMode.set(local ? 'LAN' : 'ONLINE');
     this.gameVariant.set(room.variant);
     this.boardRule.set(room.boardRule);
@@ -1489,13 +1489,19 @@ export class App {
       this.gameState.set('ROUND_SUMMARY');
       this.stopTurnTimer();
       if (this.lastOnlineStatus !== 'FINISHED') {
-        if (room.winner) {
-          this.soundFx.playWin();
-          const outcome = room.winner === role ? 'WIN' : 'LOSS';
-          if(!local && this.playerStats.recordMatchOutcome(outcome, room.roundRatings?.[getOpponent(role)] ?? 1200, matchId, 'ONLINE')) this.freshBadges.set(this.journey.recordMatch(matchId,outcome,null,room.variant,false));
-        } else if (room.isDraw) {
-          this.soundFx.playDraw();
-          if(!local && this.playerStats.recordMatchOutcome('DRAW', room.roundRatings?.[getOpponent(role)] ?? 1200, matchId, 'ONLINE')) this.freshBadges.set(this.journey.recordMatch(matchId,'DRAW',null,room.variant,false));
+        if (room.winner) this.soundFx.playWin();
+        else if (room.isDraw) this.soundFx.playDraw();
+      }
+      if (room.winner || room.isDraw) {
+        if (local) {
+          if (this.playerStats.recordUnratedRound(matchId, 'LAN')) this.roundCoins.set(COINS_PER_ROUND);
+        } else {
+          const outcome = room.isDraw ? 'DRAW' : room.winner === role ? 'WIN' : 'LOSS';
+          const opponentRating = room.roundRatings?.[getOpponent(role)] ?? 1200;
+          if (this.playerStats.recordMatchOutcome(outcome, opponentRating, matchId, 'ONLINE')) {
+            this.roundCoins.set(COINS_PER_ROUND);
+            this.freshBadges.set(this.journey.recordMatch(matchId, outcome, null, room.variant, false));
+          }
         }
       }
     } else {
@@ -1542,8 +1548,9 @@ export class App {
   }
 
   private resetRoundState(starter: Player): void {
+    this.journeyOnlineRound = '';
     this.assistedRound=false; this.freshBadges.set([]); this.threeLesson.set(null); this.morrisLesson.set(null);
-    this.offlineMatchId=`ai:${Date.now()}:${Math.random().toString(36).slice(2)}`;
+    this.offlineMatchId=`offline:${Date.now()}:${Math.random().toString(36).slice(2)}:${this.roundCounter}`;
     this.clearAiTimer();
     this.stopTurnTimer();
     this.exitReplay();
@@ -1553,6 +1560,7 @@ export class App {
     this.timeoutWinner.set(null);
     this.isAiThinking.set(false);
     this.playerStats.lastEloDelta.set(null);
+    this.roundCoins.set(0);
     this.gameState.set('PLAYING');
 
     if (this.isMorrisVariant()) {
@@ -1742,6 +1750,7 @@ export class App {
           ? 'WIN'
           : 'LOSS';
       if(this.playerStats.recordMatchOutcome(outcome, oppElo, this.offlineMatchId)) {
+        this.roundCoins.set(COINS_PER_ROUND);
         const hero=this.humanSymbol(), frames=this.threeReplayFrames();
         const saved=this.gameVariant()==='THREE' && this.boardRule()==='CLASSIC' && frames.some((f,i)=>f.currentTurn===hero && i<frames.length-1 && immediateWins(f.board,getOpponent(hero)).length>0 && immediateWins(frames[i+1].board,getOpponent(hero)).length===0);
         this.freshBadges.set(this.journey.recordMatch(this.offlineMatchId,outcome,this.journey.bot().id,this.gameVariant(),this.assistedRound,saved));
@@ -1750,6 +1759,8 @@ export class App {
         if(this.isMorrisVariant()) this.morrisLesson.set(reviewMorris(this.morrisReplayFrames(),this.humanSymbol()));
         else this.threeLesson.set(reviewThree(this.threeReplayFrames(),this.humanSymbol(),this.boardRule()));
       }
+    } else if (this.gameMode() === 'LOCAL_2P' && this.playerStats.recordUnratedRound(this.offlineMatchId, 'LOCAL_2P')) {
+      this.roundCoins.set(COINS_PER_ROUND);
     }
 
     this.roundCounter += 1;
