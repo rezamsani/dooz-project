@@ -9,10 +9,11 @@ import { bestClassicMoves, canForceWin, dailyPuzzle, tehranDay } from './learnin
 import { checkWinner } from './dooz-engine';
 import { CellValue } from './dooz.types';
 import { ShareCard, challengeCode } from './share-card';
+import { DoozIcon } from '../ui/dooz-icon';
 @Component({
-  selector:'app-daily-challenge',imports: [TranslatePipe, DoozBoard,ReactiveFormsModule],changeDetection:ChangeDetectionStrategy.OnPush,
+  selector:'app-daily-challenge',imports: [TranslatePipe, DoozBoard, ReactiveFormsModule, DoozIcon],changeDetection:ChangeDetectionStrategy.OnPush,
   template:`
-    <section class="challenge"><button class="back" type="button" (click)="back.emit()">{{ '← برگشت به بازی' | t }}</button>
+    <section class="challenge"><button class="back flex items-center gap-2" type="button" (click)="back.emit()"><app-dooz-icon name="arrow" class="rtl:rotate-180" />{{ 'برگشت به بازی' | t }}</button>
       <span class="eyebrow">{{ 'دو حرکت، یک فکر تازه' | t }}</span><h1>{{ (date() === today() ? 'معمای امروز' : 'معمای دوستت') | t }}</h1>
       <p>{{ 'تو X هستی. حتی با بهترین دفاع حریف، با حداکثر دو حرکت خودت ببر.' | t }}</p>
       <div class="meta"><span>{{ code() }}</span><span>{{ '{0} روز پیاپی' | t: [n(journey.streak())] }}</span></div>
@@ -23,7 +24,7 @@ import { ShareCard, challengeCode } from './share-card';
       <p class="note">{{ 'روز معما بر اساس ساعت ایران عوض می‌شود. این تمرین امتیاز مهارت مسابقه را تغییر نمی‌دهد.' | t }}</p>
     </section>
   `,
-  styles:`:host{display:block}.back{display:block;min-height:44px;color:var(--muted);font-size:12px;margin-bottom:20px}.eyebrow{font-size:11px;color:var(--accent)}h1{font-size:30px;font-weight:900;margin-block:10px}p{font-size:13px;line-height:2;color:var(--muted)}.meta{display:flex;justify-content:space-between;gap:10px;margin-block:20px;font-size:11px;color:var(--accent)}.meta span:first-child{direction:ltr}.message{min-height:64px;margin-block:16px}.actions{display:flex;gap:10px}button{min-height:48px;border-radius:14px;padding:10px 16px;background:var(--soft);color:var(--accent);font-weight:700;font-size:12px}.primary{width:100%;background:var(--accent);color:var(--canvas)}details{margin-top:20px;border-top:1px solid var(--line)}summary{min-height:48px;align-content:center;font-size:12px;cursor:pointer}form{display:flex;gap:8px}input{width:100%;min-width:0;padding:10px;border:1px solid var(--line);border-radius:12px;background:var(--surface);font-size:12px}.note{font-size:10px;margin-top:20px}button:disabled{opacity:.5}`,
+  styles:`:host{display:block}.back{display:flex;min-height:44px;color:var(--muted);font-size:12px;margin-bottom:20px}.eyebrow{font-size:11px;color:var(--accent)}h1{font-size:30px;font-weight:900;margin-block:10px}p{font-size:13px;line-height:2;color:var(--muted)}.meta{display:flex;justify-content:space-between;gap:10px;margin-block:20px;font-size:11px;color:var(--accent)}.meta span:first-child{direction:ltr}.message{min-height:64px;margin-block:16px}.actions{display:flex;gap:10px}button{min-height:48px;border-radius:14px;padding:10px 16px;background:var(--soft);color:var(--accent);font-weight:700;font-size:12px}.primary{width:100%;background:var(--accent);color:var(--canvas)}details{margin-top:20px;border-top:1px solid var(--line)}summary{min-height:48px;align-content:center;font-size:12px;cursor:pointer}form{display:flex;gap:8px}input{width:100%;min-width:0;padding:10px;border:1px solid var(--line);border-radius:12px;background:var(--surface);font-size:12px}.note{font-size:10px;margin-top:20px}button:disabled{opacity:.5}`,
 })
 export class DailyChallenge{
   readonly i18n = inject(I18n);

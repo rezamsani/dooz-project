@@ -25,7 +25,7 @@
   @if (!isFullscreenPlay()) {
     <header class="mobile-header">
       <button class="brand" type="button" (click)="goToTitleMenu(); homeTab.set('play')" [attr.aria-label]="'دوز، صفحهٔ اصلی' | t">
-        <span class="brand-mark" aria-hidden="true">✕<i></i></span><span>{{ 'دوز' | t }}<span class="brand-caption">{{ 'یک بازی، هزار فکر' | t }}</span></span>
+        <span class="brand-mark" aria-hidden="true"><app-dooz-icon name="close" /><app-dooz-icon name="circle" /></span><span>{{ 'دوز' | t }}<span class="brand-caption">{{ 'یک بازی، هزار فکر' | t }}</span></span>
       </button>
       <div class="header-tools">
         <app-choice-sheet class="language-picker" [compact]="true" [label]="'زبان' | t" [value]="i18n.language()" [options]="languages" (changed)="i18n.setLanguage($event)" />
@@ -33,7 +33,7 @@
           <button class="icon-button" type="button" (click)="homeTab.set('stats')" [attr.aria-label]="'پروفایل من' | t"><app-player-avatar [avatar]="profile.avatar()" [label]="'عکس پروفایل شما' | t" /></button>
         }
         @if (gameState() !== 'TITLE_MENU') {
-          <button class="icon-button" type="button" (click)="goToTitleMenu()" [attr.aria-label]="'بازگشت به منو' | t"><mat-icon class="ltr:rotate-180">arrow_forward</mat-icon></button>
+          <button class="icon-button" type="button" (click)="goToTitleMenu()" [attr.aria-label]="'بازگشت به منو' | t"><app-dooz-icon name="arrow" class="back-direction" /></button>
         }
         <button class="icon-button" type="button" (click)="toggleColorMode()" [attr.aria-label]="playerStats.colorMode() === 'dark' ? ('ظاهر روشن' | t) : ('ظاهر تیره' | t)"><app-dooz-icon [name]="playerStats.colorMode() === 'dark' ? 'day' : 'night'" /></button>
         <button class="icon-button" type="button" (click)="openHelp()" [attr.aria-label]="'راهنمای بازی' | t"><app-dooz-icon name="help" /></button>
@@ -48,7 +48,7 @@
   }
   @if (activeReaction(); as reaction) {
     <div role="status" class="pointer-events-none fixed right-4 bottom-[max(1rem,env(safe-area-inset-bottom))] left-4 z-30 mx-auto flex max-w-[300px] items-center gap-3 rounded-2xl border border-teal-500/30 bg-white p-3 shadow-xl dark:bg-[#1a2422]">
-      <mat-icon aria-hidden="true" class="reaction-mark" [attr.data-reaction]="reaction.id">{{ reaction.icon }}</mat-icon>
+      <app-dooz-icon [name]="reaction.icon" aria-hidden="true" class="reaction-mark" [attr.data-reaction]="reaction.id" />
       <span class="min-w-0"><bdi class="block truncate text-[11px] opacity-75">{{ reaction.senderName }}</bdi><strong class="block text-sm leading-6">{{ (reaction.label | t) }}</strong></span>
     </div>
   }
@@ -123,7 +123,7 @@
                         (click)="joinOnlineRoom()"
                         class="inline-flex min-h-[44px] shrink-0 items-center gap-1.5 whitespace-nowrap rounded-xl border border-teal-600/40 bg-teal-600/10 px-4 text-sm font-bold text-teal-800 transition-colors hover:bg-teal-600/20 dark:border-teal-400/50 dark:bg-teal-500/15 dark:text-teal-200 dark:hover:bg-teal-500/25"
                       >
-                        <mat-icon class="!h-[18px] !w-[18px] !text-[18px]">login</mat-icon>
+                        <app-dooz-icon name="login" class="!h-[18px] !w-[18px] !text-[18px]" />
                         <span>{{ 'ورود' | t }}</span>
                       </button>
                     </div>
@@ -302,7 +302,7 @@
                     [class.text-slate-500]="playerStats.colorMode() !== 'light'"
                     [class.dark:text-slate-400]="playerStats.colorMode() !== 'light'"
                   >
-                    <mat-icon class="!h-[16px] !w-[16px] !text-[16px]">light_mode</mat-icon>
+                    <app-dooz-icon name="day" class="!h-[16px] !w-[16px] !text-[16px]" />
                     <span>{{ 'تم روشن' | t }}</span>
                   </button>
                   <button
@@ -315,7 +315,7 @@
                     [class.text-slate-500]="playerStats.colorMode() !== 'dark'"
                     [class.dark:text-slate-400]="playerStats.colorMode() !== 'dark'"
                   >
-                    <mat-icon class="!h-[16px] !w-[16px] !text-[16px]">dark_mode</mat-icon>
+                    <app-dooz-icon name="night" class="!h-[16px] !w-[16px] !text-[16px]" />
                     <span>{{ 'تم تاریک' | t }}</span>
                   </button>
                 </div>
@@ -458,7 +458,7 @@
                       />
                     } @else {
                       <div class="flex h-full w-full items-center justify-center text-white/90">
-                        <mat-icon class="!h-[20px] !w-[20px] !text-[20px]">{{ env.icon }}</mat-icon>
+                        <app-dooz-icon [name]="env.icon" class="!h-[20px] !w-[20px] !text-[20px]" />
                       </div>
                     }
                   </div>
@@ -665,7 +665,7 @@
                     [attr.aria-label]="'شروع مجدد' | t"
                     class="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-slate-300 bg-slate-100 text-slate-800 transition-colors hover:bg-slate-200 dark:border-white/10 dark:bg-[#202020] dark:text-slate-100 dark:hover:bg-[#2E2E2E]"
                   >
-                    <mat-icon class="!h-[18px] !w-[18px] !text-[18px]">refresh</mat-icon>
+                    <app-dooz-icon name="restart" class="!h-[18px] !w-[18px] !text-[18px]" />
                   </button>
                 }
                 <button
@@ -674,9 +674,7 @@
                   [attr.aria-label]="soundFx.muted() ? ('روشن کردن صدا' | t) : ('خاموش کردن صدا' | t)"
                   class="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-slate-300 bg-slate-100 text-slate-800 transition-colors hover:bg-slate-200 dark:border-white/10 dark:bg-[#202020] dark:text-slate-100 dark:hover:bg-[#2E2E2E]"
                 >
-                  <mat-icon class="!h-[18px] !w-[18px] !text-[18px]">
-                    {{ soundFx.muted() ? 'volume_off' : 'volume_up' }}
-                  </mat-icon>
+                  <app-dooz-icon [name]="soundFx.muted() ? 'mute' : 'sound'" class="!h-[18px] !w-[18px] !text-[18px]" />
                 </button>
                 <button
                   type="button"
@@ -684,16 +682,14 @@
                   [attr.aria-label]="playerStats.colorMode() === 'dark' ? ('تم روشن' | t) : ('تم تاریک' | t)"
                   class="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-slate-300 bg-slate-100 text-slate-800 transition-colors hover:bg-slate-200 dark:border-white/10 dark:bg-[#202020] dark:text-slate-100 dark:hover:bg-[#2E2E2E]"
                 >
-                  <mat-icon class="!h-[18px] !w-[18px] !text-[18px]">
-                    {{ playerStats.colorMode() === 'dark' ? 'light_mode' : 'dark_mode' }}
-                  </mat-icon>
+                  <app-dooz-icon [name]="playerStats.colorMode() === 'dark' ? 'day' : 'night'" class="!h-[18px] !w-[18px] !text-[18px]" />
                 </button>
                 <button
                   type="button"
                   (click)="exitFullscreen()"
                   class="inline-flex h-9 items-center gap-1.5 whitespace-nowrap rounded-xl bg-teal-600 px-3 text-xs font-bold text-white transition-colors hover:bg-teal-500 dark:bg-teal-400 dark:text-slate-950 dark:hover:bg-teal-300"
                 >
-                  <mat-icon class="!h-[17px] !w-[17px] !text-[17px]">fullscreen_exit</mat-icon>
+                  <app-dooz-icon name="fullscreenExit" class="!h-[17px] !w-[17px] !text-[17px]" />
                   <span>{{ 'خروج از تمام‌صفحه' | t }}</span>
                 </button>
               </div>
@@ -715,7 +711,7 @@
           >
             <div class="flex min-w-0 flex-1 flex-col gap-1">
               <div class="flex min-w-0 items-center gap-2.5">
-                <mat-icon
+                <app-dooz-icon [name]="statusIcon()"
                   class="!h-[26px] !w-[26px] shrink-0 !text-[26px]"
                   [class.text-sky-600]="replayActive()"
                   [class.dark:text-sky-300]="replayActive()"
@@ -727,9 +723,7 @@
                   [class.dark:text-rose-400]="!replayActive() && activeWinner() === null && !activeIsDraw() && !(isMorrisVariant() && displayMorrisState().action === 'REMOVE') && activeTurn() === 'X'"
                   [class.text-teal-600]="!replayActive() && activeWinner() === null && !activeIsDraw() && !(isMorrisVariant() && displayMorrisState().action === 'REMOVE') && activeTurn() === 'O'"
                   [class.dark:text-teal-400]="!replayActive() && activeWinner() === null && !activeIsDraw() && !(isMorrisVariant() && displayMorrisState().action === 'REMOVE') && activeTurn() === 'O'"
-                >
-                  {{ statusIcon() }}
-                </mat-icon>
+                 />
                 <h1 aria-live="polite" [title]="statusHeadline()" class="min-w-0 truncate text-xl leading-7 font-extrabold text-slate-950 dark:text-white sm:text-2xl sm:leading-8">
                   {{ statusHeadline() }}
                 </h1>
@@ -769,7 +763,7 @@
                   [class.dark:text-slate-100]="remainingSeconds() > 7"
                   [attr.aria-label]="'زمان باقی‌مانده این نوبت' | t"
                 >
-                  <mat-icon class="!h-[18px] !w-[18px] !text-[18px]">timer</mat-icon>
+                  <app-dooz-icon name="stopwatch" class="!h-[18px] !w-[18px] !text-[18px]" />
                   <span dir="ltr">{{ formattedTimer() }}</span>
                 </div>
               }
@@ -782,7 +776,7 @@
                 [attr.aria-label]="is3DView() ? ('تغییر به نمای دوبعدی' | t) : ('تغییر به نمای سه‌بعدی' | t)"
                 class="inline-flex h-10 items-center gap-1.5 rounded-xl border border-slate-300 bg-slate-100 px-3 text-xs font-bold text-slate-700 transition-colors hover:border-teal-500 hover:text-teal-700 dark:border-white/15 dark:bg-[#0E0E0E] dark:text-slate-200 dark:hover:border-teal-400 dark:hover:text-teal-300"
               >
-                <mat-icon class="!h-[18px] !w-[18px] !text-[18px]">{{ is3DView() ? 'view_in_ar' : 'grid_view' }}</mat-icon>
+                <app-dooz-icon [name]="is3DView() ? 'cube' : 'grid'" class="!h-[18px] !w-[18px] !text-[18px]" />
                 <span>{{ is3DView() ? ('سه‌بعدی' | t) : ('دوبعدی' | t) }}</span>
               </button>
 
@@ -795,7 +789,7 @@
                   [attr.aria-label]="'بازی در حالت تمام‌صفحه' | t"
                   class="fullscreen-control inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-300 bg-slate-100 text-slate-700 transition-colors hover:border-teal-500 hover:text-teal-700 dark:border-white/15 dark:bg-[#0E0E0E] dark:text-slate-200 dark:hover:border-teal-400 dark:hover:text-teal-300"
                 >
-                  <mat-icon class="!h-[20px] !w-[20px] !text-[20px]">fullscreen</mat-icon>
+                  <app-dooz-icon name="fullscreen" class="!h-[20px] !w-[20px] !text-[20px]" />
                 </button>
               }
             </div>
@@ -822,7 +816,7 @@
                   (click)="copyRoomCode()"
                   class="inline-flex min-h-[42px] flex-1 items-center justify-center gap-1.5 whitespace-nowrap rounded-xl bg-teal-600 px-3.5 py-2 text-xs font-bold text-white transition-colors hover:bg-teal-500 dark:bg-teal-400 dark:text-slate-950 dark:hover:bg-teal-300"
                 >
-                  <mat-icon class="!h-[17px] !w-[17px] !text-[17px]">content_copy</mat-icon>
+                  <app-dooz-icon name="copy" class="!h-[17px] !w-[17px] !text-[17px]" />
                   <span>{{ 'کپی کد اتاق' | t }}</span>
                 </button>
                 <button
@@ -830,7 +824,7 @@
                   (click)="copyInviteLink()"
                   class="inline-flex min-h-[42px] flex-1 items-center justify-center gap-1.5 whitespace-nowrap rounded-xl border border-slate-300 bg-slate-100 px-3.5 py-2 text-xs font-bold text-slate-800 transition-colors hover:bg-slate-200 dark:border-white/15 dark:bg-[#202020] dark:text-slate-100 dark:hover:bg-[#2E2E2E]"
                 >
-                  <mat-icon class="!h-[17px] !w-[17px] !text-[17px]">link</mat-icon>
+                  <app-dooz-icon name="link" class="!h-[17px] !w-[17px] !text-[17px]" />
                   <span>{{ 'کپی لینک دعوت' | t }}</span>
                 </button>
               </div>
@@ -880,9 +874,7 @@
               [class.text-slate-800]="displayMorrisState().action !== 'REMOVE'"
               [class.dark:text-slate-200]="displayMorrisState().action !== 'REMOVE'"
             >
-              <mat-icon class="!h-[18px] !w-[18px] shrink-0 !text-[18px] text-teal-600 dark:text-teal-300">
-                {{ replayActive() ? 'history' : displayMorrisState().action === 'REMOVE' ? 'auto_awesome' : displayMorrisState().action === 'PLACE' ? 'add_circle_outline' : 'open_with' }}
-              </mat-icon>
+              <app-dooz-icon [name]="replayActive() ? 'history' : displayMorrisState().action === 'REMOVE' ? 'sparkle' : displayMorrisState().action === 'PLACE' ? 'place' : 'move'" class="!h-[18px] !w-[18px] shrink-0 !text-[18px] text-teal-600 dark:text-teal-300" />
               <span class="line-clamp-3 leading-5" aria-live="polite">{{ morrisPhaseHint() }}</span>
             </div>
           }
@@ -1048,7 +1040,7 @@
             <div class="match-toolbar" [attr.aria-label]="'ابزار بازی' | t">
               @if (!isOnlineMode()) {
                 <button type="button" (click)="undoLastMove()" [disabled]="!canUndo()"><app-dooz-icon name="undo" /><span>{{ 'برگشت' | t }}</span></button>
-                <button type="button" (click)="requestSmartHint()" [disabled]="!canRequestHint()"><mat-icon>lightbulb_outline</mat-icon><span>{{ 'راهنمایی' | t }}</span></button>
+                <button type="button" (click)="requestSmartHint()" [disabled]="!canRequestHint()"><app-dooz-icon name="hint" /><span>{{ 'راهنمایی' | t }}</span></button>
               }
               <button type="button" (click)="soundFx.toggleMute()" [attr.aria-pressed]="soundFx.muted()"><app-dooz-icon [name]="soundFx.muted() ? 'mute' : 'sound'" /><span>{{ soundFx.muted() ? ('صدا خاموش' | t) : ('صدا روشن' | t) }}</span></button>
               <button type="button" (click)="openHelp()"><app-dooz-icon name="help" /><span>{{ 'قوانین' | t }}</span></button>
@@ -1064,7 +1056,7 @@
                 </span>
               </div>
               <div class="flex flex-wrap items-center justify-between gap-2">
-                <div class="flex items-center gap-1.5">
+                <div class="flex max-w-full flex-wrap items-center gap-1">
                   <button
                     type="button"
                     [disabled]="replayStep() === 0"
@@ -1072,7 +1064,7 @@
                     [attr.aria-label]="'اول بازی' | t"
                     class="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-300 bg-slate-100 text-slate-800 hover:bg-slate-200 disabled:opacity-40 dark:border-white/10 dark:bg-[#202020] dark:text-slate-100 dark:hover:bg-[#2E2E2E]"
                   >
-                    <mat-icon class="!h-[18px] !w-[18px] !text-[18px]">last_page</mat-icon>
+                    <app-dooz-icon name="first" class="rtl-native !h-[18px] !w-[18px] !text-[18px]" />
                   </button>
                   <button
                     type="button"
@@ -1081,17 +1073,15 @@
                     [attr.aria-label]="'حرکت قبلی' | t"
                     class="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-300 bg-slate-100 text-slate-800 hover:bg-slate-200 disabled:opacity-40 dark:border-white/10 dark:bg-[#202020] dark:text-slate-100 dark:hover:bg-[#2E2E2E]"
                   >
-                    <mat-icon class="!h-[18px] !w-[18px] !text-[18px]">chevron_right</mat-icon>
+                    <app-dooz-icon name="previous" class="rtl-native !h-[18px] !w-[18px] !text-[18px]" />
                   </button>
                   <button
                     type="button"
                     (click)="toggleReplayAutoPlay()"
-                    class="inline-flex h-10 items-center gap-1.5 rounded-xl bg-sky-600 px-3.5 text-xs font-bold text-white hover:bg-sky-500 dark:bg-sky-400 dark:text-slate-950 dark:hover:bg-sky-300"
+                    class="inline-flex h-10 min-w-11 items-center justify-center gap-1.5 rounded-xl bg-sky-600 px-3.5 text-xs font-bold text-white hover:bg-sky-500 max-[360px]:px-2 dark:bg-sky-400 dark:text-slate-950 dark:hover:bg-sky-300"
                   >
-                    <mat-icon class="!h-[18px] !w-[18px] !text-[18px]">
-                      {{ replayAutoPlaying() ? 'pause' : 'play_arrow' }}
-                    </mat-icon>
-                    <span>{{ replayAutoPlaying() ? ('توقف' | t) : ('پخش خودکار' | t) }}</span>
+                    <app-dooz-icon [name]="replayAutoPlaying() ? 'pause' : 'play'" class="!h-[18px] !w-[18px] !text-[18px]" />
+                    <span class="max-[360px]:sr-only">{{ replayAutoPlaying() ? ('توقف' | t) : ('پخش خودکار' | t) }}</span>
                   </button>
                   <button
                     type="button"
@@ -1100,7 +1090,7 @@
                     [attr.aria-label]="'حرکت بعدی' | t"
                     class="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-300 bg-slate-100 text-slate-800 hover:bg-slate-200 disabled:opacity-40 dark:border-white/10 dark:bg-[#202020] dark:text-slate-100 dark:hover:bg-[#2E2E2E]"
                   >
-                    <mat-icon class="!h-[18px] !w-[18px] !text-[18px]">chevron_left</mat-icon>
+                    <app-dooz-icon name="next" class="rtl-native !h-[18px] !w-[18px] !text-[18px]" />
                   </button>
                   <button
                     type="button"
@@ -1109,7 +1099,7 @@
                     [attr.aria-label]="'پایان بازی' | t"
                     class="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-300 bg-slate-100 text-slate-800 hover:bg-slate-200 disabled:opacity-40 dark:border-white/10 dark:bg-[#202020] dark:text-slate-100 dark:hover:bg-[#2E2E2E]"
                   >
-                    <mat-icon class="!h-[18px] !w-[18px] !text-[18px]">first_page</mat-icon>
+                    <app-dooz-icon name="last" class="rtl-native !h-[18px] !w-[18px] !text-[18px]" />
                   </button>
                 </div>
 
@@ -1118,7 +1108,7 @@
                   (click)="exitReplay()"
                   class="inline-flex h-10 items-center gap-1 rounded-xl border border-slate-300 px-3 text-xs font-semibold text-slate-700 hover:bg-slate-100 dark:border-white/15 dark:text-slate-200 dark:hover:bg-white/5"
                 >
-                  <mat-icon class="!h-[16px] !w-[16px] !text-[16px]">close</mat-icon>
+                  <app-dooz-icon name="close" class="!h-[16px] !w-[16px] !text-[16px]" />
                   <span>{{ 'بستن' | t }}</span>
                 </button>
               </div>
@@ -1150,7 +1140,7 @@
                   (click)="nextRound()"
                   class="inline-flex min-h-[42px] items-center gap-1.5 whitespace-nowrap rounded-xl bg-teal-600 px-4 py-2 text-sm font-bold text-white transition-colors hover:bg-teal-500 disabled:opacity-60 dark:bg-teal-400 dark:text-slate-950 dark:hover:bg-teal-300"
                 >
-                  <mat-icon class="!h-[18px] !w-[18px] !text-[18px]">replay</mat-icon>
+                  <app-dooz-icon name="replay" class="!h-[18px] !w-[18px] !text-[18px]" />
                   <span>
                     @if (isOnlineMode()) {
                       {{ onlineRoom()?.series?.winner ? ('رقابت به پایان رسید' | t) : hasVotedRematch() ? ('در انتظار تایید حریف...' | t) : ('درخواست بازی مجدد' | t) }}
@@ -1166,7 +1156,7 @@
                     (click)="startReplay()"
                     class="inline-flex min-h-[42px] items-center gap-1.5 whitespace-nowrap rounded-xl border border-sky-500/40 bg-sky-50 px-3.5 py-2 text-sm font-semibold text-sky-800 transition-colors hover:bg-sky-100 dark:border-sky-400/35 dark:bg-sky-500/10 dark:text-sky-200 dark:hover:bg-sky-500/20"
                   >
-                    <mat-icon class="!h-[18px] !w-[18px] !text-[18px]">history</mat-icon>
+                    <app-dooz-icon name="history" class="!h-[18px] !w-[18px] !text-[18px]" />
                     <span>{{ 'بازپخش بازی' | t }}</span>
                   </button>
                 }
@@ -1176,7 +1166,7 @@
                   (click)="goToTitleMenu()"
                   class="inline-flex min-h-[42px] items-center gap-1.5 whitespace-nowrap rounded-xl border border-slate-300 px-3.5 py-2 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-100 dark:border-white/15 dark:text-slate-200 dark:hover:bg-white/5"
                 >
-                  <mat-icon class="!h-[18px] !w-[18px] !text-[18px]">tune</mat-icon>
+                  <app-dooz-icon name="settings" class="!h-[18px] !w-[18px] !text-[18px]" />
                   <span>{{ 'تنظیمات' | t }}</span>
                 </button>
               </div>
@@ -1273,7 +1263,7 @@
                       (click)="sendQuickEmote(em.id)"
                       class="reaction-button inline-flex min-h-11 items-center gap-2 rounded-xl border px-2 py-1 text-xs font-semibold"
                     >
-                      <mat-icon aria-hidden="true" class="reaction-mark" [attr.data-reaction]="em.id">{{ em.icon }}</mat-icon>
+                      <app-dooz-icon [name]="em.icon" aria-hidden="true" class="reaction-mark" [attr.data-reaction]="em.id" />
                       <span>{{ (em.label | t) }}</span>
                     </button>
                   }
@@ -1288,7 +1278,7 @@
                     (click)="offerOnlineDraw()"
                     class="inline-flex min-h-[42px] items-center justify-center gap-1.5 whitespace-nowrap rounded-xl border border-slate-300 bg-slate-100 px-3 text-xs font-semibold text-slate-800 hover:bg-slate-200 disabled:opacity-50 dark:border-white/10 dark:bg-[#202020] dark:text-slate-100 dark:hover:bg-[#2E2E2E]"
                   >
-                    <mat-icon class="!h-[17px] !w-[17px] !text-[17px]">handshake</mat-icon>
+                    <app-dooz-icon name="agreement" class="!h-[17px] !w-[17px] !text-[17px]" />
                     <span>{{ youOfferedDraw() ? ('پیشنهاد ارسال شد' | t) : ('پیشنهاد مساوی' | t) }}</span>
                   </button>
                   <button
@@ -1296,7 +1286,7 @@
                     (click)="resignOnlineMatch()"
                     class="inline-flex min-h-[42px] items-center justify-center gap-1.5 whitespace-nowrap rounded-xl border border-rose-500/35 bg-rose-50 px-3 text-xs font-semibold text-rose-700 hover:bg-rose-100 dark:border-rose-400/25 dark:bg-rose-500/10 dark:text-rose-200 dark:hover:bg-rose-500/20"
                   >
-                    <mat-icon class="!h-[17px] !w-[17px] !text-[17px]">flag</mat-icon>
+                    <app-dooz-icon name="flag" class="!h-[17px] !w-[17px] !text-[17px]" />
                     <span>{{ 'تسلیم شدن' | t }}</span>
                   </button>
                 </div>
@@ -1313,9 +1303,7 @@
                 (click)="toggleColorMode()"
                 class="inline-flex min-h-[34px] items-center gap-1.5 rounded-lg border border-slate-300 bg-slate-100 px-2.5 text-xs font-semibold text-slate-800 transition-colors hover:border-teal-500 dark:border-white/15 dark:bg-[#202020] dark:text-slate-100 dark:hover:border-teal-400"
               >
-                <mat-icon class="!h-[16px] !w-[16px] !text-[16px]">
-                  {{ playerStats.colorMode() === 'dark' ? 'light_mode' : 'dark_mode' }}
-                </mat-icon>
+                <app-dooz-icon [name]="playerStats.colorMode() === 'dark' ? 'day' : 'night'" class="!h-[16px] !w-[16px] !text-[16px]" />
                 <span>{{ playerStats.colorMode() === 'dark' ? ('تم روشن' | t) : ('تم تاریک' | t) }}</span>
               </button>
             </div>
@@ -1347,7 +1335,7 @@
                   (click)="restartCurrentRound()"
                   class="inline-flex min-h-[44px] items-center justify-center gap-2 whitespace-nowrap rounded-xl border border-slate-300 bg-slate-100 px-3 py-2 text-sm font-semibold text-slate-800 transition-colors hover:bg-slate-200 dark:border-white/10 dark:bg-[#202020] dark:text-slate-100 dark:hover:bg-[#2E2E2E]"
                 >
-                  <mat-icon class="!h-[18px] !w-[18px] !text-[18px]">refresh</mat-icon>
+                  <app-dooz-icon name="restart" class="!h-[18px] !w-[18px] !text-[18px]" />
                   <span>{{ 'شروع مجدد' | t }}</span>
                 </button>
               }
@@ -1357,9 +1345,7 @@
                 (click)="soundFx.toggleMute()"
                 class="inline-flex min-h-[44px] items-center justify-center gap-2 whitespace-nowrap rounded-xl border border-slate-300 bg-slate-100 px-3 py-2 text-sm font-semibold text-slate-800 transition-colors hover:bg-slate-200 dark:border-white/10 dark:bg-[#202020] dark:text-slate-100 dark:hover:bg-[#2E2E2E]"
               >
-                <mat-icon class="!h-[18px] !w-[18px] !text-[18px]">
-                  {{ soundFx.muted() ? 'volume_off' : 'volume_up' }}
-                </mat-icon>
+                <app-dooz-icon [name]="soundFx.muted() ? 'mute' : 'sound'" class="!h-[18px] !w-[18px] !text-[18px]" />
                 <span>{{ soundFx.muted() ? ('صدا خاموش' | t) : ('صدا روشن' | t) }}</span>
               </button>
 
@@ -1368,9 +1354,7 @@
                 (click)="toggleFullscreen()"
                 class="inline-flex min-h-[44px] items-center justify-center gap-2 whitespace-nowrap rounded-xl border border-teal-600/35 bg-teal-50 px-3 py-2 text-sm font-semibold text-teal-800 transition-colors hover:bg-teal-100 dark:border-teal-400/30 dark:bg-teal-500/10 dark:text-teal-200 dark:hover:bg-teal-500/20"
               >
-                <mat-icon class="!h-[18px] !w-[18px] !text-[18px]">
-                  {{ isFullscreen() ? 'fullscreen_exit' : 'fullscreen' }}
-                </mat-icon>
+                <app-dooz-icon [name]="isFullscreen() ? 'fullscreenExit' : 'fullscreen'" class="!h-[18px] !w-[18px] !text-[18px]" />
                 <span>{{ isFullscreen() ? ('خروج تمام‌صفحه' | t) : ('تمام‌صفحه' | t) }}</span>
               </button>
 
@@ -1380,7 +1364,7 @@
                   (click)="goToTitleMenu()"
                   class="inline-flex min-h-[44px] items-center justify-center gap-2 whitespace-nowrap rounded-xl border border-slate-300 bg-slate-100 px-3 py-2 text-sm font-semibold text-slate-800 transition-colors hover:bg-slate-200 dark:border-white/10 dark:bg-[#202020] dark:text-slate-100 dark:hover:bg-[#2E2E2E]"
                 >
-                  <mat-icon class="!h-[18px] !w-[18px] !text-[18px]">logout</mat-icon>
+                  <app-dooz-icon name="logout" class="!h-[18px] !w-[18px] !text-[18px]" />
                   <span>{{ 'خروج از اتاق' | t }}</span>
                 </button>
               }
@@ -1413,7 +1397,7 @@
                         />
                       } @else {
                         <span class="flex h-full w-full items-center justify-center bg-slate-200 text-slate-700 dark:bg-[#242424] dark:text-teal-300">
-                          <mat-icon class="!h-[16px] !w-[16px] !text-[16px]">{{ env.icon }}</mat-icon>
+                          <app-dooz-icon [name]="env.icon" class="!h-[16px] !w-[16px] !text-[16px]" />
                         </span>
                       }
                     </button>
@@ -1553,7 +1537,7 @@
                     (click)="clearScores()"
                     class="inline-flex items-center gap-1 whitespace-nowrap text-xs font-medium text-slate-500 transition-colors hover:text-rose-600 dark:text-slate-400 dark:hover:text-rose-300"
                   >
-                    <mat-icon class="!h-[16px] !w-[16px] !text-[16px]">delete_outline</mat-icon>
+                    <app-dooz-icon name="trash" class="!h-[16px] !w-[16px] !text-[16px]" />
                     <span>{{ 'پاک کردن' | t }}</span>
                   </button>
                 }
@@ -1629,7 +1613,7 @@
             (click)="closeHelp()"
             class="inline-flex h-10 w-10 items-center justify-center rounded-xl text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-white/10 dark:hover:text-white"
           >
-            <mat-icon>close</mat-icon>
+            <app-dooz-icon name="close" />
           </button>
         </div>
 
@@ -1666,7 +1650,7 @@
             (click)="closeHelp()"
             class="inline-flex min-h-[42px] items-center gap-2 rounded-xl bg-teal-600 px-5 py-2 text-sm font-bold text-white transition-colors hover:bg-teal-500 dark:bg-teal-400 dark:text-slate-950 dark:hover:bg-teal-300"
           >
-            <mat-icon class="!h-[18px] !w-[18px] !text-[18px]">check</mat-icon>
+            <app-dooz-icon name="check" class="!h-[18px] !w-[18px] !text-[18px]" />
             <span>{{ 'متوجه شدم' | t }}</span>
           </button>
         </div>

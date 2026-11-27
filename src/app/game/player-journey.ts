@@ -6,15 +6,15 @@ import { MatchOutcome } from './player-score';
 import { tehranDay } from './learning-engine';
 const KEY='dooz_journey_v1';
 export const BADGES=[
-  {id:'first_win',name:'اولین پیروزی',detail:'اولین برد در برابر ربات یا حریف آنلاین',icon:'flag'},
+  {id:'first_win',name:'اولین پیروزی',detail:'اولین برد در برابر ربات یا حریف آنلاین',icon: 'flag'},
   {id:'clean_win',name:'روی پای خودت',detail:'برد مقابل ربات بدون راهنمایی یا برگشت حرکت',icon:'verified'},
   {id:'saved_win',name:'نجات‌دهنده',detail:'بستن یک تهدید مستقیم و بردن بازی',icon:'shield'},
-  {id:'beat_simin',name:'شکستن دفاع',detail:'شکست سیمین و باز کردن رستم',icon:'psychology'},
-  {id:'draw_rostam',name:'هم‌قدِ رستم',detail:'برد یا مساوی مقابل رستم',icon:'workspace_premium'},
-  {id:'win_nine',name:'استاد حلقه‌ها',detail:'برد در دوز ۹ تایی مقابل ربات',icon:'crop_square'},
-  {id:'win_twelve',name:'دوازده‌گام',detail:'برد در دوز ۱۲ تایی مقابل ربات',icon:'hub'},
-  {id:'daily_3',name:'سه روز فکر تازه',detail:'حل معمای روز در سه روز پیاپی',icon:'local_fire_department'},
-  {id:'daily_7',name:'هفتهٔ طلایی',detail:'حل معمای روز در هفت روز پیاپی',icon:'auto_awesome'},
+  {id:'beat_simin',name:'شکستن دفاع',detail:'شکست سیمین و باز کردن رستم',icon: 'strategy'},
+  {id:'draw_rostam',name:'هم‌قدِ رستم',detail:'برد یا مساوی مقابل رستم',icon: 'medal'},
+  {id:'win_nine',name:'استاد حلقه‌ها',detail:'برد در دوز ۹ تایی مقابل ربات',icon: 'nine'},
+  {id:'win_twelve',name:'دوازده‌گام',detail:'برد در دوز ۱۲ تایی مقابل ربات',icon: 'twelve'},
+  {id:'daily_3',name:'سه روز فکر تازه',detail:'حل معمای روز در سه روز پیاپی',icon: 'flame'},
+  {id:'daily_7',name:'هفتهٔ طلایی',detail:'حل معمای روز در هفت روز پیاپی',icon: 'sparkle'},
 ] as const;
 interface DailyResult{date:string;attempts:number;moves:number;onDay:boolean;}
 interface Journey{selected:BotId;wins:Record<BotId,number>;badges:Record<string,number>;solved:DailyResult[];attempts:Record<string,number>;processed:string[];}

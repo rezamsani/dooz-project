@@ -9,6 +9,7 @@
 .mobile-header { gap: 6px; }
 .header-tools { align-items: center; }
 .header-tools app-dooz-icon { font-size: 17px; }
+:host-context([dir="rtl"]) .back-direction { transform: scaleX(-1); }
 .language-picker { padding: 0; background: transparent; min-width: 54px; }
 
 .home-navigation { border-radius: 18px; box-shadow: 0 3px 14px #1637260a; }

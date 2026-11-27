@@ -1,6 +1,6 @@
 import { TranslatePipe } from '../i18n';
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
-import { MatIconModule } from '@angular/material/icon';
+import { DoozIcon } from '../ui/dooz-icon';
 import {
   CURATED_COLOR_SWATCHES,
   getDefaultPieceHex,
@@ -15,12 +15,12 @@ type PaletteTarget = 'X' | 'O' | 'BOARD';
 @Component({
   selector: 'app-color-palette-picker',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [TranslatePipe, MatIconModule],
+  imports: [TranslatePipe, DoozIcon],
   template: `
     <div class="space-y-2.5 rounded-xl border border-slate-900/10 bg-slate-50/90 p-2.5 dark:border-white/10 dark:bg-[#0E0E0E]/90">
       <div class="flex items-center justify-between gap-2">
         <div class="flex items-center gap-1.5 text-xs font-bold text-slate-700 dark:text-slate-200">
-          <mat-icon class="!h-[16px] !w-[16px] !text-[16px] text-teal-600 dark:text-teal-300">palette</mat-icon>
+          <app-dooz-icon name="style" class="!h-[16px] !w-[16px] !text-[16px] text-teal-600 dark:text-teal-300" />
           <span>{{ 'پالت رنگ آزاد (CSS)' | t }}</span>
         </div>
 
@@ -133,7 +133,7 @@ type PaletteTarget = 'X' | 'O' | 'BOARD';
             [title]="'حذف رنگ سفارشی این بخش' | t"
             class="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-slate-300 bg-white text-slate-600 transition-colors hover:border-amber-500 hover:text-amber-600 dark:border-white/15 dark:bg-[#202020] dark:text-slate-300 dark:hover:text-amber-300"
           >
-            <mat-icon class="!h-[16px] !w-[16px] !text-[16px]">restart_alt</mat-icon>
+            <app-dooz-icon name="restart" class="!h-[16px] !w-[16px] !text-[16px]" />
           </button>
         }
       </div>

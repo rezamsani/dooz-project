@@ -1,6 +1,6 @@
 import { I18n, TranslatePipe } from './i18n';
 import { ChoiceOption, ChoiceSheet } from './ui/choice-sheet';
-import { DoozIcon } from './ui/dooz-icon';
+import { DoozIcon, DoozIconName } from './ui/dooz-icon';
 import { isPlatformBrowser } from '@angular/common';
 import {
   ChangeDetectionStrategy,
@@ -13,7 +13,6 @@ import {
   NgZone,
 } from '@angular/core';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
-import { MatIconModule } from '@angular/material/icon';
 import { ColorPalettePicker } from './game/color-palette-picker';
 import { CameraPreset, Dooz3DStage } from './game/dooz-3d-stage';
 import { DoozBoard } from './game/dooz-board';
@@ -113,7 +112,6 @@ function createPreviewMorrisState(variant: MorrisVariant): MorrisState {
   imports: [
     ChoiceSheet, DoozIcon,
     TranslatePipe,
-    MatIconModule,
     ReactiveFormsModule,
     DoozBoard,
     MorrisBoard,
@@ -598,19 +596,19 @@ export class App {
     return this.i18n.text("نوبت بازیکن {0}", [turn]);
   });
 
-  readonly statusIcon = computed<string>(() => {
+  readonly statusIcon = computed<DoozIconName>(() => {
     if (this.replayActive()) return 'history';
-    if (this.isWaitingForOnlineOpponent()) return 'hourglass_empty';
+    if (this.isWaitingForOnlineOpponent()) return 'hourglass';
     const winner = this.activeWinner();
     if (winner) {
-      if (this.gameMode() === 'AI' && winner !== this.humanSymbol()) return 'smart_toy';
-      if (this.isOnlineMode() && winner !== this.onlineRole()) return 'sports_score';
-      return 'emoji_events';
+      if (this.gameMode() === 'AI' && winner !== this.humanSymbol()) return 'bot';
+      if (this.isOnlineMode() && winner !== this.onlineRole()) return 'finish';
+      return 'trophy';
     }
-    if (this.activeIsDraw()) return 'handshake';
-    if (this.isAiThinking()) return 'hourglass_top';
-    if (this.isMorrisVariant() && this.morrisState().action === 'REMOVE') return 'auto_awesome';
-    return this.activeTurn() === 'X' ? 'close' : 'radio_button_unchecked';
+    if (this.activeIsDraw()) return 'agreement';
+    if (this.isAiThinking()) return 'hourglass';
+    if (this.isMorrisVariant() && this.morrisState().action === 'REMOVE') return 'sparkle';
+    return this.activeTurn() === 'X' ? 'close' : 'circle';
   });
 
   readonly difficultyLabel = computed<string>(() => {

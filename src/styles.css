@@ -1,5 +1,4 @@
 @import '@fontsource-variable/vazirmatn';
-@import '@fontsource/material-icons/400.css';
 @import "tailwindcss";
 @custom-variant dark (&:where(.dark, .dark *));
 
@@ -44,21 +43,7 @@
   font-variant-numeric: tabular-nums;
 }
 
-.material-icons {
-  font-family: 'Material Icons';
-  font-weight: normal;
-  font-style: normal;
-  font-size: 24px;
-  line-height: 1;
-  letter-spacing: normal;
-  text-transform: none;
-  display: inline-block;
-  white-space: nowrap;
-  word-wrap: normal;
-  direction: ltr;
-  font-feature-settings: 'liga';
-  -webkit-font-smoothing: antialiased;
-}
+html[dir="ltr"] app-dooz-icon.rtl-native { transform: scaleX(-1); }
 
 @keyframes strokeDraw {
   from {

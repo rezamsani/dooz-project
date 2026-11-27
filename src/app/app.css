@@ -6,7 +6,8 @@
 .brand { display: flex; align-items: center; gap: 10px; text-align: start; font-size: 23px; font-weight: 900; }
 .brand-caption { display: block; color: var(--muted); font-size: 10px; font-weight: 400; }
 .brand-mark { display: flex; align-items: center; gap: 2px; color: var(--accent); font-size: 26px; }
-.brand-mark i { width: 15px; height: 15px; border: 4px solid #d5a66d; border-radius: 50%; }
+.brand-mark app-dooz-icon { width: 23px; height: 23px; }
+.brand-mark app-dooz-icon:last-child { width: 18px; height: 18px; color: var(--gold, #d5a66d); }
 .header-tools { display: flex; gap: 4px; }
 .language-picker { min-width: 54px; }
 button { font-family: inherit; }
@@ -18,7 +19,6 @@ button { font-family: inherit; }
 .home-navigation { display: grid; grid-template-columns: repeat(3,1fr); padding: 5px; border-radius: 16px; background: var(--surface); border: 1px solid var(--line); }
 .home-navigation button { min-height: 46px; display: flex; align-items: center; justify-content: center; gap: 7px; border-radius: 11px; font-size: 13px; color: var(--muted); }
 .home-navigation .selected { background: var(--soft); color: var(--accent); font-weight: 800; }
-.home-navigation mat-icon { font-size: 20px; width: 20px; height: 20px; }
 .eyebrow { color: var(--accent); font-size: 11px; font-weight: 600; }
 .welcome h1 { font-size: clamp(30px, 6vw, 42px); line-height: 1.55; font-weight: 900; letter-spacing: -1.5px; margin-block: 7px 10px; }
 .welcome p, .page-heading p { font-size: 12px; color: var(--muted); line-height: 1.9; }
@@ -28,18 +28,15 @@ button { font-family: inherit; }
 .section-label > span { color: var(--muted); font-size: 11px; }
 .mode-options, .variant-options { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 9px; }
 .mode-options button { display: flex; flex-direction: column; align-items: center; gap: 7px; padding: 18px 4px 14px; border: 1px solid var(--line); border-radius: 18px; background: var(--surface); }
-.mode-options mat-icon { width: 27px; height: 27px; font-size: 27px; color: var(--muted); margin-bottom: 2px; }
 .mode-options strong { font-size: 13px; font-weight: 700; }
 .mode-options small { color: var(--muted); font-size: 10px; }
 .mode-options .chosen, .variant-options .chosen { background: var(--soft); border-color: var(--accent); color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
-.mode-options .chosen mat-icon { color: var(--accent); }
 .variant-options button { display: flex; align-items: center; justify-content: center; gap: 10px; min-height: 62px; padding: 8px 4px; border: 1px solid var(--line); background: var(--surface); border-radius: 14px; }
 .variant-options b { font-size: 25px; line-height: 1; }
 .variant-options span { font-size: 11px; }
 .advanced-settings, .appearance-panel, .match-extras { border-top: 1px solid var(--line); }
 summary { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 52px; list-style: none; cursor: pointer; font-size: 12px; font-weight: 600; color: var(--muted); }
 summary::-webkit-details-marker { display: none; }
-details[open] > summary mat-icon { transform: rotate(180deg); }
 .advanced-content { padding-block: 12px 20px; }
 .advanced-content button { min-height: 44px; }
 .launch-button { display: flex; align-items: center; justify-content: space-between; width: 100%; min-height: 56px; padding: 14px 22px; border-radius: 17px; background: var(--accent); color: var(--canvas); font-weight: 800; font-size: 16px; transition: filter .15s, transform .15s; }
@@ -81,7 +78,7 @@ button:focus-visible, summary:focus-visible { outline: 2px solid var(--accent); 
 .camera-picker button[aria-pressed="true"] { background: #a3d5bb; color: #132820; }
 .reaction-button { background: var(--surface); border-color: var(--line); }
 .reaction-button:hover { border-color: var(--accent); }
-.reaction-mark { display: grid; place-items: center; flex: none; width: 32px; height: 32px; border-radius: 10px; font-size: 18px; color: #433117; background: #f1d699; }
+.reaction-mark { display: grid; place-items: center; flex: none; width: 34px; height: 34px; padding: 6px; border-radius: 11px; color: #433117; background: #f1d699; box-shadow: inset 0 1px 1px #fff9, inset 0 -2px 3px #1f2d241c; }
 .reaction-mark[data-reaction="nice"] { color: #143e31; background: #a7dcc6; }
 .reaction-mark[data-reaction="wow"] { color: #452c66; background: #dfcdf8; }
 .reaction-mark[data-reaction="gg"] { color: #173b58; background: #c0e0fa; }

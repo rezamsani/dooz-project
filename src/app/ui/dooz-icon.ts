@@ -19,7 +19,55 @@ const ICON_PATHS = {
   undo: 'M8 4 3 9l5 5 M3 9h11a5 5 0 0 1 0 10h-2',
   hint: 'M9 18h6 M10 21h4 M8 15c0-1.3-2-3-2-6a6 6 0 0 1 12 0c0 3-2 4.7-2 6H8Z',
   mute: 'M3 9h4l5-4v14l-5-4H3V9Z M16 10l5 5m0-5-5 5',
+  plus: 'M12 5v14M5 12h14',
+  circle: 'M20 12a8 8 0 1 1-16 0 8 8 0 0 1 16 0Z',
+  login: 'M13 4h5a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-5M3 12h12m-4-4 4 4-4 4',
+  logout: 'M11 4H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h5M9 12h12m-4-4 4 4-4 4',
+  restart: 'M4 5v5h5 M4.3 10a8 8 0 1 1 1.5 7',
+  history: 'M4 5v5h5 M4.3 10a8 8 0 1 1 1.5 7 M12 7.5v5l3 1.5',
+  replay: 'M4 5v5h5 M4.3 10a8 8 0 1 1 1.5 7 M10 9l5 3.5-5 3.5V9Z',
+  fullscreen: 'M9 4H4v5m11-5h5v5m0 6v5h-5M4 15v5h5',
+  fullscreenExit: 'M4 9h5V4m11 5h-5V4m0 16v-5h5M9 20v-5H4',
+  stopwatch: 'M9 2h6m-3 0v4 M17.5 7.5 20 5 M20 14a8 8 0 1 1-16 0 8 8 0 0 1 16 0Z M12 10v4l3 1.5',
+  cube: 'M12 3 21 8v8l-9 5-9-5V8l9-5Z M3 8l9 5 9-5M12 13v8',
+  grid: 'M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h6v6h-6z',
+  copy: 'M8 8h11a1 1 0 0 1 1 1v11H9a1 1 0 0 1-1-1V8Z M16 4H5a1 1 0 0 0-1 1v11',
+  link: 'M10 14l4-4 M8 16l-2 2a3 3 0 0 1-4-4l4-4a3 3 0 0 1 4 0 M16 8l2-2a3 3 0 1 1 4 4l-4 4a3 3 0 0 1-4 0',
+  sparkle: 'M11 3l2.5 6.5L20 12l-6.5 2.5L11 21l-2.5-6.5L2 12l6.5-2.5L11 3Z M19 3v4m-2-2h4',
+  place: 'M20 12a8 8 0 1 1-16 0 8 8 0 0 1 16 0Z M12 8v8m-4-4h8',
+  move: 'M12 3v18M3 12h18 M9 6l3-3 3 3m-6 12 3 3 3-3M6 9l-3 3 3 3m12-6 3 3-3 3',
+  pause: 'M8 5h3v14H8zM14 5h3v14h-3z',
+  next: 'm14 6-6 6 6 6',
+  previous: 'm10 6 6 6-6 6',
+  first: 'M18 5v14m-8-13 6 6-6 6',
+  last: 'M6 5v14m8-13-6 6 6 6',
+  settings: 'M4 7h16M4 12h16M4 17h16 M8 5v4m8 1v4m-6 1v4',
+  agreement: 'M3 8l4-2 3 2m11 0-4-2-4 2-3 3c-.7.9.4 2.3 1.4 1.7l2-1.2 4.7 4.5c1.4 1.4-.5 3.2-1.9 2 M3 8v6l5.8 5a2 2 0 0 0 2.5.1l.8-.6 M21 8v6l-2.5 2.1 M8.5 15l3.6 3.5a1.8 1.8 0 0 0 2.5.1l1-.9 M12 15l3.1 3',
+  flag: 'M5 21V4m0 1c4-3 7 3 14 0v9c-7 3-10-3-14 0',
+  trash: 'M3 6h18 M9 6V3h6v3 M5 6l1 14h12l1-14 M10 10v6m4-6v6',
+  hourglass: 'M6 3h12M6 21h12M7 3v3c0 3 2 4 5 6 3 2 5 3 5 6v3M17 3v3c0 3-2 4-5 6-3 2-5 3-5 6v3',
+  trophy: 'M8 4h8v7a4 4 0 0 1-8 0V4Z M8 6H4v2a4 4 0 0 0 4 4m8-6h4v2a4 4 0 0 1-4 4M12 15v5m-4 0h8',
+  finish: 'M5 21V4h14v11H5 M9.7 4v11m4.6-11v11M5 9.5h14',
+  flame: 'M13 2c.2 4.7-2.9 5.6-3.2 8.6-1.5-.3-2.7-1.4-3-2.8C1 15 5.6 21 12 21c6.9 0 10.2-7 5.1-12.8-.1 2.3-1.5 3.4-2.5 3.6C16.4 8 14.6 4.3 13 2Z M12 21c-3.2 0-4.8-4.1-.3-7.6.3 2.3 3.7 3.8 2.4 6.4',
+  medal: 'M7 3h4l5 6m1-6h-4L8 9 M18 15a6 6 0 1 1-12 0 6 6 0 0 1 12 0Z M12 12l.8 1.8 2 .2-1.5 1.3.4 2-1.7-1-1.7 1 .4-2-1.5-1.3 2-.2.8-1.8Z',
+  verified: 'M12 3l2.6 2.2 3.4.3.5 3.4 2.5 2.6-2 2.9-.3 3.6-3.6.6L12 21l-2.9-2.4-3.6-.6-.3-3.6-2-2.9 2.5-2.6.5-3.4 3.4-.3L12 3Z M8.5 12l2.3 2.3 4.7-5',
+  shield: 'M12 3 4.5 6v5.5c0 4.4 2.8 7.3 7.5 9.5 4.7-2.2 7.5-5.1 7.5-9.5V6L12 3Z M9 12l2 2 4-4',
+  strategy: 'M7 8l5-5 5 5-5 5-5-5Z M12 13v4m-6 0h12l2 3H4l2-3Z',
+  nine: 'M3.5 3.5h17v17h-17zM8 8h8v8H8z M12 3.5V8m0 8v4.5M3.5 12H8m8 0h4.5',
+  twelve: 'M3.5 3.5h17v17h-17zM8 8h8v8H8z M12 3.5V8m0 8v4.5M3.5 12H8m8 0h4.5M3.5 3.5 8 8m8 8 4.5 4.5m0-17L16 8m-8 8-4.5 4.5',
+  arch: 'M4 21h16V11c0-4-5.5-7.5-8-9-2.5 1.5-8 5-8 9v10Z M9 21v-6a3 3 0 0 1 6 0v6 M4 11h16',
+  diamond: 'M12 3 21 12l-9 9-9-9 9-9Z M12 7l5 5-5 5-5-5 5-5Z',
+  contrast: 'M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z M12 3v18M12 7l4 4m-4 1 4 4',
+  carpet: 'M5 4h14v16H5z M5 4V2m5 2V2m4 2V2m5 2V2M5 20v2m5-2v2m4-2v2m5-2v2 M12 8l4 4-4 4-4-4 4-4Z',
+  leaf: 'M20 4c-10-.3-16 4.2-16 10a5 5 0 0 0 5 5c5.7 0 10-5.8 11-15Z M3 21 14 10',
+  water: 'M3 7c2.3-3 4.8-3 7 0s4.8 3 7 0c1.5-2 3-2 4-1 M3 12c2.3-3 4.8-3 7 0s4.8 3 7 0c1.5-2 3-2 4-1 M3 17c2.3-3 4.8-3 7 0s4.8 3 7 0c1.5-2 3-2 4-1',
+  lounge: 'M5 12V8a3 3 0 0 1 3-3h8a3 3 0 0 1 3 3v4 M5 12a2 2 0 0 0-3 2v3h20v-3a2 2 0 0 0-3-2v2H5v-2Z M5 17v3m14-3v3',
+  smile: 'M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z M8.5 9h.1m6.8 0h.1M8 14c1.8 3 6.2 3 8 0',
+  thumbsUp: 'M9 10l3-6c1.4-2 3.5.3 2.8 2.2L14 9h5a2 2 0 0 1 2 2.4L19.6 18a2 2 0 0 1-2 1.7H9V10Z M3 10h6v10H3z',
+  gamepad: 'M7 6h10c3 0 4.5 6 4.5 9.5 0 2.5-2 3.5-3.7 2l-3.3-3h-5l-3.3 3C4.5 19 2.5 18 2.5 15.5 2.5 12 4 6 7 6Z M7 8v5m-2.5-2.5h5m6.5-1h.1m2 2h.1',
 } as const;
+
+export type DoozIconName = keyof typeof ICON_PATHS;
 
 @Component({
   selector: 'app-dooz-icon',
@@ -31,6 +79,6 @@ const ICON_PATHS = {
     svg { display: block; width: 100%; height: 100%; }`,
 })
 export class DoozIcon {
-  readonly name = input.required<keyof typeof ICON_PATHS>();
+  readonly name = input.required<DoozIconName>();
   protected readonly paths = ICON_PATHS;
 }

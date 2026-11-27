@@ -4,10 +4,11 @@ import { FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
 import { CARTOON_AVATARS, cartoonAvatarUrl } from './avatar';
 import { PlayerProfile } from './player-profile';
 import { PlayerAvatarComponent } from './player-avatar';
+import { DoozIcon } from '../ui/dooz-icon';
 
 @Component({
   selector: 'app-profile-panel',
-  imports: [TranslatePipe, ReactiveFormsModule, PlayerAvatarComponent],
+  imports: [TranslatePipe, ReactiveFormsModule, PlayerAvatarComponent, DoozIcon],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <section class="profile-card" [attr.aria-label]="'پروفایل من' | t">
@@ -33,7 +34,7 @@ import { PlayerAvatarComponent } from './player-avatar';
         </div>
       </fieldset>
       <details [open]="!!profile.avatar().gravatarHash">
-        <summary>{{ 'عکس خودت از Gravatar' | t }} <span aria-hidden="true">＋</span></summary>
+        <summary>{{ 'عکس خودت از Gravatar' | t }} <app-dooz-icon name="chevron" /></summary>
         <p>{{ 'اگر در' | t }} <a href="https://gravatar.com" target="_blank" rel="noopener noreferrer">Gravatar</a> {{ 'عکس داری، ایمیل همون حساب رو وارد کن.' | t }}</p>
         <form (submit)="$event.preventDefault(); connectGravatar()">
           <label for="gravatar-email">{{ 'ایمیل Gravatar' | t }}</label>
@@ -66,6 +67,8 @@ import { PlayerAvatarComponent } from './player-avatar';
     details { border-top:1px solid var(--line); padding-top:8px; }
     summary { min-height:44px; display:flex; align-items:center; justify-content:space-between; cursor:pointer; font-size:13px; font-weight:700; list-style:none; }
     summary::-webkit-details-marker { display:none; }
+    summary app-dooz-icon { color:var(--accent); }
+    details[open] > summary app-dooz-icon { transform:rotate(180deg); }
     details form { margin-top:16px; }
     a { color:var(--accent); text-decoration:underline; }
     .connect-button { width:100%; margin-top:10px; }

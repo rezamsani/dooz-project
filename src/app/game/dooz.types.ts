@@ -1,3 +1,5 @@
+import type { DoozIconName } from '../ui/dooz-icon';
+
 export type Player = 'X' | 'O';
 export type CellValue = Player | null;
 
@@ -20,12 +22,12 @@ export interface EnvironmentOption {
   imagePath: string | null;
   fallbackGradient: string;
   recommendedBoard: BoardTheme;
-  icon: string;
+  icon: DoozIconName;
 }
 
 export const ENVIRONMENT_THEMES: readonly EnvironmentOption[] = [
-  {id:'courtyard',label:'حیاط فیروزه',subtitle:'کاشی و آرامش',imagePath:'/environments/courtyard.svg',fallbackGradient:'linear-gradient(135deg,#134a5b,#579b9a)',recommendedBoard:'tile',icon:'mosque'},
-  {id:'khatam',label:'میز خاتم',subtitle:'گرمای چوب و نقش',imagePath:'/environments/khatam.svg',fallbackGradient:'linear-gradient(135deg,#4e3425,#b98a51)',recommendedBoard:'walnut',icon:'auto_awesome'},
+  {id:'courtyard',label:'حیاط فیروزه',subtitle:'کاشی و آرامش',imagePath:'/environments/courtyard.svg',fallbackGradient:'linear-gradient(135deg,#134a5b,#579b9a)',recommendedBoard:'tile',icon: 'arch'},
+  {id:'khatam',label:'میز خاتم',subtitle:'گرمای چوب و نقش',imagePath:'/environments/khatam.svg',fallbackGradient:'linear-gradient(135deg,#4e3425,#b98a51)',recommendedBoard:'walnut',icon: 'sparkle'},
   {
     id: 'simple',
     label: 'ساده و مدرن',
@@ -42,7 +44,7 @@ export const ENVIRONMENT_THEMES: readonly EnvironmentOption[] = [
     imagePath: '/environments/carpet.svg',
     fallbackGradient: 'radial-gradient(ellipse at 25% 25%, #a54c52, #63263a 54%, #321b29)',
     recommendedBoard: 'walnut',
-    icon: 'temple_buddhist',
+    icon: 'carpet',
   },
   {
     id: 'meadow',
@@ -51,7 +53,7 @@ export const ENVIRONMENT_THEMES: readonly EnvironmentOption[] = [
     imagePath: null,
     fallbackGradient: 'radial-gradient(ellipse at 24% 16%, #b8c675, #586e44 45%, #203e30 85%)',
     recommendedBoard: 'felt',
-    icon: 'park',
+    icon: 'leaf',
   },
   {
     id: 'waterfall',
@@ -69,7 +71,7 @@ export const ENVIRONMENT_THEMES: readonly EnvironmentOption[] = [
     imagePath: null,
     fallbackGradient: 'radial-gradient(ellipse at 28% 13%, #c49161, #764c36 45%, #2d2429 88%)',
     recommendedBoard: 'walnut',
-    icon: 'weekend',
+    icon: 'lounge',
   },
 ];
 
@@ -91,15 +93,15 @@ export type QuickEmoteId = 'salam' | 'nice' | 'wow' | 'gg' | 'hurry';
 export interface QuickEmote {
   id: QuickEmoteId;
   label: string;
-  icon: string;
+  icon: DoozIconName;
 }
 
 export const QUICK_EMOTES: readonly QuickEmote[] = [
-  { id: 'salam', label: 'سلام!', icon: 'sentiment_satisfied_alt' },
-  { id: 'nice', label: 'آفرین!', icon: 'thumb_up' },
-  { id: 'wow', label: 'عجب حرکتی!', icon: 'auto_awesome' },
-  { id: 'gg', label: 'بازی خوبی بود', icon: 'sports_esports' },
-  { id: 'hurry', label: 'نوبت شماست!', icon: 'hourglass_top' },
+  { id: 'salam', label: 'سلام!', icon: 'smile' },
+  { id: 'nice', label: 'آفرین!', icon: 'thumbsUp' },
+  { id: 'wow', label: 'عجب حرکتی!', icon: 'sparkle' },
+  { id: 'gg', label: 'بازی خوبی بود', icon: 'gamepad' },
+  { id: 'hurry', label: 'نوبت شماست!', icon: 'hourglass' },
 ];
 
 export interface WinLineGeometry {

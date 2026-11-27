@@ -1,7 +1,6 @@
 import { DoozIcon } from '../ui/dooz-icon';
 import { I18n, TranslatePipe } from '../i18n';
 import { ChangeDetectionStrategy, Component, inject, output } from '@angular/core';
-import { MatIconModule } from '@angular/material/icon';
 import { BOTS, BotId } from './bot-personalities';
 import { PlayerJourney, BADGES } from './player-journey';
 import { PlayerAvatarComponent } from './player-avatar';
@@ -38,12 +37,12 @@ export class BotRoster{
   choose(id:BotId):void{if(this.journey.selectBot(id))this.selected.emit(id);}
 }
 @Component({
-  selector:'app-journey-panel',imports: [TranslatePipe, MatIconModule],changeDetection:ChangeDetectionStrategy.OnPush,
+  selector:'app-journey-panel',imports: [TranslatePipe, DoozIcon],changeDetection:ChangeDetectionStrategy.OnPush,
   template:`<section [attr.aria-label]="'مسیر استادی' | t"><div class="heading"><h2>{{ 'نشان‌های مسیر تو' | t }}</h2><span>{{ '{0} از {1}' | t: [n(earned()), n(badges.length)] }}</span></div>
-    <div class="daily"><mat-icon>local_fire_department</mat-icon><span>{{ '{0} روز پیاپی معمای روز' | t: [n(journey.streak())] }}<small>{{ '{0} معمای حل‌شده' | t: [n(journey.state().solved.length)] }}</small></span></div>
-    <div class="badges">@for(badge of badges;track badge.id){<div [class.earned]="!!journey.state().badges[badge.id]"><mat-icon>{{ badge.icon }}</mat-icon><strong>{{ (badge.name | t) }}</strong><p>{{ (badge.detail | t) }}</p><span>{{ journey.state().badges[badge.id]?('کسب شده' | t):('در مسیر کسب' | t) }}</span></div>}</div>
+    <div class="daily"><app-dooz-icon name="flame" /><span>{{ '{0} روز پیاپی معمای روز' | t: [n(journey.streak())] }}<small>{{ '{0} معمای حل‌شده' | t: [n(journey.state().solved.length)] }}</small></span></div>
+    <div class="badges">@for(badge of badges;track badge.id){<div [class.earned]="!!journey.state().badges[badge.id]"><app-dooz-icon [name]="badge.icon" /><strong>{{ (badge.name | t) }}</strong><p>{{ (badge.detail | t) }}</p><span>{{ journey.state().badges[badge.id]?('کسب شده' | t):('در مسیر کسب' | t) }}</span></div>}</div>
   </section>`,
-  styles:`:host{display:block;margin-block:24px}.heading{display:flex;align-items:center;justify-content:space-between;gap:10px}h2{font-size:15px;font-weight:800}.heading span{font-size:11px;color:var(--muted)}.daily{display:flex;align-items:center;gap:10px;padding:16px;background:var(--soft);border-radius:16px;margin-block:16px;color:var(--accent);font-size:12px}.daily small{display:block;font-size:10px;margin-top:5px}.badges{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.badges>div{border:1px dashed var(--line);border-radius:16px;padding:16px 12px;color:var(--muted);background:var(--surface)}.badges .earned{border:1px solid #a68c57;background:var(--soft);color:var(--ink)}.badges mat-icon{display:block;margin-bottom:10px}.earned mat-icon{color:#bc985a}.badges strong{font-size:12px}.badges p{font-size:10px;line-height:1.8;margin-block:8px;min-height:36px}.badges span{font-size:9px;color:var(--muted)}`,
+  styles:`:host{display:block;margin-block:24px}.heading{display:flex;align-items:center;justify-content:space-between;gap:10px}h2{font-size:15px;font-weight:800}.heading span{font-size:11px;color:var(--muted)}.daily{display:flex;align-items:center;gap:10px;padding:16px;background:var(--soft);border-radius:16px;margin-block:16px;color:var(--accent);font-size:12px}.daily small{display:block;font-size:10px;margin-top:5px}.badges{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.badges>div{border:1px dashed var(--line);border-radius:16px;padding:16px 12px;color:var(--muted);background:var(--surface)}.badges .earned{border:1px solid #a68c57;background:var(--soft);color:var(--ink)}.badges app-dooz-icon{display:grid;width:38px;height:38px;padding:8px;border-radius:12px;margin-bottom:10px;background:var(--canvas);color:var(--muted);border:1px solid var(--line)}.earned app-dooz-icon{color:#57371b;background:linear-gradient(155deg,#ffe6a7,#e4b66d);border-color:#bc9055;box-shadow:inset 0 1px 0 #fff7}.badges strong{font-size:12px}.badges p{font-size:10px;line-height:1.8;margin-block:8px;min-height:36px}.badges span{font-size:9px;color:var(--muted)}`,
 })
 export class JourneyPanel{
   private readonly i18n = inject(I18n);
