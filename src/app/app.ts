@@ -175,6 +175,7 @@ export class App {
   // Reactive Form controls for Online Lobby (strictly no ngModel)
   readonly playerNameControl = new FormControl<string>('', { nonNullable: true });
   readonly joinCodeControl = new FormControl<string>('', { nonNullable: true });
+  readonly lanInviteControl = new FormControl<string>('', { nonNullable: true });
 
   readonly quickEmotes = QUICK_EMOTES;
   readonly environmentThemes = ENVIRONMENT_THEMES;
@@ -250,9 +251,12 @@ export class App {
 
   // ---------- DERIVED STATE ----------
 
-  readonly isOnlineMode = computed<boolean>(() => this.gameMode() === 'ONLINE');
+  readonly isLanMode = computed(() => this.gameMode() === 'LAN');
+  readonly isOnlineMode = computed(() => this.gameMode() === 'ONLINE' || this.isLanMode());
   readonly onlineRoom = computed<RoomSnapshotDto | null>(() => this.onlineClient.room());
   readonly onlineRole = computed<Player | null>(() => this.onlineClient.yourRole());
+  readonly lanReady = computed(() => this.onlineClient.connectionStatus() === 'CONNECTED' &&
+    !!this.onlineRoom()?.players.X?.connected && !!this.onlineRoom()?.players.O?.connected);
 
   readonly isWaitingForOnlineOpponent = computed<boolean>(() => {
     const room = this.onlineRoom();
@@ -373,6 +377,7 @@ export class App {
       const room = this.onlineRoom();
       const role = this.onlineRole();
       if (!room || !role || room.status !== 'PLAYING') return true;
+      if (this.isLanMode() && !this.lanReady()) return true;
       return this.activeTurn() !== role;
     }
     if (this.isAiThinking()) return true;
@@ -769,7 +774,7 @@ export class App {
 
   setGameMode(mode: GameMode): void {
     this.soundFx.playClick();
-    if (this.gameMode() === 'ONLINE' && mode !== 'ONLINE') {
+    if (this.isOnlineMode() && this.gameMode() !== mode) {
       this.onlineClient.leaveRoom();
     }
     this.gameMode.set(mode);
@@ -858,7 +863,7 @@ export class App {
     this.stopTurnTimer();
     this.exitReplay();
     this.clearHints();
-    if (this.isOnlineMode() && this.onlineRoom()) {
+    if (this.isOnlineMode()) {
       this.onlineClient.leaveRoom();
     }
     this.soundFx.playClick();
@@ -949,7 +954,11 @@ export class App {
     this.gameMode.set('ONLINE');
     this.lastOnlineStatus = null;
     this.lastOnlineTurnKey = '';
-    this.onlineClient.createRoom({
+    this.onlineClient.createRoom(this.matchRoomSettings());
+  }
+
+  private matchRoomSettings() {
+    return {
       targetWins: this.targetWins(),
       playerName: this.playerNameControl.value.trim() || this.profile.name() || this.i18n.text("بازیکن ۱"),
       avatar: this.profile.avatar(),
@@ -958,7 +967,23 @@ export class App {
       boardRule: this.boardRule(),
       allowFlying: this.allowFlying(),
       turnTimeLimit: this.turnTimeLimit(),
-    });
+    };
+  }
+
+  hostWifiRoom(): void {
+    this.soundFx.playClick();
+    this.lastOnlineTurnKey = '';
+    this.lastOnlineStatus = null;
+    const options = this.matchRoomSettings();
+    void this.onlineClient.hostLocal({ ...options, rating: undefined, avatar: { ...options.avatar, gravatarHash: null } });
+  }
+
+  joinWifiRoom(): void {
+    this.soundFx.playClick();
+    this.lastOnlineTurnKey = '';
+    this.lastOnlineStatus = null;
+    const name = this.playerNameControl.value.trim() || this.profile.name() || this.i18n.text('بازیکن ۲');
+    void this.onlineClient.joinLocal(this.lanInviteControl.value, name, { ...this.profile.avatar(), gravatarHash: null });
   }
 
   joinOnlineRoom(): void {
@@ -983,7 +1008,7 @@ export class App {
   }
 
   async copyRoomCode(): Promise<void> {
-    const code = this.onlineRoom()?.code;
+    const code = this.isLanMode() ? this.onlineClient.localInvite() : this.onlineRoom()?.code;
     if (!code || !isPlatformBrowser(this.platformId)) return;
     this.soundFx.playClick();
     await this.copyToClipboard(code, 'کد اتاق کپی شد');
@@ -1062,6 +1087,10 @@ export class App {
   // ---------- OFFLINE MATCH FLOW ----------
 
   startGame(): void {
+    if (this.isLanMode()) {
+      this.hostWifiRoom();
+      return;
+    }
     if (this.gameMode() !== 'LOCAL_2P' && !this.playerStats.storage.canReadStats()) return;
     if (this.isOnlineMode()) {
       this.createOnlineRoom();
@@ -1411,11 +1440,12 @@ export class App {
   // ---------- INTERNAL SYNC & ENGINE HELPERS ----------
 
   private syncFromOnlineRoom(room: RoomSnapshotDto, role: Player): void {
+    const local = this.onlineClient.localMode();
     const roundNumber=room.scores.X+room.scores.O+room.scores.draws+(room.status==='FINISHED'?0:1);
     const matchId=`online:${room.roundId ?? `${room.code}:${roundNumber}`}:${role}`;
     if(this.journeyOnlineRound!==matchId){this.journeyOnlineRound=matchId;this.freshBadges.set([]);}
-    if(room.status==='PLAYING') this.playerStats.beginOnlineMatch(matchId);
-    this.gameMode.set('ONLINE');
+    if(!local && room.status==='PLAYING') this.playerStats.beginOnlineMatch(matchId);
+    this.gameMode.set(local ? 'LAN' : 'ONLINE');
     this.gameVariant.set(room.variant);
     this.boardRule.set(room.boardRule);
     this.allowFlying.set(room.allowFlying);
@@ -1454,10 +1484,10 @@ export class App {
         if (room.winner) {
           this.soundFx.playWin();
           const outcome = room.winner === role ? 'WIN' : 'LOSS';
-          if(this.playerStats.recordMatchOutcome(outcome, room.roundRatings?.[getOpponent(role)] ?? 1200, matchId, 'ONLINE')) this.freshBadges.set(this.journey.recordMatch(matchId,outcome,null,room.variant,false));
+          if(!local && this.playerStats.recordMatchOutcome(outcome, room.roundRatings?.[getOpponent(role)] ?? 1200, matchId, 'ONLINE')) this.freshBadges.set(this.journey.recordMatch(matchId,outcome,null,room.variant,false));
         } else if (room.isDraw) {
           this.soundFx.playDraw();
-          if(this.playerStats.recordMatchOutcome('DRAW', room.roundRatings?.[getOpponent(role)] ?? 1200, matchId, 'ONLINE')) this.freshBadges.set(this.journey.recordMatch(matchId,'DRAW',null,room.variant,false));
+          if(!local && this.playerStats.recordMatchOutcome('DRAW', room.roundRatings?.[getOpponent(role)] ?? 1200, matchId, 'ONLINE')) this.freshBadges.set(this.journey.recordMatch(matchId,'DRAW',null,room.variant,false));
         }
       }
     } else {
@@ -1467,7 +1497,10 @@ export class App {
           ? `${room.threeTurn}:${room.threeMoveCount}`
           : `${room.morrisState?.currentTurn}:${room.morrisState?.action}:${room.morrisState?.moveCount}`
       }`;
-      if (room.status === 'PLAYING' && turnKey !== this.lastOnlineTurnKey) {
+      if (local && !this.lanReady()) {
+        this.lastOnlineTurnKey = '';
+        this.stopTurnTimer();
+      } else if (room.status === 'PLAYING' && turnKey !== this.lastOnlineTurnKey) {
         this.lastOnlineTurnKey = turnKey;
         this.resetTurnTimer();
       } else if (room.status === 'WAITING') {
@@ -1736,7 +1769,7 @@ export class App {
 
     this.remainingSeconds.set(limit);
     this.turnIntervalId = setInterval(() => {
-      if (this.gameState() !== 'PLAYING' || this.isWaitingForOnlineOpponent()) {
+      if (this.gameState() !== 'PLAYING' || this.isWaitingForOnlineOpponent() || (this.isLanMode() && !this.lanReady())) {
         this.stopTurnTimer();
         return;
       }

@@ -61,6 +61,8 @@
   background: var(--soft); color: var(--accent);
 }
 .mode-options button:nth-child(2) app-dooz-icon { color: var(--gold); }
+.mode-options { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+@media (min-width: 480px) { .mode-options { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
 .mode-options small { font-size: 10px; line-height: 1.45; }
 .mode-options .chosen, .variant-options .chosen {
   box-shadow: inset 0 0 0 1px var(--accent);
@@ -76,9 +78,21 @@ summary app-dooz-icon { color: var(--accent); }
 details[open] > summary app-dooz-icon { transform: rotate(180deg); }
 .launch-area { position: static; margin-top: 13px; padding: 0; background: transparent; }
 .launch-button { background: #1b654f; color: #fffaf0; box-shadow: 0 6px 15px #12473626; }
+.launch-button:disabled { opacity: .55; box-shadow: none; }
 :host-context(.dark) .launch-button { background: #a8d8b5; color: #133328; }
 .launch-area p { font-size: 11px; }
 .choice-field { display: grid; gap: 7px; font-size: 13px; color: var(--ink); font-weight: 750; }
+.wifi-lobby, .wifi-notice { display: grid; gap: 12px; border: 1px solid var(--line); border-radius: 17px; padding: 14px; background: var(--surface); }
+.wifi-lobby { margin-block-end: 16px; }
+.wifi-lobby p, .wifi-notice { color: var(--muted); font-size: 12px; line-height: 1.8; }
+.wifi-lobby label { display: grid; gap: 6px; font-size: 12px; font-weight: 650; }
+.wifi-lobby input { width: 100%; min-height: 44px; border: 1px solid var(--line); border-radius: 11px; padding-inline: 10px; }
+.wifi-join { margin-top: 8px; min-height: 44px; padding-inline: 12px; border-radius: 11px; background: var(--soft); color: var(--accent); font-size: 12px; font-weight: 750; }
+.wifi-join:disabled { opacity: .6; }
+.wifi-invite { padding: 10px; border-radius: 10px; background: var(--soft); color: var(--accent); font: 700 14px monospace; overflow-wrap: anywhere; user-select: all; }
+.wifi-lobby .wifi-error, .wifi-notice { color: #ab273e; }
+:host-context(.dark) .wifi-lobby .wifi-error, :host-context(.dark) .wifi-notice { color: #ffafba; }
+.wifi-notice { width: min(100%, 440px); }
 .environment-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .environment-grid button { min-width: 0; }
 .environment-grid button > span { align-self: stretch; white-space: normal; font-size: 11px; min-height: 31px; }

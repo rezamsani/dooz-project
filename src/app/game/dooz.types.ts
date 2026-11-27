@@ -5,7 +5,7 @@ export type CellValue = Player | null;
 
 export type GameVariant = 'THREE' | 'NINE' | 'TWELVE';
 export type GameState = 'TITLE_MENU' | 'PLAYING' | 'ROUND_SUMMARY';
-export type GameMode = 'AI' | 'LOCAL_2P' | 'ONLINE';
+export type GameMode = 'AI' | 'LOCAL_2P' | 'ONLINE' | 'LAN';
 export type Difficulty = 'EASY' | 'MEDIUM' | 'HARD';
 export type BoardRule = 'CLASSIC' | 'INFINITE';
 export type BoardTheme = 'navy' | 'walnut' | 'felt' | 'tile' | 'glass';

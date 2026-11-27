@@ -1,14 +1,12 @@
 import { isPlatformBrowser } from '@angular/common';
-import { DestroyRef, Injectable, PLATFORM_ID, inject, signal } from '@angular/core';
+import { DestroyRef, Injectable, PLATFORM_ID, computed, inject, signal } from '@angular/core';
 import { RuntimeConfig } from '../runtime-config';
 import { PlayerAvatar } from './avatar';
 import { DeviceStorage } from './device-storage';
+import { LanSession, lanAvailable, parseLanInvite } from './lan-session';
 import {
-  BoardRule,
-  GameVariant,
   Player,
   QuickEmoteId,
-  TurnTimeLimit,
 } from './dooz.types';
 import {
   ClientWsMessage,
@@ -23,6 +21,8 @@ export interface EmoteBanner {
   timestamp: number;
 }
 
+type CreateOptions = Omit<Extract<ClientWsMessage, { type: 'room:create' }>, 'type'>;
+
 @Injectable({ providedIn: 'root' })
 export class OnlineClient {
   private readonly platformId = inject(PLATFORM_ID);
@@ -34,12 +34,42 @@ export class OnlineClient {
   private pendingQueue: ClientWsMessage[] = [];
   private emoteTimerId: ReturnType<typeof setTimeout> | null = null;
   private stateListener: ((room: RoomSnapshotDto, role: Player) => void) | null = null;
+  private localAttempt = 0;
+  private joinTimeout: ReturnType<typeof setTimeout> | null = null;
+  private localEndpoint = signal('');
 
   readonly connectionStatus = signal<'IDLE' | 'CONNECTING' | 'CONNECTED' | 'ERROR'>('IDLE');
   readonly room = signal<RoomSnapshotDto | null>(null);
   readonly yourRole = signal<Player | null>(null);
   readonly errorMessage = signal<string | null>(null);
   readonly activeEmote = signal<EmoteBanner | null>(null);
+  readonly localMode = signal(false);
+  readonly localSupported = lanAvailable();
+  readonly localInvite = computed(() => {
+    const code = this.room()?.code;
+    return code && this.localEndpoint() ? `${this.localEndpoint()}/${code}` : '';
+  });
+  private readonly lan = new LanSession(
+    message => {
+      if (!this.localMode()) return;
+      if (message.type === 'room:state') {
+        this.clearJoinTimeout();
+        this.connectionStatus.set('CONNECTED');
+      } else if (message.type === 'room:error' && !this.room()) {
+        this.failLocal(message.message);
+        return;
+      }
+      this.handleServerMessage(message);
+    },
+    hosting => {
+      if (!this.localMode()) return;
+      if (hosting) {
+        this.errorMessage.set('ارتباط با گوشی دوم قطع شد.');
+      } else if (this.connectionStatus() !== 'ERROR') {
+        this.failLocal('ارتباط با میزبان وای‌فای قطع شد.');
+      }
+    },
+  );
 
   constructor() {
     this.destroyRef.onDestroy(() => {
@@ -51,16 +81,59 @@ export class OnlineClient {
     this.stateListener = listener;
   }
 
-  createRoom(params: {
-    playerName: string;
-    avatar?: PlayerAvatar;
-    rating?: number;
-    variant: GameVariant;
-    boardRule: BoardRule;
-    allowFlying: boolean;
-    turnTimeLimit: TurnTimeLimit;
-    targetWins?: 0 | 3;
-  }): void {
+  private beginLocal(): number {
+    this.disconnect();
+    this.localMode.set(true);
+    this.errorMessage.set(null);
+    this.connectionStatus.set('CONNECTING');
+    return this.localAttempt;
+  }
+
+  async hostLocal(options: CreateOptions): Promise<void> {
+    if (!this.localSupported || this.connectionStatus() === 'CONNECTING') return;
+    const attempt = this.beginLocal();
+    try {
+      await this.lan.host({ type: 'room:create', ...options }, endpoint => {
+        this.localEndpoint.set(`${endpoint.address}:${endpoint.port}`);
+      });
+    } catch {
+      if (attempt === this.localAttempt) this.failLocal('میزبانی وای‌فای ممکن نشد. اتصال شبکه یا هات‌اسپات را بررسی کن.');
+    }
+  }
+
+  async joinLocal(invitation: string, playerName: string, avatar: PlayerAvatar): Promise<void> {
+    if (!this.localSupported || this.connectionStatus() === 'CONNECTING') return;
+    const invite = parseLanInvite(invitation);
+    if (!invite) {
+      this.errorMessage.set('دعوت‌نامهٔ وای‌فای معتبر نیست.');
+      return;
+    }
+    const attempt = this.beginLocal();
+    this.joinTimeout = setTimeout(() => {
+      if (attempt === this.localAttempt) this.failLocal('اتصال وای‌فای برقرار نشد. هر دو گوشی باید روی یک شبکه باشند.');
+    }, 8500);
+    try {
+      await this.lan.join(invite, { type: 'room:join', code: invite.code, playerName, avatar });
+    } catch {
+      if (attempt === this.localAttempt) this.failLocal('اتصال وای‌فای برقرار نشد. هر دو گوشی باید روی یک شبکه باشند.');
+    }
+  }
+
+  private clearJoinTimeout(): void {
+    if (this.joinTimeout !== null) clearTimeout(this.joinTimeout);
+    this.joinTimeout = null;
+  }
+
+  private failLocal(message: string): void {
+    this.localAttempt++;
+    this.clearJoinTimeout();
+    void this.lan.close();
+    this.errorMessage.set(message);
+    this.connectionStatus.set('ERROR');
+  }
+
+  createRoom(params: CreateOptions): void {
+    if (this.localMode()) this.disconnect();
     this.errorMessage.set(null);
     this.send({
       type: 'room:create',
@@ -76,6 +149,7 @@ export class OnlineClient {
   }
 
   joinRoom(code: string, playerName: string, avatar?: PlayerAvatar, rating?: number): void {
+    if (this.localMode()) this.disconnect();
     this.errorMessage.set(null);
     this.send({
       type: 'room:join',
@@ -127,6 +201,10 @@ export class OnlineClient {
   }
 
   leaveRoom(): void {
+    if (this.localMode()) {
+      this.disconnect();
+      return;
+    }
     if (this.ws && this.ws.readyState === WebSocket.OPEN) {
       this.send({ type: 'room:leave' });
     }
@@ -137,6 +215,11 @@ export class OnlineClient {
   }
 
   disconnect(): void {
+    this.localAttempt++;
+    this.clearJoinTimeout();
+    if (this.localMode()) void this.lan.close();
+    this.localMode.set(false);
+    this.localEndpoint.set('');
     if (this.emoteTimerId !== null) {
       clearTimeout(this.emoteTimerId);
       this.emoteTimerId = null;
@@ -153,6 +236,8 @@ export class OnlineClient {
     this.connectionStatus.set('IDLE');
     this.room.set(null);
     this.yourRole.set(null);
+    this.activeEmote.set(null);
+    this.errorMessage.set(null);
   }
 
   private openWebSocket(): void {
@@ -225,6 +310,10 @@ export class OnlineClient {
 
   private send(msg: ClientWsMessage): void {
     if (!isPlatformBrowser(this.platformId)) return;
+    if (this.localMode()) {
+      this.lan.send(msg);
+      return;
+    }
     if (this.ws && this.ws.readyState === WebSocket.OPEN) {
       this.ws.send(JSON.stringify(msg));
     } else {

@@ -81,6 +81,7 @@
                 <button type="button" (click)="setGameMode('AI')" [class.chosen]="gameMode() === 'AI'" [attr.aria-pressed]="gameMode() === 'AI'"><app-dooz-icon name="bot" /><strong>{{ 'با ربات' | t }}</strong><small>{{ 'تمرین و چالش' | t }}</small></button>
                 <button type="button" (click)="setGameMode('LOCAL_2P')" [class.chosen]="gameMode() === 'LOCAL_2P'" [attr.aria-pressed]="gameMode() === 'LOCAL_2P'"><app-dooz-icon name="friends" /><strong>{{ 'کنار هم' | t }}</strong><small>{{ 'روی یک گوشی' | t }}</small></button>
                 <button type="button" (click)="setGameMode('ONLINE')" [class.chosen]="gameMode() === 'ONLINE'" [attr.aria-pressed]="gameMode() === 'ONLINE'"><app-dooz-icon name="online" /><strong>{{ 'از راه دور' | t }}</strong><small>{{ 'با کد دعوت' | t }}</small></button>
+                <button type="button" (click)="setGameMode('LAN')" [class.chosen]="isLanMode()" [attr.aria-pressed]="isLanMode()"><app-dooz-icon name="wifi" /><strong>{{ 'با وای‌فای' | t }}</strong><small>{{ 'بدون اینترنت' | t }}</small></button>
               </div>
             </div>
             <div class="setup-section">
@@ -93,7 +94,24 @@
             </div>
             @if(gameMode()==='AI'){<app-bot-roster (selected)="selectBot($event)" />}
                         <!-- Online Room Lobby Panel -->
-            @if (gameMode() === 'ONLINE') {
+            @if (isLanMode()) {
+              <section class="wifi-lobby" [attr.aria-label]="'با وای‌فای' | t">
+                <p>{{ 'هر دو گوشی را به یک وای‌فای وصل کنید یا یکی را به هات‌اسپات دیگری وصل کنید.' | t }}</p>
+                @if (onlineClient.localSupported) {
+                  <label>{{ 'نام نمایشی شما' | t }}<input [formControl]="playerNameControl" maxlength="18" autocomplete="nickname" /></label>
+                  <form (submit)="$event.preventDefault(); joinWifiRoom()">
+                    <label>{{ 'دعوت‌نامهٔ میزبان' | t }}<input dir="ltr" [formControl]="lanInviteControl" placeholder="192.168.1.10:45678/ABCDE" maxlength="28" autocapitalize="characters" autocomplete="off" spellcheck="false" /></label>
+                    <button type="submit" class="wifi-join" [disabled]="onlineClient.connectionStatus() === 'CONNECTING'">{{ 'پیوستن با دعوت‌نامه' | t }}</button>
+                  </form>
+                  @if (onlineClient.connectionStatus() === 'CONNECTING') {
+                    <p role="status">{{ 'در حال آماده‌سازی اتصال وای‌فای…' | t }}</p>
+                  }
+                } @else {
+                  <p>{{ 'این حالت در برنامهٔ Android در دسترس است.' | t }}</p>
+                }
+                @if (onlineClient.errorMessage(); as error) { <p class="wifi-error" role="alert">{{ error | t }}</p> }
+              </section>
+            } @else if (gameMode() === 'ONLINE') {
               <div class="space-y-4 border-t border-slate-900/10 pt-4 dark:border-white/10">
                 <div class="choice-field"><span>{{ 'نوع اتاق' | t }}</span><app-choice-sheet icon="online" [label]="'نوع اتاق' | t" [options]="roomOptions()" [value]="targetWins() === 3 ? '3' : '0'" (changed)="targetWins.set($event === '3' ? 3 : 0)" /></div>
                 <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -365,8 +383,8 @@
             </details>
 
             <div class="launch-area">
-              <button class="launch-button" type="button" (click)="startGame()"><span>{{ isOnlineMode() ? ('ساخت اتاق و دعوت دوست' | t) : ('بزن بریم' | t) }}</span><app-dooz-icon name="arrow" /></button>
-              <p>{{ isOnlineMode() ? ('برای بازی آنلاین به اینترنت نیاز داری' | t) : ('بدون اینترنت هم می‌تونی بازی کنی' | t) }}</p>
+              <button class="launch-button" type="button" (click)="startGame()" [disabled]="isLanMode() && (!onlineClient.localSupported || onlineClient.connectionStatus() === 'CONNECTING')"><span>{{ isLanMode() ? ('میزبانی با وای‌فای' | t) : isOnlineMode() ? ('ساخت اتاق و دعوت دوست' | t) : ('بزن بریم' | t) }}</span><app-dooz-icon name="arrow" /></button>
+              @if (!isLanMode()) { <p>{{ isOnlineMode() ? ('برای بازی آنلاین به اینترنت نیاز داری' | t) : ('بدون اینترنت هم می‌تونی بازی کنی' | t) }}</p> }
             </div>
           </section>
         } @else if (homeTab() === 'daily') {
@@ -733,7 +751,9 @@
                 <span>{{ variantTitle() }}</span>
                 <span aria-hidden="true">·</span>
                 <span>
-                  @if (isOnlineMode()) {
+                  @if (isLanMode()) {
+                    {{ 'با وای‌فای' | t }}
+                  } @else if (isOnlineMode()) {
                     {{ 'اتاق آنلاین {0}' | t: [onlineRoom()?.code] }}
                   } @else if (gameMode() === 'AI') {
                     {{ 'بازی با ربات ({0})' | t: [difficultyLabel()] }}
@@ -801,15 +821,16 @@
               <div class="flex items-center justify-between gap-3">
                 <div class="space-y-0.5">
                   <div class="text-sm font-bold text-slate-950 dark:text-white">{{ 'کد دعوت اتاق آماده است' | t }}</div>
-                  <div class="text-xs text-slate-600 dark:text-slate-400">{{ 'کد یا لینک زیر را برای دوست خود بفرستید تا بازی شروع شود.' | t }}</div>
+                  <div class="text-xs text-slate-600 dark:text-slate-400">{{ isLanMode() ? ('دوستت در همان شبکه این دعوت‌نامه را در بخش وای‌فای وارد کند.' | t) : ('کد یا لینک زیر را برای دوست خود بفرستید تا بازی شروع شود.' | t) }}</div>
                 </div>
-                <span
+                @if (!isLanMode()) { <span
                   dir="ltr"
                   class="rounded-xl border border-teal-500/40 bg-teal-50 px-3.5 py-2 font-mono text-lg font-extrabold tracking-widest text-teal-800 dark:border-teal-400/40 dark:bg-[#0E0E0E] dark:text-teal-300"
                 >
                   {{ room.code }}
-                </span>
+                </span> }
               </div>
+              @if (isLanMode()) { <div dir="ltr" class="wifi-invite">{{ onlineClient.localInvite() }}</div> }
               <div class="flex flex-wrap items-center gap-2.5">
                 <button
                   type="button"
@@ -817,21 +838,24 @@
                   class="inline-flex min-h-[42px] flex-1 items-center justify-center gap-1.5 whitespace-nowrap rounded-xl bg-teal-600 px-3.5 py-2 text-xs font-bold text-white transition-colors hover:bg-teal-500 dark:bg-teal-400 dark:text-slate-950 dark:hover:bg-teal-300"
                 >
                   <app-dooz-icon name="copy" class="!h-[17px] !w-[17px] !text-[17px]" />
-                  <span>{{ 'کپی کد اتاق' | t }}</span>
+                  <span>{{ (isLanMode() ? 'کپی دعوت‌نامهٔ وای‌فای' : 'کپی کد اتاق') | t }}</span>
                 </button>
-                <button
+                @if (!isLanMode()) { <button
                   type="button"
                   (click)="copyInviteLink()"
                   class="inline-flex min-h-[42px] flex-1 items-center justify-center gap-1.5 whitespace-nowrap rounded-xl border border-slate-300 bg-slate-100 px-3.5 py-2 text-xs font-bold text-slate-800 transition-colors hover:bg-slate-200 dark:border-white/15 dark:bg-[#202020] dark:text-slate-100 dark:hover:bg-[#2E2E2E]"
                 >
                   <app-dooz-icon name="link" class="!h-[17px] !w-[17px] !text-[17px]" />
                   <span>{{ 'کپی لینک دعوت' | t }}</span>
-                </button>
+                </button> }
               </div>
               @if (copiedToast(); as toast) {
                 <div class="text-center text-xs font-semibold text-teal-700 dark:text-teal-300">{{ (toast | t) }}</div>
               }
             </div>
+          }
+          @if (isLanMode() && onlineClient.errorMessage(); as error) {
+            <p class="wifi-notice" role="alert">{{ error | t }}</p>
           }
 
           <!-- Incoming Draw Offer Bar (Online) -->
@@ -1248,7 +1272,7 @@
           @if (isOnlineMode() && onlineRoom(); as room) {
             <div class="space-y-4 rounded-2xl border border-slate-900/10 bg-white/90 p-5 shadow-sm backdrop-blur-md dark:border-white/10 dark:bg-[#171717]/88">
               <div class="flex items-center justify-between gap-2">
-                <h2 class="text-base font-bold text-slate-950 dark:text-white">{{ 'اتاق آنلاین ({0})' | t: [room.code] }}</h2>
+                <h2 class="text-base font-bold text-slate-950 dark:text-white">{{ isLanMode() ? ('با وای‌فای' | t) : ('اتاق آنلاین ({0})' | t: [room.code]) }}</h2>
                 <span class="text-xs text-slate-500 dark:text-slate-400">
                   {{ room.players.O?.connected && room.players.X?.connected ? ('هر دو بازیکن متصل' | t) : ('در انتظار اتصال' | t) }}
                 </span>

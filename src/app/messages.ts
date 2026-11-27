@@ -527,5 +527,20 @@ export const MESSAGES: Readonly<Record<string, readonly [string, string]>> = {
   "معمای دوستت": ["Friend’s puzzle", "لغز صديقك"],
   "{0} حرکت": ["Moves: {0}", "الحركات: {0}"],
   "در تلاش شمارهٔ {0}": ["Attempt {0}", "المحاولة رقم {0}"],
-  "٪": ["%", "٪"]
+  "٪": ["%", "٪"],
+  "با وای‌فای": ["Wi-Fi play", "اللعب عبر Wi-Fi"],
+  "بدون اینترنت": ["No internet needed", "دون إنترنت"],
+  "هر دو گوشی را به یک وای‌فای وصل کنید یا یکی را به هات‌اسپات دیگری وصل کنید.": ["Connect both phones to the same Wi-Fi, or connect one phone to the other's hotspot.", "صِل الهاتفين بشبكة Wi-Fi نفسها، أو صِل أحدهما بنقطة اتصال الهاتف الآخر."],
+  "دعوت‌نامهٔ میزبان": ["Host invitation", "دعوة المضيف"],
+  "پیوستن با دعوت‌نامه": ["Join with invitation", "الانضمام بالدعوة"],
+  "در حال آماده‌سازی اتصال وای‌فای…": ["Setting up Wi-Fi play…", "جارٍ إعداد اللعب عبر Wi-Fi…"],
+  "این حالت در برنامهٔ Android در دسترس است.": ["This mode is available in the Android app.", "هذا الوضع متاح في تطبيق Android."],
+  "میزبانی با وای‌فای": ["Host over Wi-Fi", "استضف عبر Wi-Fi"],
+  "دوستت در همان شبکه این دعوت‌نامه را در بخش وای‌فای وارد کند.": ["Your friend can enter this invitation in Wi-Fi play on the same network.", "يمكن لصديقك إدخال هذه الدعوة في وضع Wi-Fi على الشبكة نفسها."],
+  "کپی دعوت‌نامهٔ وای‌فای": ["Copy Wi-Fi invitation", "نسخ دعوة Wi-Fi"],
+  "دعوت‌نامهٔ وای‌فای معتبر نیست.": ["The Wi-Fi invitation is invalid.", "دعوة Wi-Fi غير صالحة."],
+  "میزبانی وای‌فای ممکن نشد. اتصال شبکه یا هات‌اسپات را بررسی کن.": ["Could not host over Wi-Fi. Check the network or hotspot.", "تعذّرت الاستضافة عبر Wi-Fi. تحقق من الشبكة أو نقطة الاتصال."],
+  "اتصال وای‌فای برقرار نشد. هر دو گوشی باید روی یک شبکه باشند.": ["Could not connect over Wi-Fi. Both phones must be on the same network.", "تعذّر الاتصال عبر Wi-Fi. يجب أن يكون الهاتفان على الشبكة نفسها."],
+  "ارتباط با میزبان وای‌فای قطع شد.": ["Connection to the Wi-Fi host was lost.", "انقطع الاتصال بمضيف Wi-Fi."],
+  "ارتباط با گوشی دوم قطع شد.": ["The other phone disconnected.", "انقطع اتصال الهاتف الآخر."]
 };
