@@ -997,6 +997,12 @@ export class App {
       { ...this.profile.avatar(), gravatarHash: null }, this.twelveBilling.canPlay());
   }
 
+  reconnectWifiRoom(): void {
+    this.gameState.set('TITLE_MENU');
+    this.homeTab.set('play');
+    this.joinWifiRoom();
+  }
+
   joinOnlineRoom(): void {
     if (!this.playerStats.storage.canReadStats()) return;
     this.soundFx.playClick();

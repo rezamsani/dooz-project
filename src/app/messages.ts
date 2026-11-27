@@ -558,6 +558,7 @@ export const MESSAGES: Readonly<Record<string, readonly [string, string]>> = {
   "میزبانی وای‌فای ممکن نشد. اتصال شبکه یا هات‌اسپات را بررسی کن.": ["Could not host over Wi-Fi. Check the network or hotspot.", "تعذّرت الاستضافة عبر Wi-Fi. تحقق من الشبكة أو نقطة الاتصال."],
   "اتصال وای‌فای برقرار نشد. هر دو گوشی باید روی یک شبکه باشند.": ["Could not connect over Wi-Fi. Both phones must be on the same network.", "تعذّر الاتصال عبر Wi-Fi. يجب أن يكون الهاتفان على الشبكة نفسها."],
   "ارتباط با میزبان وای‌فای قطع شد.": ["Connection to the Wi-Fi host was lost.", "انقطع الاتصال بمضيف Wi-Fi."],
+  "اتصال دوباره به میزبان": ["Reconnect to host", "إعادة الاتصال بالمضيف"],
   "ارتباط با گوشی دوم قطع شد.": ["The other phone disconnected.", "انقطع اتصال الهاتف الآخر."],
   "تاریخچهٔ دوز؛ از سنگ‌نگاره‌های کهن تا امروز": ["History of Dooz: From ancient stone carvings to today", "تاريخ دوز: من النقوش الحجرية القديمة إلى اليوم"],
   "ریشه‌های سه‌هزارساله در ایران، مصر و جاده ابریشم": ["Three millennia of heritage across Iran, Egypt, and the Silk Road", "جذور تمتد لثلاثة آلاف عام في إيران ومصر وطريق الحرير"],

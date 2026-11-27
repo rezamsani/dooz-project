@@ -9,6 +9,8 @@ class LocalTestTransport implements LanPlugin {
   id = 0;
   private listeners = new Map<string, (event: Event) => void>();
 
+  get listenerCount(): number { return this.listeners.size; }
+
   async host() { return { address: '192.168.43.1', port: 45000 }; }
   async join() {
     this.id++;
@@ -105,6 +107,21 @@ describe('local host and guest', () => {
     expect(snapshot(guestEvents).morrisState?.moveCount).toBe(1);
     guest.send({type:'room:morris_place',nodeId:1});
     expect(snapshot(guestEvents).morrisState?.board.slice(0,2)).toEqual(['X','O']);
+    await guest.close();
+    await host.close();
+  });
+
+  it('cleans up a partially registered transport and can rejoin after retry', async () => {
+    const {host, guest, hostEvents, guestEvents, second} = pairedSessions();
+    await host.host(setup(), () => {});
+    const {code} = snapshot(hostEvents);
+    const invite = {address:'192.168.43.1',port:45000,code};
+    const join = {type:'room:join',code,playerName:'Guest'} as const;
+    vi.spyOn(second, 'addListener').mockRejectedValueOnce(new Error('bridge unavailable'));
+    await expect(guest.join(invite, join)).rejects.toThrow('bridge unavailable');
+    expect(second.listenerCount).toBe(0);
+    await guest.join(invite, join);
+    expect(snapshot(guestEvents).status).toBe('PLAYING');
     await guest.close();
     await host.close();
   });

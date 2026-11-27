@@ -1,5 +1,10 @@
 package ir.dooz.game;
 
+import android.net.ConnectivityManager;
+import android.net.LinkAddress;
+import android.net.LinkProperties;
+import android.net.Network;
+import android.net.NetworkCapabilities;
 import com.getcapacitor.JSObject;
 import com.getcapacitor.Plugin;
 import com.getcapacitor.PluginCall;
@@ -9,14 +14,16 @@ import java.io.Closeable;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
-import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.net.InterfaceAddress;
 import java.net.NetworkInterface;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Locale;
+import java.util.Enumeration;
+import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -29,6 +36,7 @@ public class LanTransportPlugin extends Plugin {
     private final ScheduledExecutorService writer = Executors.newSingleThreadScheduledExecutor();
     private ServerSocket listener;
     private Socket connection;
+    private Socket pendingConnection;
     private int peerId;
     private int generation;
 
@@ -41,15 +49,16 @@ public class LanTransportPlugin extends Plugin {
     public void host(PluginCall call) {
         int attempt = reset();
         readers.execute(() -> {
+            boolean listening = false;
             try {
-                InetAddress address = localWifiAddress();
-                if (address == null) {
+                WifiLink link = findWifiLink(null);
+                if (link == null) {
                     call.reject("No Wi-Fi IPv4 address", "NO_WIFI");
                     return;
                 }
                 ServerSocket server = new ServerSocket();
                 try {
-                    server.bind(new InetSocketAddress(address, 0), 2);
+                    server.bind(new InetSocketAddress(link.address, 0), 2);
                     synchronized (this) {
                         if (generation != attempt) {
                             call.reject("Hosting cancelled", "CANCELLED");
@@ -58,8 +67,9 @@ public class LanTransportPlugin extends Plugin {
                         listener = server;
                     }
                     JSObject result = new JSObject();
-                    result.put("address", address.getHostAddress());
+                    result.put("address", link.address.getHostAddress());
                     result.put("port", server.getLocalPort());
+                    listening = true;
                     call.resolve(result);
                     while (!server.isClosed()) {
                         Socket socket = server.accept();
@@ -74,9 +84,9 @@ public class LanTransportPlugin extends Plugin {
                 synchronized (this) {
                     if (generation == attempt) {
                         listener = null;
-                        call.reject("Could not host on Wi-Fi", "HOST_FAILED");
                     }
                 }
+                if (!listening) call.reject("Could not host on Wi-Fi", "HOST_FAILED");
             }
         });
     }
@@ -93,6 +103,10 @@ public class LanTransportPlugin extends Plugin {
         readers.execute(() -> {
             Socket socket = new Socket();
             try {
+                synchronized (this) {
+                    if (generation != attempt) throw new IOException("Connection cancelled");
+                    pendingConnection = socket;
+                }
                 String[] parts = address.split("\\.");
                 byte[] ip = new byte[4];
                 for (int i = 0; i < 4; i++) {
@@ -101,7 +115,11 @@ public class LanTransportPlugin extends Plugin {
                     ip[i] = (byte)number;
                 }
                 InetAddress host = InetAddress.getByAddress(ip);
-                if (!host.isSiteLocalAddress()) throw new IOException("Local address required");
+                if (!LanAddresses.isPrivateIpv4(host)) throw new IOException("Local address required");
+                WifiLink link = findWifiLink(host);
+                if (link == null) throw new IOException("Host is not on a connected Wi-Fi subnet");
+                if (link.network != null) link.network.bindSocket(socket);
+                socket.bind(new InetSocketAddress(link.address, 0));
                 socket.connect(new InetSocketAddress(host, port), 4500);
                 int id = attach(socket, attempt);
                 if (id == 0) throw new IOException("Connection cancelled");
@@ -109,6 +127,10 @@ public class LanTransportPlugin extends Plugin {
             } catch (IOException | SecurityException error) {
                 closeQuietly(socket);
                 call.reject("Could not connect over Wi-Fi", "JOIN_FAILED");
+            } finally {
+                synchronized (this) {
+                    if (pendingConnection == socket) pendingConnection = null;
+                }
             }
         });
     }
@@ -196,31 +218,67 @@ public class LanTransportPlugin extends Plugin {
         generation++;
         closeQuietly(listener);
         closeQuietly(connection);
+        closeQuietly(pendingConnection);
         listener = null;
         connection = null;
+        pendingConnection = null;
         return generation;
     }
 
-    private static InetAddress localWifiAddress() throws IOException {
-        InetAddress best = null;
-        int bestPriority = -1;
-        for (NetworkInterface network : Collections.list(NetworkInterface.getNetworkInterfaces())) {
-            String name = network.getName().toLowerCase(Locale.ROOT);
-            if (!network.isUp() || network.isLoopback() || network.isPointToPoint()) continue;
-            int priority = name.startsWith("ap") || name.contains("softap") ||
-                           name.startsWith("swlan") || name.matches("wlan[1-9][0-9]*") ? 3
-                : name.startsWith("wlan") || name.startsWith("wifi") ? 2
-                : name.startsWith("eth") ? 1 : -1;
-            if (priority <= bestPriority) continue;
-            for (InetAddress address : Collections.list(network.getInetAddresses())) {
-                if (address instanceof Inet4Address && address.isSiteLocalAddress()) {
-                    best = address;
-                    bestPriority = priority;
-                    break;
+    private WifiLink findWifiLink(InetAddress host) throws IOException {
+        List<WifiLink> links = new ArrayList<>();
+        ConnectivityManager connectivity = getContext().getSystemService(ConnectivityManager.class);
+        if (connectivity != null) {
+            for (Network network : connectivity.getAllNetworks()) {
+                NetworkCapabilities capabilities = connectivity.getNetworkCapabilities(network);
+                if (capabilities == null || !capabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI)
+                        || capabilities.hasTransport(NetworkCapabilities.TRANSPORT_VPN)) continue;
+                LinkProperties properties = connectivity.getLinkProperties(network);
+                if (properties == null) continue;
+                for (LinkAddress address : properties.getLinkAddresses()) {
+                    if (LanAddresses.isPrivateIpv4(address.getAddress())) {
+                        links.add(new WifiLink(address.getAddress(), address.getPrefixLength(), 2, network));
+                    }
                 }
             }
         }
+
+        // Hotspot interfaces need not be exposed as Networks to an app on the hosting phone.
+        Enumeration<NetworkInterface> interfaces = NetworkInterface.getNetworkInterfaces();
+        for (NetworkInterface candidate : interfaces == null
+                ? Collections.<NetworkInterface>emptyList() : Collections.list(interfaces)) {
+            int priority = LanAddresses.wifiPriority(candidate.getName());
+            if (priority < 0 || !candidate.isUp() || candidate.isLoopback() || candidate.isPointToPoint()) continue;
+            for (InterfaceAddress address : candidate.getInterfaceAddresses()) {
+                if (LanAddresses.isPrivateIpv4(address.getAddress()) &&
+                        links.stream().noneMatch(link -> link.address.equals(address.getAddress()))) {
+                    links.add(new WifiLink(address.getAddress(), address.getNetworkPrefixLength(), priority, null));
+                }
+            }
+        }
+
+        WifiLink best = null;
+        for (WifiLink link : links) {
+            if (host != null && !LanAddresses.matchesSubnet(link.address, link.prefixLength, host)) continue;
+            if (best == null || (host == null ? link.priority > best.priority : link.prefixLength > best.prefixLength)) {
+                best = link;
+            }
+        }
         return best;
+    }
+
+    private static final class WifiLink {
+        final InetAddress address;
+        final int prefixLength;
+        final int priority;
+        final Network network;
+
+        WifiLink(InetAddress address, int prefixLength, int priority, Network network) {
+            this.address = address;
+            this.prefixLength = prefixLength;
+            this.priority = priority;
+            this.network = network;
+        }
     }
 
     private static JSObject peerEvent(int id) {

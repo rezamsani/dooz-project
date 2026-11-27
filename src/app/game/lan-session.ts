@@ -113,7 +113,7 @@ export class LanSession {
     const revision = this.revision;
     await closing;
     this.ensureCurrent(revision);
-    const handles = await Promise.all([
+    const listeners = await Promise.allSettled([
       this.native.addListener('packet', packet => {
         if (revision === this.revision) this.onPacket(packet.id, packet.message);
       }),
@@ -129,9 +129,12 @@ export class LanSession {
         }
       }),
     ]);
-    if (this.revision !== revision) {
+    const handles = listeners.flatMap(listener => listener.status === 'fulfilled' ? [listener.value] : []);
+    const failure = listeners.find(listener => listener.status === 'rejected');
+    if (failure || this.revision !== revision) {
       await Promise.allSettled(handles.map(handle => handle.remove()));
       this.ensureCurrent(revision);
+      if (failure) throw failure.reason;
     }
     this.handles = handles;
     return revision;

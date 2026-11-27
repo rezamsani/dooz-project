@@ -890,7 +890,12 @@
             </div>
           }
           @if (isLanMode() && onlineClient.errorMessage(); as error) {
-            <p class="wifi-notice" role="alert">{{ error | t }}</p>
+            <div class="wifi-notice">
+              <p role="alert">{{ error | t }}</p>
+              @if (onlineRole() === 'O' && onlineClient.connectionStatus() === 'ERROR') {
+                <button type="button" class="wifi-join mt-2" (click)="reconnectWifiRoom()">{{ 'اتصال دوباره به میزبان' | t }}</button>
+              }
+            </div>
           }
 
           <!-- Incoming Draw Offer Bar (Online) -->
