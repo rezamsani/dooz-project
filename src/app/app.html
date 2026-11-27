@@ -1,6 +1,6 @@
-<div class="dooz-app relative flex min-h-dvh flex-col text-slate-900 transition-colors duration-300 dark:text-slate-100" [class.environment-live]="gameState() !== 'TITLE_MENU' && playerStats.environment() !== 'simple'">
+<div class="dooz-app relative flex min-h-dvh flex-col text-slate-900 transition-colors duration-300 dark:text-slate-100" [class.environment-live]="gameState() !== 'TITLE_MENU' && !is3DView() && playerStats.environment() !== 'simple'">
   <!-- Atmospheric Environment Backdrop Layer -->
-  @if (gameState() !== 'TITLE_MENU' && playerStats.activeEnvironmentOption(); as activeEnv) {
+  @if (gameState() !== 'TITLE_MENU' && !is3DView() && playerStats.activeEnvironmentOption(); as activeEnv) {
     <div
       class="pointer-events-none fixed inset-0 -z-10 overflow-hidden transition-opacity duration-500"
       aria-hidden="true"
@@ -48,6 +48,12 @@
     <p role="alert" class="mx-auto max-w-lg px-5 py-3 text-sm text-amber-700 dark:text-amber-300">اطلاعات ذخیره‌شده خوانده نشد. برای محافظت از امتیازها، برنامه را ببندید و دوباره باز کنید.</p>
   } @else if (playerStats.storage.issue()==='write' && (gameState() !== 'TITLE_MENU' || homeTab() !== 'stats')) {
     <div role="alert" class="mx-auto max-w-lg px-5 py-3 text-sm text-amber-700 dark:text-amber-300">ذخیرهٔ آمار کامل نشد. <button type="button" class="min-h-11 underline" (click)="playerStats.storage.retry()">تلاش دوباره برای ذخیره</button></div>
+  }
+  @if (activeReaction(); as reaction) {
+    <div role="status" class="pointer-events-none fixed right-4 bottom-[max(1rem,env(safe-area-inset-bottom))] left-4 z-30 mx-auto flex max-w-[300px] items-center gap-3 rounded-2xl border border-teal-500/30 bg-white p-3 shadow-xl dark:bg-[#1a2422]">
+      <mat-icon aria-hidden="true" class="reaction-mark" [attr.data-reaction]="reaction.id">{{ reaction.icon }}</mat-icon>
+      <span class="min-w-0"><bdi class="block truncate text-[11px] opacity-75">{{ reaction.senderName }}</bdi><strong class="block text-sm leading-6">{{ reaction.label }}</strong></span>
+    </div>
   }
   <!-- Main Workspace -->
   <main
@@ -837,14 +843,6 @@
             </div>
           }
 
-          <!-- Transient Online Quick Reaction Banner -->
-          @if (activeEmoteLabel(); as emoteText) {
-            <div class="animate-panel-in flex w-full max-w-[440px] items-center gap-2 rounded-xl border border-sky-500/40 bg-sky-50/95 px-3.5 py-2 text-xs font-semibold text-sky-900 dark:border-sky-400/35 dark:bg-sky-950/80 dark:text-sky-100">
-              <mat-icon class="!h-[17px] !w-[17px] !text-[17px] text-sky-600 dark:text-sky-300">chat_bubble_outline</mat-icon>
-              <span>{{ emoteText }}</span>
-            </div>
-          }
-
           <!-- Incoming Draw Offer Bar (Online) -->
           @if (opponentOfferedDraw()) {
             <div class="animate-panel-in flex w-full max-w-[440px] flex-wrap items-center justify-between gap-3 rounded-xl border border-amber-500/45 bg-amber-50/95 px-4 py-3 text-xs dark:border-amber-400/40 dark:bg-amber-950/75">
@@ -895,9 +893,9 @@
           @if (is3DView()) {
             <!-- 3D Diorama Tabletop Stage -->
             <div
-              class="relative w-full overflow-hidden rounded-3xl border border-slate-900/15 shadow-xl dark:border-white/10"
+              class="relative w-full overflow-hidden rounded-3xl border border-slate-900/15 bg-[#16221f] shadow-lg dark:border-white/10"
               [class.h-[68dvh]]="isFullscreenPlay()"
-              [class.h-[460px]]="!isFullscreenPlay()"
+              [class.h-[clamp(320px,104vw,460px)]]="!isFullscreenPlay()"
               [class.sm:h-[560px]]="!isFullscreenPlay()"
               [class.lg:h-[620px]]="!isFullscreenPlay()"
             >
@@ -937,34 +935,28 @@
               />
 
               <!-- Camera Preset Controls -->
-              <div class="pointer-events-auto absolute bottom-3 left-3 flex items-center gap-1 rounded-xl border border-white/15 bg-slate-950/70 p-1 text-xs text-slate-200 backdrop-blur-md">
+              <div class="camera-picker absolute inset-x-2 bottom-2 mx-auto flex w-max max-w-[calc(100%-1rem)] items-center gap-1 rounded-2xl border border-white/15 bg-[#152421] p-1 text-xs text-slate-100" role="group" aria-label="زاویهٔ دوربین">
                 <button
                   type="button"
                   (click)="setCameraPreset('TABLE')"
-                  class="rounded-lg px-2.5 py-1 font-semibold transition-colors"
-                  [class.bg-teal-500]="cameraPreset() === 'TABLE'"
-                  [class.text-slate-950]="cameraPreset() === 'TABLE'"
-                  [class.hover:bg-white/10]="cameraPreset() !== 'TABLE'"
+                  class="min-h-11 min-w-11 rounded-xl px-3 font-semibold transition-colors hover:bg-white/10"
+                  [attr.aria-pressed]="cameraPreset() === 'TABLE'"
                 >
                   زاویه میز
                 </button>
                 <button
                   type="button"
                   (click)="setCameraPreset('TOP')"
-                  class="rounded-lg px-2.5 py-1 font-semibold transition-colors"
-                  [class.bg-teal-500]="cameraPreset() === 'TOP'"
-                  [class.text-slate-950]="cameraPreset() === 'TOP'"
-                  [class.hover:bg-white/10]="cameraPreset() !== 'TOP'"
+                  class="min-h-11 min-w-11 rounded-xl px-3 font-semibold transition-colors hover:bg-white/10"
+                  [attr.aria-pressed]="cameraPreset() === 'TOP'"
                 >
                   از بالا
                 </button>
                 <button
                   type="button"
                   (click)="setCameraPreset('CINEMA')"
-                  class="rounded-lg px-2.5 py-1 font-semibold transition-colors"
-                  [class.bg-teal-500]="cameraPreset() === 'CINEMA'"
-                  [class.text-slate-950]="cameraPreset() === 'CINEMA'"
-                  [class.hover:bg-white/10]="cameraPreset() !== 'CINEMA'"
+                  class="min-h-11 min-w-11 rounded-xl px-3 font-semibold transition-colors hover:bg-white/10"
+                  [attr.aria-pressed]="cameraPreset() === 'CINEMA'"
                 >
                   سینمایی
                 </button>
@@ -1282,9 +1274,10 @@
                     <button
                       type="button"
                       (click)="sendQuickEmote(em.id)"
-                      class="min-h-[36px] whitespace-nowrap rounded-lg border border-slate-300 bg-slate-50 px-3 py-1 text-xs font-medium text-slate-700 transition-colors hover:border-teal-500 hover:text-teal-800 dark:border-white/10 dark:bg-[#202020] dark:text-slate-200 dark:hover:border-teal-400/50 dark:hover:text-white"
+                      class="reaction-button inline-flex min-h-11 items-center gap-2 rounded-xl border px-2 py-1 text-xs font-semibold"
                     >
-                      {{ em.label }}
+                      <mat-icon aria-hidden="true" class="reaction-mark" [attr.data-reaction]="em.id">{{ em.icon }}</mat-icon>
+                      <span>{{ em.label }}</span>
                     </button>
                   }
                 </div>

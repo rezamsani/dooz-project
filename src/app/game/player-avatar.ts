@@ -15,7 +15,7 @@ import { gravatarUrl, normalizeAvatar, PlayerAvatar } from './avatar';
     }
   `,
   styles: `
-    :host { display: block; position: relative; width: 40px; height: 40px; flex-shrink: 0; border-radius: 50%; overflow: hidden; background: #e0ede5; }
+    :host { display: block; position: relative; width: 40px; height: 40px; flex-shrink: 0; border-radius: 50%; overflow: hidden; background: #e0ede5; box-shadow: 0 0 0 1px var(--line, #dfe5de); }
     img { display: block; width: 100%; height: 100%; object-fit: cover; }
     .remote { position: absolute; inset: 0; opacity: 0; } .remote.ready { opacity: 1; }
   `,

@@ -91,14 +91,15 @@ export type QuickEmoteId = 'salam' | 'nice' | 'wow' | 'gg' | 'hurry';
 export interface QuickEmote {
   id: QuickEmoteId;
   label: string;
+  icon: string;
 }
 
 export const QUICK_EMOTES: readonly QuickEmote[] = [
-  { id: 'salam', label: 'سلام!' },
-  { id: 'nice', label: 'آفرین!' },
-  { id: 'wow', label: 'عجب حرکتی!' },
-  { id: 'gg', label: 'بازی خوبی بود' },
-  { id: 'hurry', label: 'نوبت شماست!' },
+  { id: 'salam', label: 'سلام!', icon: 'sentiment_satisfied_alt' },
+  { id: 'nice', label: 'آفرین!', icon: 'thumb_up' },
+  { id: 'wow', label: 'عجب حرکتی!', icon: 'auto_awesome' },
+  { id: 'gg', label: 'بازی خوبی بود', icon: 'sports_esports' },
+  { id: 'hurry', label: 'نوبت شماست!', icon: 'hourglass_top' },
 ];
 
 export interface WinLineGeometry {

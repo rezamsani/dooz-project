@@ -10,10 +10,20 @@ const KEYS = [
   'dooz_journey_v1', 'dooz_online_session_v1', 'dooz_sound_muted', 'dooz_sound_style_v1',
 ];
 export const NATIVE_STORAGE = new InjectionToken<boolean>('native player storage',{providedIn:'root',factory:()=>Capacitor.isNativePlatform()});
+type NativePreferences = Pick<typeof Preferences, 'get' | 'set' | 'remove'>;
+export const NATIVE_PREFERENCES = new InjectionToken<NativePreferences>('native preferences', {
+  providedIn: 'root',
+  factory: () => ({
+    get: (options) => Preferences.get(options),
+    set: (options) => Preferences.set(options),
+    remove: (options) => Preferences.remove(options),
+  }),
+});
 
 @Injectable({providedIn:'root'})
 export class DeviceStorage {
   private readonly platformId = inject(PLATFORM_ID);
+  private readonly preferences = inject(NATIVE_PREFERENCES);
   readonly native = inject(NATIVE_STORAGE);
   readonly issue = signal<'load' | 'write' | null>(null);
   readonly pending = signal(0);
@@ -27,10 +37,10 @@ export class DeviceStorage {
     if (!isPlatformBrowser(this.platformId) || !this.native) return;
     await Promise.all(KEYS.map(async key => {
       try {
-        let {value} = await Preferences.get({key});
+        let {value} = await this.preferences.get({key});
         if (value === null) {
           try { value = window.localStorage.getItem(key); } catch { /* No legacy data. */ }
-          if (value !== null) await Preferences.set({key,value});
+          if (value !== null) await this.preferences.set({key,value});
         }
         if (value !== null) this.cache.set(key,value);
       } catch {
@@ -68,7 +78,7 @@ export class DeviceStorage {
     // Serialize writes so an older result cannot finish after a newer one.
     this.queue = this.queue.then(async () => {
       try {
-        if (value === null) await Preferences.remove({key}); else await Preferences.set({key,value});
+        if (value === null) await this.preferences.remove({key}); else await this.preferences.set({key,value});
         if (this.dirty.get(key) === value) this.dirty.delete(key);
         if (!this.unread.size && !this.dirty.size) this.issue.set(null);
       } catch { this.issue.set('write'); }

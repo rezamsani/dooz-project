@@ -25,6 +25,7 @@ import { MorrisEdge, MorrisMill, MorrisNodeCoord, MorrisState } from './morris.t
       [class.backdrop-blur-md]="theme() === 'glass'"
       [class.shadow-[inset_0_1px_1px_rgba(255,255,255,0.45),0_10px_30px_rgba(0,0,0,0.28)]]="theme() === 'glass'"
       [style.background-color]="boardTokens().frameBg"
+      [style.background-image]="tabletop() ? 'var(--surface-finish)' : null"
       [style.border-color]="boardTokens().borderColor"
     >
       <!-- Subtle luxury inlaid inner border line -->
@@ -237,6 +238,7 @@ import { MorrisEdge, MorrisMill, MorrisNodeCoord, MorrisState } from './morris.t
               <g [attr.opacity]="isBlockedOwn ? 0.58 : 1">
                 <svg
                   appPieceSvg
+                  [class.drop-shadow-[2px_4px_2px_rgba(0,0,0,0.5)]]="tabletop()"
                   [attr.x]="node.x - 19"
                   [attr.y]="node.y - 19"
                   width="38"
@@ -258,6 +260,7 @@ export class MorrisBoard {
   readonly disabled = input<boolean>(false);
   readonly hintDecision = input<MorrisAiDecision | null>(null);
   readonly theme = input<BoardTheme>('navy');
+  readonly tabletop = input(false);
   readonly pieceStyle = input<PieceStyle>('gemstone');
   readonly colorMode = input<ColorMode>('dark');
   readonly customXColor = input<string | null>(null);

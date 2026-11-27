@@ -16,6 +16,7 @@ import { DoozPieceSvg } from './dooz-piece-svg';
       [class.backdrop-blur-md]="theme() === 'glass'"
       [class.shadow-[inset_0_1px_1px_rgba(255,255,255,0.45),0_10px_30px_rgba(0,0,0,0.28)]]="theme() === 'glass'"
       [style.background-color]="boardTokens().frameBg"
+      [style.background-image]="tabletop() ? 'var(--surface-finish)' : null"
       [style.border-color]="boardTokens().borderColor"
     >
       <!-- Subtle luxury inlaid inner border line -->
@@ -66,6 +67,7 @@ import { DoozPieceSvg } from './dooz-piece-svg';
                 [style]="pieceStyle()"
                 [customColor]="cell === 'X' ? customXColor() : customOColor()"
                 class="absolute inset-[12%] h-[76%] w-[76%] transition-opacity duration-150"
+                [class.drop-shadow-[2px_4px_2px_rgba(0,0,0,0.5)]]="tabletop()"
                 [class.opacity-45]="isExpiringCell($index)"
               ></svg>
             }
@@ -119,6 +121,7 @@ export class DoozBoard {
   readonly lastMoveIndex = input<number | null>(null);
   readonly hintIndex = input<number | null>(null);
   readonly theme = input<BoardTheme>('navy');
+  readonly tabletop = input(false);
   readonly pieceStyle = input<PieceStyle>('gemstone');
   readonly colorMode = input<ColorMode>('dark');
   readonly customXColor = input<string | null>(null);

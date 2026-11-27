@@ -78,3 +78,11 @@ button:focus-visible, summary:focus-visible { outline: 2px solid var(--accent); 
   .match-players > div { padding: 8px 5px; gap: 5px; }
 }
 @media(prefers-reduced-motion: reduce) { .launch-button { transition: none; } }
+.camera-picker button[aria-pressed="true"] { background: #a3d5bb; color: #132820; }
+.reaction-button { background: var(--surface); border-color: var(--line); }
+.reaction-button:hover { border-color: var(--accent); }
+.reaction-mark { display: grid; place-items: center; flex: none; width: 32px; height: 32px; border-radius: 10px; font-size: 18px; color: #433117; background: #f1d699; }
+.reaction-mark[data-reaction="nice"] { color: #143e31; background: #a7dcc6; }
+.reaction-mark[data-reaction="wow"] { color: #452c66; background: #dfcdf8; }
+.reaction-mark[data-reaction="gg"] { color: #173b58; background: #c0e0fa; }
+.reaction-mark[data-reaction="hurry"] { color: #702f28; background: #fad0c5; }

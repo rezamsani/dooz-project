@@ -1,12 +1,19 @@
 import { TestBed } from '@angular/core/testing';
-import { Preferences } from '@capacitor/preferences';
-import { DeviceStorage, NATIVE_STORAGE } from './device-storage';
+import type { PreferencesPlugin } from '@capacitor/preferences';
+import { DeviceStorage, NATIVE_PREFERENCES, NATIVE_STORAGE } from './device-storage';
 import { PlayerStats } from './player-stats';
 
-vi.mock('@capacitor/preferences',()=>({Preferences:{get:vi.fn(),set:vi.fn(),remove:vi.fn()}}));
+const Preferences = {
+  get: vi.fn<PreferencesPlugin['get']>(),
+  set: vi.fn<PreferencesPlugin['set']>(),
+  remove: vi.fn<PreferencesPlugin['remove']>(),
+};
 describe('native player storage',()=>{
   beforeEach(()=>{
-    TestBed.configureTestingModule({providers:[{provide:NATIVE_STORAGE,useValue:true}]});
+    TestBed.configureTestingModule({providers:[
+      {provide:NATIVE_STORAGE,useValue:true},
+      {provide:NATIVE_PREFERENCES,useValue:Preferences},
+    ]});
     vi.mocked(Preferences.get).mockImplementation(async()=>({value:null}));
     vi.mocked(Preferences.set).mockResolvedValue();
     vi.mocked(Preferences.remove).mockResolvedValue();

@@ -662,11 +662,11 @@ export class App {
     return '۰';
   });
 
-  readonly activeEmoteLabel = computed<string | null>(() => {
+  readonly activeReaction = computed(() => {
     const em = this.onlineClient.activeEmote();
     if (!em) return null;
     const found = QUICK_EMOTES.find((item) => item.id === em.emoteId);
-    return found ? `${em.senderName}: «${found.label}»` : null;
+    return found ? { ...found, senderName: em.senderName } : null;
   });
 
   readonly hasVotedRematch = computed<boolean>(() => {

@@ -99,18 +99,17 @@ const STAGE_ENV_CONFIG: Record<EnvironmentTheme, StageEnvironmentConfig> = {
   },
 };
 
-/**
- * High-FPS GPU-composited Photorealistic Perspective Tabletop Stage.
- * Renders the board directly onto the real environment surface with physical 3D slab depth,
- * calibrated perspective pitch, contact shadows, and interactive drag-to-tilt.
- */
+/** Perspective tabletop with a layered CSS frame and DOM-based game controls. */
 @Component({
   selector: 'app-dooz-3d-stage',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [DoozBoard, MorrisBoard, PieceTray],
+  styleUrl: './dooz-3d-stage.css',
   template: `
     <div
-      class="relative h-full w-full overflow-hidden select-none"
+      class="scene relative h-full w-full overflow-hidden select-none"
+      [class.studio]="environment() === 'simple'"
+      [class.studio-light]="colorMode() === 'light'"
       [class.cursor-grab]="!isDragging()"
       [class.cursor-grabbing]="isDragging()"
       [style.background]="activeEnvOption().fallbackGradient"
@@ -118,79 +117,47 @@ const STAGE_ENV_CONFIG: Record<EnvironmentTheme, StageEnvironmentConfig> = {
       (pointermove)="onStagePointerMove($event)"
       (pointerup)="onStagePointerUp($event)"
       (pointercancel)="onStagePointerUp($event)"
+      (lostpointercapture)="onStagePointerUp($event)"
       role="region"
       aria-label="محیط سه‌بعدی بازی دوز"
     >
-      <!-- Photorealistic Environment Backdrop with Subtle GPU Parallax -->
       @if (activeEnvOption().imagePath; as imgSrc) {
         <img
           [src]="imgSrc"
           alt=""
           draggable="false"
           referrerpolicy="no-referrer"
-          class="pointer-events-none absolute inset-0 h-full w-full object-cover will-change-transform"
+          class="scene-backdrop pointer-events-none absolute inset-0 h-full w-full object-cover"
           [class.transition-transform]="!isDragging()"
           [class.duration-500]="!isDragging()"
           [class.ease-out]="!isDragging()"
           [style.transform]="backdropTransform()"
         />
-      } @else {
-        <!-- Studio Pedestal Gradient for 'simple' environment -->
-        <div
-          class="pointer-events-none absolute inset-0 transition-colors duration-300"
-          [class.bg-[radial-gradient(circle_at_50%_40%,#F8FAFC_0%,#CBD5E1_100%)]]="colorMode() === 'light'"
-          [class.bg-[radial-gradient(circle_at_50%_40%,#1C1C1C_0%,#0E0E0E_100%)]]="colorMode() === 'dark'"
-        ></div>
       }
 
-      <!-- Calibrated Scene Atmospheric Lighting & Living Ambience -->
       <div
         class="pointer-events-none absolute inset-0"
         [style.background]="envConfig().lightTint"
       ></div>
-      @if (environment() === 'lounge') {
-        <div
-          class="animate-ambient-breath pointer-events-none absolute right-[10%] top-[44%] h-40 w-40 rounded-full bg-amber-400/20 blur-3xl"
-        ></div>
-      } @else if (environment() === 'carpet' || environment() === 'meadow') {
-        <div
-          class="animate-ambient-breath pointer-events-none absolute left-[22%] top-[10%] h-48 w-72 rounded-full bg-amber-200/15 blur-3xl"
-        ></div>
-      } @else if (environment() === 'waterfall') {
-        <div
-          class="animate-ambient-breath pointer-events-none absolute left-[38%] top-[16%] h-44 w-56 rounded-full bg-cyan-200/15 blur-3xl"
-        ></div>
-      }
-      <div
-        class="pointer-events-none absolute inset-0 shadow-[inset_0_0_90px_rgba(0,0,0,0.45)]"
-      ></div>
+      <div class="scene-vignette pointer-events-none absolute inset-0"></div>
 
       <!-- 3D Perspective Viewport -->
       <div
-        class="relative flex h-full w-full items-center justify-center px-3 py-4 sm:px-6"
-        style="perspective: 1150px; perspective-origin: 50% 42%;"
+        class="scene-camera relative flex h-full w-full items-center justify-center px-3 pb-[76px] pt-4 sm:px-6"
       >
         <div
-          class="relative flex w-full max-w-[660px] flex-col items-center justify-center will-change-transform"
+          class="scene-table relative flex w-full max-w-[660px] flex-col items-center justify-center"
           style="transform-style: preserve-3d;"
           [class.transition-transform]="!isDragging()"
           [class.duration-500]="!isDragging()"
           [class.ease-out]="!isDragging()"
           [style.transform]="tabletopTransform()"
         >
-          <!-- Deep Grounded Contact Shadow directly onto the Carpet / Wood / Stone / Grass -->
-          <div
-            class="pointer-events-none absolute -inset-x-3 -bottom-6 top-4 rounded-[34px] blur-xl"
-            style="transform: translateZ(-22px) translateY(16px);"
-            [class.opacity-50]="boardTheme() === 'glass'"
-            [style.background]="envConfig().shadowTint"
-          ></div>
-
-          <!-- Tabletop Arena: Side Trays + Physical 3D Slab Board -->
           <div
             class="relative flex w-full items-center justify-center gap-2.5 sm:gap-3.5"
             style="transform-style: preserve-3d;"
-            (click.capture)="onBoardClickCapture($event)"
+            [style.--slab-edge]="slabEdgeColor()"
+            [style.--contact-tint]="envConfig().shadowTint"
           >
             <!-- Right Side Tray (Player X) -->
             @if (showSideDishes()) {
@@ -219,14 +186,15 @@ const STAGE_ENV_CONFIG: Record<EnvironmentTheme, StageEnvironmentConfig> = {
 
             <!-- Main 3D Physical Board Slab -->
             <div
-              class="relative w-full max-w-[440px] flex-1 rounded-2xl border-b-[10px] ring-1 ring-white/15"
-              [style.border-bottom-color]="slabEdgeColor()"
-              [style.box-shadow]="slabShadow()"
-              style="transform-style: preserve-3d;"
+              class="board-slab relative w-full min-w-0 flex-1 rounded-2xl"
+              [attr.data-material]="boardTheme()"
             >
+              <div class="board-contact" aria-hidden="true"></div>
+              <div class="board-edge" aria-hidden="true"></div>
               @if (variant() === 'THREE') {
                 <app-dooz-board
-                  class="block w-full [&_svg]:drop-shadow-[0_4px_5px_rgba(0,0,0,0.45)]"
+                  class="board-surface block w-full"
+                  [tabletop]="true"
                   [board]="threeBoard()"
                   [currentTurn]="currentTurn()"
                   [winResult]="threeWin()"
@@ -246,7 +214,8 @@ const STAGE_ENV_CONFIG: Record<EnvironmentTheme, StageEnvironmentConfig> = {
                 />
               } @else {
                 <app-morris-board
-                  class="block w-full"
+                  class="board-surface block w-full"
+                  [tabletop]="true"
                   [state]="morrisState()"
                   [theme]="boardTheme()"
                   [pieceStyle]="pieceStyle()"
@@ -261,12 +230,6 @@ const STAGE_ENV_CONFIG: Record<EnvironmentTheme, StageEnvironmentConfig> = {
                 />
               }
 
-              <!-- Subtle Realistic Surface Specular Reflection -->
-              <div
-                class="pointer-events-none absolute inset-0 rounded-2xl"
-                [class.bg-[linear-gradient(135deg,rgba(255,255,255,0.3)_0%,rgba(255,255,255,0.06)_36%,transparent_54%,rgba(255,255,255,0.16)_100%)]]="boardTheme() === 'glass'"
-                [class.bg-[linear-gradient(155deg,rgba(255,248,230,0.16)_0%,transparent_42%,rgba(0,0,0,0.16)_100%)]]="boardTheme() !== 'glass'"
-              ></div>
             </div>
 
             <!-- Left Side Tray (Player O) -->
@@ -302,7 +265,7 @@ const STAGE_ENV_CONFIG: Record<EnvironmentTheme, StageEnvironmentConfig> = {
         <button
           type="button"
           (click)="resetOrbit(); $event.stopPropagation()"
-          class="absolute top-3 left-3 z-10 inline-flex items-center gap-1.5 rounded-xl border border-white/20 bg-slate-950/75 px-3 py-1.5 text-xs font-semibold text-slate-100 backdrop-blur-md transition-colors hover:bg-slate-900"
+          class="absolute top-3 left-3 z-10 inline-flex min-h-11 items-center gap-1.5 rounded-xl border border-white/20 bg-slate-950/85 px-3 text-xs font-semibold text-slate-100 transition-colors hover:bg-slate-900"
         >
           بازنشانی زاویه
         </button>
@@ -360,7 +323,6 @@ export class Dooz3DStage {
   private startPitch = 0;
   private startRoll = 0;
   private activePointerId: number | null = null;
-  private suppressNextClick = false;
 
   constructor() {
     effect(() => {
@@ -396,15 +358,19 @@ export class Dooz3DStage {
     let scale = cfg.tableScale;
 
     if (preset === 'TOP') {
-      basePitch = 10;
+      basePitch = 0;
       baseRoll = 0;
       offsetX = 0;
       offsetY = 2;
-      scale = Math.min(0.92, cfg.tableScale + 0.14);
+      scale = Math.min(0.98, cfg.tableScale + 0.18);
     } else if (preset === 'CINEMA') {
-      basePitch = Math.min(44, cfg.pitchDeg + 6);
-      baseRoll = -9;
-      scale = cfg.tableScale * 0.96;
+      basePitch = Math.min(43, cfg.pitchDeg + 8);
+      baseRoll = -6;
+      scale = Math.min(0.94, cfg.tableScale + 0.07);
+    } else {
+      basePitch = Math.min(30, basePitch);
+      offsetY = Math.min(6, offsetY);
+      scale = Math.min(0.96, scale + 0.16);
     }
 
     const pitch = Math.max(0, Math.min(50, basePitch + this.dragPitchDelta()));
@@ -423,7 +389,7 @@ export class Dooz3DStage {
     const pitch = this.dragPitchDelta();
     const tx = (-roll * 0.18).toFixed(2);
     const ty = (-pitch * 0.15).toFixed(2);
-    return `scale(1.07) translate3d(${tx}%, ${ty}%, 0)`;
+    return `scale(1.10) translate3d(${tx}%, ${ty}%, 0)`;
   });
 
   readonly slabEdgeColor = computed<string>(
@@ -438,9 +404,9 @@ export class Dooz3DStage {
   });
 
   onStagePointerDown(event: PointerEvent): void {
-    // Allow normal button clicks on board cells without blocking pointer capture prematurely
-    if (event.button !== 0) return;
-    this.suppressNextClick = false;
+    if (event.button !== 0 || !event.isPrimary || this.activePointerId !== null) return;
+    if (event.target instanceof Element && event.target.closest('button, [role="button"]')) return;
+    (event.currentTarget as Element).setPointerCapture(event.pointerId);
     this.activePointerId = event.pointerId;
     this.pointerDownX = event.clientX;
     this.pointerDownY = event.clientY;
@@ -454,31 +420,17 @@ export class Dooz3DStage {
     const dy = event.clientY - this.pointerDownY;
     if (!this.isDragging() && Math.hypot(dx, dy) > 8) {
       this.isDragging.set(true);
-      this.suppressNextClick = true;
     }
     if (!this.isDragging()) return;
 
-    this.dragRollDelta.set(Math.max(-24, Math.min(24, this.startRoll + dx * 0.14)));
+    this.dragRollDelta.set(Math.max(-10, Math.min(10, this.startRoll + dx * 0.10)));
     this.dragPitchDelta.set(Math.max(-28, Math.min(18, this.startPitch - dy * 0.14)));
   }
 
   onStagePointerUp(event: PointerEvent): void {
     if (this.activePointerId !== event.pointerId) return;
     this.activePointerId = null;
-    if (this.isDragging()) {
-      setTimeout(() => {
-        this.isDragging.set(false);
-        this.suppressNextClick = false;
-      }, 40);
-    }
-  }
-
-  onBoardClickCapture(event: Event): void {
-    if (this.suppressNextClick) {
-      event.stopPropagation();
-      event.preventDefault();
-      this.suppressNextClick = false;
-    }
+    this.isDragging.set(false);
   }
 
   resetOrbit(): void {
