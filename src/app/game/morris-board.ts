@@ -13,6 +13,8 @@ import {
 } from './morris-engine';
 import { MorrisEdge, MorrisMill, MorrisNodeCoord, MorrisState } from './morris.types';
 
+let nextMorrisBoardUid = 1;
+
 @Component({
   selector: 'app-morris-board',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -28,27 +30,144 @@ import { MorrisEdge, MorrisMill, MorrisNodeCoord, MorrisState } from './morris.t
       [style.background-image]="tabletop() ? 'var(--surface-finish)' : null"
       [style.border-color]="boardTokens().borderColor"
     >
-      <!-- Subtle luxury inlaid inner border line -->
+      <!-- Outer chamfered frame highlight -->
       <div
-        class="pointer-events-none absolute inset-2 rounded-xl border border-white/10"
+        class="pointer-events-none absolute inset-1.5 rounded-xl border border-white/12 shadow-[inset_0_2px_10px_rgba(0,0,0,0.28)]"
         aria-hidden="true"
       ></div>
+
       <svg
         viewBox="0 0 400 400"
         role="group"
         [attr.aria-label]="boardAriaLabel()"
         class="relative block aspect-square w-full select-none"
       >
+        <defs>
+          <!-- Overhead studio directional illumination across the board -->
+          <radialGradient [attr.id]="uid('deckLight')" cx="38%" cy="30%" r="76%">
+            <stop offset="0%" stop-color="rgba(255,250,235,0.13)" />
+            <stop offset="55%" stop-color="rgba(255,255,255,0)" />
+            <stop offset="100%" stop-color="rgba(0,0,0,0.24)" />
+          </radialGradient>
 
-        <!-- Board tracks / lines -->
+          <!-- Machined brass / metallic rim gradient -->
+          <linearGradient [attr.id]="uid('brassRim')" x1="15%" y1="10%" x2="85%" y2="90%">
+            <stop offset="0%" [attr.stop-color]="rimHighlight()" />
+            <stop offset="48%" [attr.stop-color]="socketStroke()" />
+            <stop offset="100%" [attr.stop-color]="rimShadow()" />
+          </linearGradient>
+
+          <!-- Recessed socket bowl gradient -->
+          <radialGradient [attr.id]="uid('socketBowl')" cx="54%" cy="56%" r="65%">
+            <stop offset="0%" [attr.stop-color]="socketFill()" />
+            <stop offset="68%" [attr.stop-color]="socketFill()" />
+            <stop offset="100%" stop-color="rgba(0,0,0,0.62)" />
+          </radialGradient>
+
+          <!-- Subtle wood grain / tile texture overlay -->
+          <pattern [attr.id]="uid('grain')" width="80" height="80" patternUnits="userSpaceOnUse">
+            @if (theme() === 'walnut') {
+              <path
+                d="M0 10 Q 20 6 40 10 T 80 10 M0 28 Q 25 32 50 28 T 80 28 M0 48 Q 18 44 42 48 T 80 48 M0 66 Q 22 70 46 66 T 80 66"
+                fill="none"
+                stroke="rgba(255,220,170,0.06)"
+                stroke-width="1.2"
+              />
+              <path
+                d="M0 19 Q 22 23 44 19 T 80 19 M0 57 Q 20 53 45 57 T 80 57"
+                fill="none"
+                stroke="rgba(0,0,0,0.14)"
+                stroke-width="1"
+              />
+            } @else if (theme() === 'tile') {
+              <rect x="2" y="2" width="76" height="76" rx="4" fill="none" stroke="rgba(126,210,223,0.09)" stroke-width="1" />
+              <path d="M40 8 L72 40 L40 72 L8 40 Z" fill="none" stroke="rgba(253,230,138,0.07)" stroke-width="1" />
+            } @else if (theme() === 'felt') {
+              <circle cx="16" cy="18" r="0.8" fill="rgba(255,255,255,0.06)" />
+              <circle cx="52" cy="34" r="0.8" fill="rgba(0,0,0,0.16)" />
+              <circle cx="32" cy="64" r="0.8" fill="rgba(255,255,255,0.05)" />
+              <circle cx="68" cy="70" r="0.8" fill="rgba(0,0,0,0.14)" />
+            }
+          </pattern>
+        </defs>
+
+        <!-- Tactile surface finish & lighting vignette -->
+        @if (theme() !== 'glass') {
+          <rect x="4" y="4" width="392" height="392" rx="14" [attr.fill]="'url(#' + uid('grain') + ')'" />
+          <rect x="4" y="4" width="392" height="392" rx="14" [attr.fill]="'url(#' + uid('deckLight') + ')'" />
+        }
+
+        <!-- Artisanal inlaid outer perimeter border -->
+        <rect
+          x="13"
+          y="13"
+          width="374"
+          height="374"
+          rx="12"
+          fill="none"
+          [attr.stroke]="trackStroke()"
+          stroke-width="1.2"
+          opacity="0.34"
+        />
+
+        <!-- Delicate Persian Shamseh centerpiece rosette -->
+        <g transform="translate(200, 200)" opacity="0.16" aria-hidden="true">
+          <circle cx="0" cy="0" r="30" fill="none" [attr.stroke]="trackStroke()" stroke-width="1.2" />
+          <polygon
+            points="0,-24 6,-6 24,0 6,6 0,24 -6,6 -24,0 -6,-6"
+            fill="none"
+            [attr.stroke]="trackStroke()"
+            stroke-width="1.2"
+          />
+          <polygon
+            points="0,-18 5,-5 18,0 5,5 0,18 -5,5 -18,0 -5,-5"
+            transform="rotate(45)"
+            fill="none"
+            [attr.stroke]="trackStroke()"
+            stroke-width="1"
+          />
+          <circle cx="0" cy="0" r="4" [attr.fill]="trackStroke()" />
+        </g>
+
+        <!-- 4 Antique corner rivets -->
+        @for (corner of cornerRivets; track $index) {
+          <g aria-hidden="true">
+            <circle [attr.cx]="corner.x" [attr.cy]="corner.y + 0.8" r="4.8" fill="rgba(0,0,0,0.38)" />
+            <circle [attr.cx]="corner.x" [attr.cy]="corner.y" r="4.4" [attr.fill]="'url(#' + uid('brassRim') + ')'" />
+            <circle [attr.cx]="corner.x - 1.2" [attr.cy]="corner.y - 1.2" r="1.2" fill="rgba(255,255,255,0.48)" />
+          </g>
+        }
+
+        <!-- Carved 3-layer tracks: dark recessed groove -> inlaid track -> subtle specular edge -->
         @for (edge of edges(); track $index) {
+          <!-- Layer 1: Recessed groove shadow -->
+          <line
+            [attr.x1]="nodes[edge.from].x"
+            [attr.y1]="nodes[edge.from].y + 1.1"
+            [attr.x2]="nodes[edge.to].x"
+            [attr.y2]="nodes[edge.to].y + 1.1"
+            [attr.stroke]="grooveShadow()"
+            [attr.stroke-width]="edge.diagonal ? 6.4 : 7.6"
+            stroke-linecap="round"
+          />
+          <!-- Layer 2: Inlaid track body -->
           <line
             [attr.x1]="nodes[edge.from].x"
             [attr.y1]="nodes[edge.from].y"
             [attr.x2]="nodes[edge.to].x"
             [attr.y2]="nodes[edge.to].y"
             [attr.stroke]="edge.diagonal ? diagonalStroke() : trackStroke()"
-            [attr.stroke-width]="edge.diagonal ? 3 : 3.5"
+            [attr.stroke-width]="edge.diagonal ? 3 : 3.8"
+            stroke-linecap="round"
+          />
+          <!-- Layer 3: Subtle top bevel highlight -->
+          <line
+            [attr.x1]="nodes[edge.from].x"
+            [attr.y1]="nodes[edge.from].y - 0.6"
+            [attr.x2]="nodes[edge.to].x"
+            [attr.y2]="nodes[edge.to].y - 0.6"
+            stroke="rgba(255,255,255,0.2)"
+            [attr.stroke-width]="edge.diagonal ? 0.9 : 1.1"
             stroke-linecap="round"
           />
         }
@@ -75,13 +194,13 @@ import { MorrisEdge, MorrisMill, MorrisNodeCoord, MorrisState } from './morris.t
             [attr.x2]="path.x2"
             [attr.y2]="path.y2"
             stroke="#14B8A6"
-            stroke-width="4.5"
+            stroke-width="4.8"
             stroke-linecap="round"
-            opacity="0.8"
+            opacity="0.88"
           />
         }
 
-        <!-- Active mill golden highlight line -->
+        <!-- Active mill golden highlight line with ambient aura -->
         @if (millLineCoords(); as line) {
           <line
             [attr.x1]="line.x1"
@@ -89,9 +208,19 @@ import { MorrisEdge, MorrisMill, MorrisNodeCoord, MorrisState } from './morris.t
             [attr.x2]="line.x2"
             [attr.y2]="line.y2"
             stroke="#F59E0B"
-            stroke-width="7"
+            stroke-width="13"
             stroke-linecap="round"
-            opacity="0.88"
+            opacity="0.28"
+          />
+          <line
+            [attr.x1]="line.x1"
+            [attr.y1]="line.y1"
+            [attr.x2]="line.x2"
+            [attr.y2]="line.y2"
+            stroke="#FBBF24"
+            stroke-width="6.5"
+            stroke-linecap="round"
+            opacity="0.95"
             class="animate-win-line"
           />
         }
@@ -118,7 +247,7 @@ import { MorrisEdge, MorrisMill, MorrisNodeCoord, MorrisState } from './morris.t
             (keydown.space)="$event.preventDefault(); onNodeClick(node.id)"
             [class.cursor-pointer]="isClickable"
             [class.cursor-default]="!isClickable"
-            class="outline-none focus-visible:opacity-100"
+            class="group outline-none focus-visible:opacity-100"
           >
             <!-- Generous invisible touch target (44px diameter in 400x400 viewBox) -->
             <circle
@@ -128,13 +257,34 @@ import { MorrisEdge, MorrisMill, MorrisNodeCoord, MorrisState } from './morris.t
               fill="transparent"
             />
 
-            <!-- Base socket dot -->
+            <!-- Precision-turned recessed socket collar (always visible under pieces too) -->
+            <circle
+              [attr.cx]="node.x"
+              [attr.cy]="node.y + 0.9"
+              r="11.2"
+              fill="rgba(0,0,0,0.34)"
+            />
+            <circle
+              [attr.cx]="node.x"
+              [attr.cy]="node.y"
+              [attr.r]="isClickable && state().action === 'PLACE' ? 11.2 : 10"
+              [attr.fill]="'url(#' + uid('brassRim') + ')'"
+              class="transition-all duration-150"
+            />
+            <circle
+              [attr.cx]="node.x"
+              [attr.cy]="node.y"
+              [attr.r]="isClickable && state().action === 'PLACE' ? 8.2 : 7"
+              [attr.fill]="'url(#' + uid('socketBowl') + ')'"
+            />
+
+            <!-- Empty-state interactive indicators -->
             @if (owner === null) {
               @if (isHintNode) {
                 <circle
                   [attr.cx]="node.x"
                   [attr.cy]="node.y"
-                  r="15.5"
+                  r="16"
                   fill="rgba(56, 189, 248, 0.24)"
                   stroke="#0EA5E9"
                   stroke-width="2.75"
@@ -150,8 +300,8 @@ import { MorrisEdge, MorrisMill, MorrisNodeCoord, MorrisState } from './morris.t
                 <circle
                   [attr.cx]="node.x"
                   [attr.cy]="node.y"
-                  r="14.5"
-                  fill="rgba(20, 184, 166, 0.24)"
+                  r="15"
+                  fill="rgba(20, 184, 166, 0.26)"
                   stroke="#14B8A6"
                   stroke-width="2.75"
                 />
@@ -162,23 +312,15 @@ import { MorrisEdge, MorrisMill, MorrisNodeCoord, MorrisState } from './morris.t
                   fill="#2DD4BF"
                 />
               } @else if (isClickable && state().action === 'PLACE') {
+                <!-- Hover highlight ring on valid placement sockets -->
                 <circle
                   [attr.cx]="node.x"
                   [attr.cy]="node.y"
-                  r="8"
-                  [attr.fill]="socketFill()"
-                  [attr.stroke]="socketStroke()"
+                  r="13.5"
+                  fill="none"
+                  stroke="#2DD4BF"
                   stroke-width="2"
-                  class="transition-all duration-150 hover:stroke-teal-400"
-                />
-              } @else {
-                <circle
-                  [attr.cx]="node.x"
-                  [attr.cy]="node.y"
-                  r="6"
-                  [attr.fill]="socketFill()"
-                  [attr.stroke]="trackStroke()"
-                  stroke-width="1.75"
+                  class="opacity-0 transition-opacity duration-150 group-hover:opacity-80"
                 />
               }
             } @else {
@@ -187,7 +329,7 @@ import { MorrisEdge, MorrisMill, MorrisNodeCoord, MorrisState } from './morris.t
                 <circle
                   [attr.cx]="node.x"
                   [attr.cy]="node.y"
-                  r="21.5"
+                  r="22"
                   fill="rgba(56, 189, 248, 0.2)"
                   stroke="#38BDF8"
                   stroke-width="3"
@@ -196,8 +338,8 @@ import { MorrisEdge, MorrisMill, MorrisNodeCoord, MorrisState } from './morris.t
                 <circle
                   [attr.cx]="node.x"
                   [attr.cy]="node.y"
-                  r="21.5"
-                  fill="rgba(245, 158, 11, 0.2)"
+                  r="22"
+                  fill="rgba(245, 158, 11, 0.22)"
                   stroke="#F59E0B"
                   stroke-width="3"
                 />
@@ -205,7 +347,7 @@ import { MorrisEdge, MorrisMill, MorrisNodeCoord, MorrisState } from './morris.t
                 <circle
                   [attr.cx]="node.x"
                   [attr.cy]="node.y"
-                  r="21.5"
+                  r="22"
                   fill="rgba(245, 158, 11, 0.16)"
                   stroke="#F59E0B"
                   stroke-width="2.6"
@@ -215,7 +357,7 @@ import { MorrisEdge, MorrisMill, MorrisNodeCoord, MorrisState } from './morris.t
                 <circle
                   [attr.cx]="node.x"
                   [attr.cy]="node.y"
-                  r="20.5"
+                  r="21"
                   [attr.fill]="isLightNeutral() ? 'rgba(15, 23, 42, 0.08)' : 'rgba(248, 250, 252, 0.1)'"
                   [attr.stroke]="isLightNeutral() ? '#334155' : '#E2E8F0'"
                   stroke-width="2"
@@ -226,16 +368,28 @@ import { MorrisEdge, MorrisMill, MorrisNodeCoord, MorrisState } from './morris.t
                 <circle
                   [attr.cx]="node.x"
                   [attr.cy]="node.y"
-                  r="20"
+                  r="20.5"
                   fill="none"
                   stroke="#F59E0B"
                   stroke-width="2.2"
-                  opacity="0.9"
+                  opacity="0.92"
                 />
               }
 
-              <!-- Sculpted Piece Body -->
-              <g [attr.opacity]="isBlockedOwn ? 0.58 : 1">
+              <!-- Sculpted Piece Body (gently lifted with deeper shadow when selected) -->
+              <g
+                [attr.opacity]="isBlockedOwn ? 0.58 : 1"
+                [attr.transform]="isSelected ? 'translate(0, -3)' : null"
+              >
+                @if (isSelected) {
+                  <ellipse
+                    [attr.cx]="node.x"
+                    [attr.cy]="node.y + 6.5"
+                    rx="15.5"
+                    ry="13"
+                    fill="rgba(0,0,0,0.42)"
+                  />
+                }
                 <svg
                   appPieceSvg
                   [class.drop-shadow-[2px_4px_2px_rgba(0,0,0,0.5)]]="tabletop()"
@@ -256,6 +410,7 @@ import { MorrisEdge, MorrisMill, MorrisNodeCoord, MorrisState } from './morris.t
   `,
 })
 export class MorrisBoard {
+  private readonly instanceUid = nextMorrisBoardUid++;
   readonly i18n = inject(I18n);
   readonly state = input.required<MorrisState>();
   readonly disabled = input<boolean>(false);
@@ -271,6 +426,12 @@ export class MorrisBoard {
   readonly nodeSelected = output<number>();
 
   readonly nodes: readonly MorrisNodeCoord[] = MORRIS_NODES;
+  readonly cornerRivets = [
+    { x: 18, y: 18 },
+    { x: 382, y: 18 },
+    { x: 382, y: 382 },
+    { x: 18, y: 382 },
+  ] as const;
 
   readonly isLightNeutral = computed<boolean>(
     () => this.theme() === 'navy' && this.colorMode() === 'light',
@@ -284,6 +445,32 @@ export class MorrisBoard {
   readonly diagonalStroke = computed<string>(() => this.boardTokens().diagonalStroke);
   readonly socketFill = computed<string>(() => this.boardTokens().socketFill);
   readonly socketStroke = computed<string>(() => this.boardTokens().socketStroke);
+
+  readonly grooveShadow = computed<string>(() =>
+    this.isLightNeutral() && !this.customBoardColor()
+      ? 'rgba(15, 23, 42, 0.2)'
+      : 'rgba(0, 0, 0, 0.48)',
+  );
+
+  readonly rimHighlight = computed<string>(() =>
+    this.theme() === 'walnut' || this.theme() === 'felt'
+      ? '#FDE68A'
+      : this.theme() === 'tile'
+        ? '#A5F3FC'
+        : 'rgba(255,255,255,0.72)',
+  );
+
+  readonly rimShadow = computed<string>(() =>
+    this.theme() === 'walnut' || this.theme() === 'felt'
+      ? '#6B421A'
+      : this.theme() === 'tile'
+        ? '#164E63'
+        : 'rgba(15,23,42,0.58)',
+  );
+
+  uid(suffix: string): string {
+    return `mb-${this.instanceUid}-${suffix}`;
+  }
 
   readonly edges = computed<readonly MorrisEdge[]>(() => getMorrisEdges(this.state().variant));
 
