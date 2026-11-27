@@ -3,9 +3,9 @@ import { applyMove, checkWinner, chooseAiMove, getAvailableCells, getOpponent } 
 import { MorrisState } from './morris.types';
 import { applyDecision, chooseMorrisAiDecision, evaluateMorrisBoard, generateLegalDecisions, getMorrisMills } from './morris-engine';
 export const BOTS=[
-  {id:'baran',name:'باران',difficulty:'EASY',style:'بازیگوش و حمله‌ور',line:'بیا یه تلهٔ کوچیک بچینیم!',unlock:'همیشه همراه تو'},
-  {id:'simin',name:'سیمین',difficulty:'MEDIUM',style:'آرام و دفاعی',line:'اول راه حریف رو ببند.',unlock:'با شکست باران باز می‌شود'},
-  {id:'rostam',name:'رستم',difficulty:'HARD',style:'حسابگر و اهل تله',line:'یک حرکت جلوتر فکر کن.',unlock:'با شکست سیمین باز می‌شود'},
+  {id:'baran',name:'باران',difficulty:'EASY',style:'بازیگوش و حمله‌ور',line:'بیا یه تلهٔ کوچیک بچینیم!',requiredCoins:0},
+  {id:'simin',name:'سیمین',difficulty:'MEDIUM',style:'آرام و دفاعی',line:'اول راه حریف رو ببند.',requiredCoins:1},
+  {id:'rostam',name:'رستم',difficulty:'HARD',style:'حسابگر و اهل تله',line:'یک حرکت جلوتر فکر کن.',requiredCoins:2},
 ] as const;
 export type BotId=typeof BOTS[number]['id'];
 export function botForDifficulty(difficulty:Difficulty){return BOTS.find(b=>b.difficulty===difficulty)!;}

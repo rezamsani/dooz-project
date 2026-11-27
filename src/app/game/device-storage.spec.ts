@@ -26,7 +26,7 @@ describe('native player storage',()=>{
     vi.mocked(Preferences.get).mockImplementation(async({key})=>({value:key==='dooz_player_stats_v1'?JSON.stringify({elo:1310,wins:8,losses:3,draws:2}):null}));
     const storage=TestBed.inject(DeviceStorage);await storage.load();
     const stats=TestBed.inject(PlayerStats);
-    expect(stats.stats().elo).toBe(1310);expect(stats.totalGames()).toBe(13);
+    expect(stats.stats().coins).toBe(13);expect(stats.totalGames()).toBe(13);
     expect(storage.issue()).toBeNull();
   });
 

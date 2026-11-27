@@ -77,7 +77,7 @@ describe('App', () => {
     expect(app.homeTab()).toBe('play');
   });
 
-  it('awards a coin for a completed local round without changing the personal rating',()=>{
+  it('awards a coin for a completed local round',()=>{
     const fixture = TestBed.createComponent(App);
     const app = fixture.componentInstance;
     app.setGameMode('LOCAL_2P');app.startGame();
@@ -87,7 +87,6 @@ describe('App', () => {
     for(const index of [0,3,1,4,2,2]) app.onCellSelected(index);
     expect(app.scores()).toEqual({X:1,O:0,draws:0});
     expect(app.playerStats.totalGames()).toBe(0);
-    expect(app.playerStats.stats().elo).toBe(1200);
     expect(app.playerStats.stats().coins).toBe(1);
     fixture.detectChanges();
     expect(fixture.nativeElement.textContent).toContain('۱ سکه گرفتی');
@@ -119,7 +118,7 @@ describe('App', () => {
     const app=TestBed.createComponent(App).componentInstance;
     const listener=registered.mock.calls[0][0];
     const room: RoomSnapshotDto={
-      code:'ABCDE',roundId:'unique-round',roundRatings:{X:1200,O:1400},variant:'THREE',boardRule:'CLASSIC',allowFlying:false,turnTimeLimit:0,status:'FINISHED',
+      code:'ABCDE',roundId:'unique-round',variant:'THREE',boardRule:'CLASSIC',allowFlying:false,turnTimeLimit:0,status:'FINISHED',
       players:{X:{name:'You',connected:true},O:{name:'Opponent',connected:true}},scores:{X:1,O:0,draws:0},rematchVotes:[],drawOfferFrom:null,
       threeBoard:Array(9).fill(null),threeXQueue:[],threeOQueue:[],threeTurn:'X',threeMoveCount:5,threeLastMove:2,threeWin:null,threeDraw:false,morrisState:null,winner:'X',isDraw:false,endReason:'NORMAL',
     };
@@ -128,8 +127,8 @@ describe('App', () => {
     emit({...room,status:'PLAYING',winner:null});
     emit(room);emit(room);
     expect(app.playerStats.stats()).toMatchObject(mode === 'LAN'
-      ? {coins:1,wins:0,elo:1200}
-      : {coins:1,wins:1,elo:1218});
+      ? {coins:1,wins:0}
+      : {coins:1,wins:1});
     expect(app.roundCoins()).toBe(1);
   });
 });

@@ -1,16 +1,23 @@
 import { TestBed } from '@angular/core/testing';
 import { PlayerJourney } from './player-journey';
 import { DeviceStorage } from './device-storage';
+import { PlayerStats } from './player-stats';
 describe('earned journey',()=>{
   let values:Map<string,string>;
-  beforeEach(()=>{values=new Map();TestBed.configureTestingModule({providers:[{provide:DeviceStorage,useValue:{getItem:(k:string)=>values.get(k)??null,setItem:(k:string,v:string)=>values.set(k,v)}}]});});
+  beforeEach(()=>{values=new Map();TestBed.configureTestingModule({providers:[{provide:DeviceStorage,useValue:{canReadStats:()=>true,getItem:(k:string)=>values.get(k)??null,setItem:(k:string,v:string)=>values.set(k,v)}}]});});
   afterEach(()=>vi.useRealTimers());
-  it('unlocks bots from wins, deduplicates results and persists progress',()=>{
+  it('unlocks bots from coins and persists the selected bot and badges',()=>{
     const j=TestBed.inject(PlayerJourney);expect(j.selectBot('simin')).toBe(false);
-    j.recordMatch('1','LOSS','baran','THREE',false);expect(j.isUnlocked('simin')).toBe(false);
+    const stats = TestBed.inject(PlayerStats);
+    stats.recordMatchOutcome('LOSS','1');
+    j.recordMatch('1','LOSS','baran','THREE',false);
+    expect(j.isUnlocked('simin')).toBe(true);
+    expect(j.isUnlocked('rostam')).toBe(false);
     j.recordMatch('2','WIN','baran','THREE',true);expect(j.isUnlocked('simin')).toBe(true);expect(j.state().badges['clean_win']).toBeUndefined();
     expect(j.recordMatch('2','WIN','baran','THREE',false)).toEqual([]);expect(j.state().wins.baran).toBe(1);
-    j.recordMatch('3','WIN','simin','NINE',false);expect(j.isUnlocked('rostam')).toBe(true);expect(j.state().badges['beat_simin']).toBeTruthy();
+    stats.recordRoundCompletion('local-round','LOCAL_2P');
+    expect(j.selectBot('rostam')).toBe(true);
+    j.recordMatch('3','WIN','simin','NINE',false);expect(j.state().badges['beat_simin']).toBeTruthy();
     const copy=TestBed.runInInjectionContext(()=>new PlayerJourney());expect(copy.state()).toEqual(j.state());
   });
   it('counts actual attempts and archives cannot backfill daily streaks',()=>{

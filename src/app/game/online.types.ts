@@ -20,7 +20,6 @@ export interface OnlinePlayerInfo {
 export interface RoomSnapshotDto {
   code: string;
   roundId?: string;
-  roundRatings?: Record<Player, number>;
   series?: {targetWins:0|3;winner:Player|null};
   rivalry?: {X:number;O:number;draws:number;seriesX:number;seriesO:number;persisted:boolean;recent:{winner:Player|null;at:number}[]};
   variant: GameVariant;
@@ -58,7 +57,6 @@ export type ClientWsMessage =
       type: 'room:create';
       playerName: string;
       avatar?: PlayerAvatar;
-      rating?: number;
       targetWins?:0|3;
       variant: GameVariant;
       boardRule: BoardRule;
@@ -70,7 +68,6 @@ export type ClientWsMessage =
       code: string;
       playerName: string;
       avatar?: PlayerAvatar;
-      rating?: number;
     }
   | { type: 'room:move_three'; index: number }
   | { type: 'room:morris_place'; nodeId: number }

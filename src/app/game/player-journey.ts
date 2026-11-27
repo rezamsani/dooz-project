@@ -3,13 +3,14 @@ import { DeviceStorage } from './device-storage';
 import { BOTS, BotId } from './bot-personalities';
 import { GameVariant } from './dooz.types';
 import { MatchOutcome } from './player-score';
+import { PlayerStats } from './player-stats';
 import { tehranDay } from './learning-engine';
 const KEY='dooz_journey_v1';
 export const BADGES=[
   {id:'first_win',name:'اولین پیروزی',detail:'اولین برد در برابر ربات یا حریف آنلاین',icon: 'flag'},
   {id:'clean_win',name:'روی پای خودت',detail:'برد مقابل ربات بدون راهنمایی یا برگشت حرکت',icon:'verified'},
   {id:'saved_win',name:'نجات‌دهنده',detail:'بستن یک تهدید مستقیم و بردن بازی',icon:'shield'},
-  {id:'beat_simin',name:'شکستن دفاع',detail:'شکست سیمین و باز کردن رستم',icon: 'strategy'},
+  {id:'beat_simin',name:'شکستن دفاع',detail:'برد مقابل سیمین',icon: 'strategy'},
   {id:'draw_rostam',name:'هم‌قدِ رستم',detail:'برد یا مساوی مقابل رستم',icon: 'medal'},
   {id:'win_nine',name:'استاد حلقه‌ها',detail:'برد در دوز ۹ تایی مقابل ربات',icon: 'nine'},
   {id:'win_twelve',name:'دوازده‌گام',detail:'برد در دوز ۱۲ تایی مقابل ربات',icon: 'twelve'},
@@ -22,6 +23,7 @@ const initial=():Journey=>({selected:'baran',wins:{baran:0,simin:0,rostam:0},bad
 @Injectable({providedIn:'root'})
 export class PlayerJourney{
   readonly storage=inject(DeviceStorage);
+  private readonly stats = inject(PlayerStats);
   readonly state=signal<Journey>(initial());
   readonly bot=computed(()=>BOTS.find(b=>b.id===this.state().selected)!);
   readonly streak=computed(()=>this.streakAt(tehranDay()));
@@ -36,7 +38,10 @@ export class PlayerJourney{
       this.state.set(v);if(!this.isUnlocked(v.selected))this.state.update(s=>({...s,selected:'baran'}));
     }}catch{/* Invalid progress starts a fresh local journey. */}
   }
-  isUnlocked(id:BotId):boolean{return id==='baran'||(id==='simin'?this.state().wins.baran>0:this.state().wins.simin>0);}
+  isUnlocked(id: BotId): boolean {
+    const bot = BOTS.find(candidate => candidate.id === id)!;
+    return this.stats.stats().coins >= bot.requiredCoins;
+  }
   selectBot(id:BotId):boolean{if(!this.isUnlocked(id))return false;this.state.update(s=>({...s,selected:id}));this.save();return true;}
   recordMatch(id:string,outcome:MatchOutcome,bot:BotId|null,variant:GameVariant,assisted:boolean,savedThreat=false):string[]{
     if(this.state().processed.includes(id))return [];

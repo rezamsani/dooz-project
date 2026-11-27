@@ -2,11 +2,10 @@ import { isPlatformBrowser } from '@angular/common';
 import { Injectable, PLATFORM_ID, computed, inject, signal } from '@angular/core';
 import { normalizeHex } from './color-palette';
 import { DeviceStorage } from './device-storage';
-import { COINS_PER_ROUND, PlayerRecord, MatchOutcome, emptyRecord, restoreRecord, ratingAfterMatch } from './player-score';
+import { COINS_PER_ROUND, PlayerRecord, MatchOutcome, emptyRecord, restoreRecord } from './player-score';
 import {
   BoardTheme,
   ColorMode,
-  Difficulty,
   ENVIRONMENT_THEMES,
   EnvironmentOption,
   EnvironmentTheme,
@@ -32,7 +31,6 @@ export class PlayerStats {
   readonly storage = inject(DeviceStorage);
 
   readonly stats = signal<PersistentStats>(emptyRecord());
-  readonly lastEloDelta = signal<number | null>(null);
   readonly boardTheme = signal<BoardTheme>('navy');
   readonly colorMode = signal<ColorMode>('dark');
   readonly environment = signal<EnvironmentTheme>('simple');
@@ -63,15 +61,6 @@ export class PlayerStats {
     const total = this.totalGames();
     if (total === 0) return 0;
     return Math.round((this.stats().wins / total) * 100);
-  });
-
-  readonly rankTitle = computed<string>(() => {
-    const elo = this.stats().elo;
-    if (elo >= 1550) return 'استاد بزرگ';
-    if (elo >= 1400) return 'استاد دوز';
-    if (elo >= 1260) return 'بازیکن حرفه‌ای';
-    if (elo >= 1120) return 'بازیکن باتجربه';
-    return 'تازه‌کار';
   });
 
   constructor() {
@@ -163,25 +152,21 @@ export class PlayerStats {
     this.stats.set(updated); this.persistStats(updated);
   }
 
-  recordMatchOutcome(outcome: MatchOutcome, opponentRating: number, matchId: string, mode: 'AI' | 'ONLINE' = 'AI'): boolean {
+  recordMatchOutcome(outcome: MatchOutcome, matchId: string, mode: 'AI' | 'ONLINE' = 'AI'): boolean {
     const current=this.stats();
     if (!this.canCompleteRound(matchId, mode === 'ONLINE')) return false;
-    const nextElo=ratingAfterMatch(current.elo,opponentRating,outcome);
-    const delta=nextElo-current.elo;
     const nextStreak=outcome === 'WIN' ? current.currentStreak+1 : 0;
     this.completeRound(matchId, {
-      elo:nextElo,
       wins:current.wins+(outcome==='WIN'?1:0),
       losses:current.losses+(outcome==='LOSS'?1:0),
       draws:current.draws+(outcome==='DRAW'?1:0),
       currentStreak:nextStreak,bestStreak:Math.max(current.bestStreak,nextStreak),
-      recentResults:[...current.recentResults,{id:matchId,outcome,mode,rating:nextElo,delta,at:Date.now()}].slice(-12),
+      recentResults:[...current.recentResults,{id:matchId,outcome,mode,at:Date.now()}].slice(-12),
     });
-    this.lastEloDelta.set(delta);
     return true;
   }
 
-  recordUnratedRound(matchId: string, mode: 'LOCAL_2P' | 'LAN'): boolean {
+  recordRoundCompletion(matchId: string, mode: 'LOCAL_2P' | 'LAN'): boolean {
     if (!this.canCompleteRound(matchId, mode === 'LAN')) return false;
     this.completeRound(matchId);
     return true;
@@ -206,21 +191,9 @@ export class PlayerStats {
     this.persistStats(updated);
   }
 
-  getAiOpponentRating(difficulty: Difficulty): number {
-    switch (difficulty) {
-      case 'EASY':
-        return 950;
-      case 'MEDIUM':
-        return 1200;
-      case 'HARD':
-        return 1480;
-    }
-  }
-
   resetStats(): void {
     const reset={...emptyRecord(),processedMatchIds:this.stats().processedMatchIds,pendingOnlineMatches:this.stats().pendingOnlineMatches};
     this.stats.set(reset);
-    this.lastEloDelta.set(null);
     this.persistStats(reset);
   }
 

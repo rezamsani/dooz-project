@@ -965,7 +965,6 @@ export class App {
       targetWins: this.targetWins(),
       playerName: this.playerNameControl.value.trim() || this.profile.name() || this.i18n.text("بازیکن ۱"),
       avatar: this.profile.avatar(),
-      rating: this.playerStats.stats().elo,
       variant: this.gameVariant(),
       boardRule: this.boardRule(),
       allowFlying: this.allowFlying(),
@@ -978,7 +977,7 @@ export class App {
     this.lastOnlineTurnKey = '';
     this.lastOnlineStatus = null;
     const options = this.matchRoomSettings();
-    void this.onlineClient.hostLocal({ ...options, rating: undefined, avatar: { ...options.avatar, gravatarHash: null } });
+    void this.onlineClient.hostLocal({ ...options, avatar: { ...options.avatar, gravatarHash: null } });
   }
 
   joinWifiRoom(): void {
@@ -997,7 +996,7 @@ export class App {
     this.gameMode.set('ONLINE');
     this.lastOnlineStatus = null;
     this.lastOnlineTurnKey = '';
-    this.onlineClient.joinRoom(code, this.playerNameControl.value.trim() || this.profile.name() || this.i18n.text("بازیکن ۲"), this.profile.avatar(), this.playerStats.stats().elo);
+    this.onlineClient.joinRoom(code, this.playerNameControl.value.trim() || this.profile.name() || this.i18n.text("بازیکن ۲"), this.profile.avatar());
   }
 
   avatarForPlayer(player: Player): PlayerAvatar {
@@ -1125,7 +1124,7 @@ export class App {
     this.resetRoundState(this.startingPlayer());
   }
 
-  clearScores(): void {
+  clearRoundHistory(): void {
     this.soundFx.playClick();
     this.scores.set({ X: 0, O: 0, draws: 0 });
     this.recentRounds.set([]);
@@ -1494,11 +1493,10 @@ export class App {
       }
       if (room.winner || room.isDraw) {
         if (local) {
-          if (this.playerStats.recordUnratedRound(matchId, 'LAN')) this.roundCoins.set(COINS_PER_ROUND);
+          if (this.playerStats.recordRoundCompletion(matchId, 'LAN')) this.roundCoins.set(COINS_PER_ROUND);
         } else {
           const outcome = room.isDraw ? 'DRAW' : room.winner === role ? 'WIN' : 'LOSS';
-          const opponentRating = room.roundRatings?.[getOpponent(role)] ?? 1200;
-          if (this.playerStats.recordMatchOutcome(outcome, opponentRating, matchId, 'ONLINE')) {
+          if (this.playerStats.recordMatchOutcome(outcome, matchId, 'ONLINE')) {
             this.roundCoins.set(COINS_PER_ROUND);
             this.freshBadges.set(this.journey.recordMatch(matchId, outcome, null, room.variant, false));
           }
@@ -1559,7 +1557,6 @@ export class App {
     this.isDraw.set(false);
     this.timeoutWinner.set(null);
     this.isAiThinking.set(false);
-    this.playerStats.lastEloDelta.set(null);
     this.roundCoins.set(0);
     this.gameState.set('PLAYING');
 
@@ -1743,13 +1740,12 @@ export class App {
     }
 
     if (this.gameMode() === 'AI') {
-      const oppElo = this.playerStats.getAiOpponentRating(this.difficulty());
       const outcome: 'WIN' | 'LOSS' | 'DRAW' = draw
         ? 'DRAW'
         : winnerPlayer === this.humanSymbol()
           ? 'WIN'
           : 'LOSS';
-      if(this.playerStats.recordMatchOutcome(outcome, oppElo, this.offlineMatchId)) {
+      if(this.playerStats.recordMatchOutcome(outcome, this.offlineMatchId)) {
         this.roundCoins.set(COINS_PER_ROUND);
         const hero=this.humanSymbol(), frames=this.threeReplayFrames();
         const saved=this.gameVariant()==='THREE' && this.boardRule()==='CLASSIC' && frames.some((f,i)=>f.currentTurn===hero && i<frames.length-1 && immediateWins(f.board,getOpponent(hero)).length>0 && immediateWins(frames[i+1].board,getOpponent(hero)).length===0);
@@ -1759,7 +1755,7 @@ export class App {
         if(this.isMorrisVariant()) this.morrisLesson.set(reviewMorris(this.morrisReplayFrames(),this.humanSymbol()));
         else this.threeLesson.set(reviewThree(this.threeReplayFrames(),this.humanSymbol(),this.boardRule()));
       }
-    } else if (this.gameMode() === 'LOCAL_2P' && this.playerStats.recordUnratedRound(this.offlineMatchId, 'LOCAL_2P')) {
+    } else if (this.gameMode() === 'LOCAL_2P' && this.playerStats.recordRoundCompletion(this.offlineMatchId, 'LOCAL_2P')) {
       this.roundCoins.set(COINS_PER_ROUND);
     }
 

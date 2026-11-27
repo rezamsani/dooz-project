@@ -1,5 +1,4 @@
 import { normalizeAvatar, PlayerAvatar } from './avatar';
-import { ratingAfterMatch, validRating } from './player-score';
 import {
   applyMove,
   checkWinner,
@@ -66,14 +65,12 @@ interface PlayerSlot {
   socket: RoomPeer | null;
   name: string;
   avatar: PlayerAvatar;
-  rating: number;
   identityId:string;
 }
 
 interface ActiveRoom {
   code: string;
   roundId: string;
-  roundRatings: Record<Player,number>;
   targetWins:0|3;
   seriesWinner:Player|null;
   variant: GameVariant;
@@ -185,7 +182,7 @@ export class RoomCoordinator {
         this.createRoom(ws, msg);
         return;
       case 'room:join':
-        this.joinRoom(ws, msg.code, msg.playerName, msg.avatar, msg.rating);
+        this.joinRoom(ws, msg.code, msg.playerName, msg.avatar);
         return;
       case 'room:leave':
         this.detachSocket(ws);
@@ -253,14 +250,13 @@ export class RoomCoordinator {
       code,
       roundId: randomHex(this.random, 12),
       targetWins:msg.targetWins===3?3:0,seriesWinner:null,
-      roundRatings: {X: validRating(msg.rating), O:1200},
       variant,
       boardRule,
       allowFlying,
       turnTimeLimit,
       status: 'WAITING',
       players: {
-        X: { socket: ws, name: playerName, avatar: normalizeAvatar(msg.avatar), rating:validRating(msg.rating), identityId:identity.id },
+        X: { socket: ws, name: playerName, avatar: normalizeAvatar(msg.avatar), identityId:identity.id },
         O: null,
       },
       scores: { X: 0, O: 0, draws: 0 },
@@ -290,7 +286,7 @@ export class RoomCoordinator {
     this.broadcastRoomState(room);
   }
 
-  private joinRoom(ws: RoomPeer, rawCode: unknown, rawName: unknown, rawAvatar: unknown, rawRating: unknown): void {
+  private joinRoom(ws: RoomPeer, rawCode: unknown, rawName: unknown, rawAvatar: unknown): void {
     const code = sanitizeRoomCode(rawCode);
     if (!code) {
       sendJson(ws, { type: 'room:error', message: 'کد اتاق باید ۵ حرف یا عدد معتبر باشد.' });
@@ -312,11 +308,10 @@ export class RoomCoordinator {
     this.detachSocket(ws);
     const name = sanitizePlayerName(rawName, 'بازیکن ۲');
     const avatar = rawAvatar === undefined ? normalizeAvatar({cartoon:'sky'}) : normalizeAvatar(rawAvatar);
-    const rating = validRating(rawRating);
 
     let assignedRole: Player | null = null;
     if (!room.players.O && ownedRole!=='X') {
-      room.players.O = { socket: ws, name, avatar, rating, identityId:identity.id };
+      room.players.O = { socket: ws, name, avatar, identityId:identity.id };
       assignedRole = 'O';
     } else if (ownedRole==='O'&&room.players.O&&!room.players.O.socket) {
       room.players.O.socket = ws;
@@ -324,7 +319,7 @@ export class RoomCoordinator {
       room.players.O.avatar = avatar;
       assignedRole = 'O';
     } else if (ownedRole==='X'&&(!room.players.X||!room.players.X.socket)) {
-      room.players.X = { socket: ws, name, avatar, rating:room.players.X?.rating??rating, identityId:identity.id };
+      room.players.X = { socket: ws, name, avatar, identityId:identity.id };
       assignedRole = 'X';
     }
 
@@ -335,7 +330,6 @@ export class RoomCoordinator {
 
     room.lastActivityAt = Date.now();
     if (room.status === 'WAITING' && room.players.X?.socket && room.players.O?.socket) {
-      room.roundRatings = {X:room.players.X.rating,O:room.players.O.rating};
       room.status = 'PLAYING';
     }
 
@@ -506,12 +500,6 @@ export class RoomCoordinator {
     room.lastActivityAt = Date.now();
 
     if (room.rematchVotes.has('X') && room.rematchVotes.has('O')) {
-      const before=room.roundRatings;
-      const x=ratingAfterMatch(before.X,before.O,room.isDraw?'DRAW':room.winner==='X'?'WIN':'LOSS');
-      const o=ratingAfterMatch(before.O,before.X,room.isDraw?'DRAW':room.winner==='O'?'WIN':'LOSS');
-      room.roundRatings={X:x,O:o};
-      if(room.players.X) room.players.X.rating=x;
-      if(room.players.O) room.players.O.rating=o;
       room.roundId=randomHex(this.random, 12);
       room.starter = getOpponent(room.starter);
       room.rematchVotes.clear();
@@ -621,7 +609,6 @@ export class RoomCoordinator {
     return {
       code: room.code,
       roundId: room.roundId,
-      roundRatings: {...room.roundRatings},
       series:{targetWins:room.targetWins,winner:room.seriesWinner},
       ...(history&&x&&o?{rivalry:{X:history.wins[x]??0,O:history.wins[o]??0,draws:history.draws,seriesX:history.series[x]??0,seriesO:history.series[o]??0,persisted:!this.rivalries.issue,recent:history.recent.map(m=>({winner:m.winner===null?null:m.winner===x?'X' as const:'O' as const,at:m.at}))}}:{}),
       variant: room.variant,

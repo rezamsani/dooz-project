@@ -7,7 +7,7 @@ import { PlayerAvatarComponent } from './player-avatar';
 @Component({
   selector:'app-bot-roster',imports: [TranslatePipe, PlayerAvatarComponent, DoozIcon],changeDetection:ChangeDetectionStrategy.OnPush,
   template:`<details><summary><app-player-avatar [robot]="journey.bot().difficulty" [label]="(journey.bot().name | t)"/><span><strong>{{ (journey.bot().name | t) }}</strong><small>{{ (journey.bot().style | t) }}</small></span><app-dooz-icon name="chevron" class="bot-chevron" /></summary>
-    <div class="bots">@for(bot of bots;track bot.id){<button type="button" [disabled]="!journey.isUnlocked(bot.id)" [class.selected]="journey.state().selected===bot.id" [attr.aria-pressed]="journey.state().selected===bot.id" (click)="choose(bot.id)"><app-player-avatar [robot]="bot.difficulty" [label]="(bot.name | t)"/><strong>{{ (bot.name | t) }}</strong><span>{{ (bot.style | t) }}</span><small>{{ journey.isUnlocked(bot.id)?(bot.line | t):(bot.unlock | t) }}</small></button>}</div>
+    <div class="bots">@for(bot of bots;track bot.id){<button type="button" [disabled]="!journey.isUnlocked(bot.id)" [class.selected]="journey.state().selected===bot.id" [attr.aria-pressed]="journey.state().selected===bot.id" (click)="choose(bot.id)"><app-player-avatar [robot]="bot.difficulty" [label]="(bot.name | t)"/><strong>{{ (bot.name | t) }}</strong><span>{{ (bot.style | t) }}</span><small>{{ journey.isUnlocked(bot.id) ? (bot.line | t) : ('با {0} سکه باز می‌شود' | t: [n(bot.requiredCoins)]) }}</small></button>}</div>
   </details>`,
   styles: `
     :host { display: block; margin-bottom: 20px; }
@@ -33,6 +33,7 @@ import { PlayerAvatarComponent } from './player-avatar';
   `,
 })
 export class BotRoster{
+  readonly n = inject(I18n).digits;
   readonly journey=inject(PlayerJourney);readonly bots=BOTS;readonly selected=output<BotId>();
   choose(id:BotId):void{if(this.journey.selectBot(id))this.selected.emit(id);}
 }

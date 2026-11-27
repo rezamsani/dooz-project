@@ -139,7 +139,6 @@ export class OnlineClient {
       type: 'room:create',
       playerName: params.playerName,
       avatar: params.avatar,
-      rating: params.rating,
       variant: params.variant,
       boardRule: params.boardRule,
       allowFlying: params.allowFlying,
@@ -148,7 +147,7 @@ export class OnlineClient {
     });
   }
 
-  joinRoom(code: string, playerName: string, avatar?: PlayerAvatar, rating?: number): void {
+  joinRoom(code: string, playerName: string, avatar?: PlayerAvatar): void {
     if (this.localMode()) this.disconnect();
     this.errorMessage.set(null);
     this.send({
@@ -156,7 +155,6 @@ export class OnlineClient {
       code,
       playerName,
       avatar,
-      rating,
     });
   }
 
