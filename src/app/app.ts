@@ -1,4 +1,6 @@
 import { I18n, TranslatePipe } from './i18n';
+import { ChoiceOption, ChoiceSheet } from './ui/choice-sheet';
+import { DoozIcon } from './ui/dooz-icon';
 import { isPlatformBrowser } from '@angular/common';
 import {
   ChangeDetectionStrategy,
@@ -109,6 +111,7 @@ function createPreviewMorrisState(variant: MorrisVariant): MorrisState {
   changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-root',
   imports: [
+    ChoiceSheet, DoozIcon,
     TranslatePipe,
     MatIconModule,
     ReactiveFormsModule,
@@ -122,7 +125,7 @@ function createPreviewMorrisState(variant: MorrisVariant): MorrisState {
     PlayerDashboard, BotRoster, JourneyPanel, DailyChallenge, CoachReview, RivalryPanel,
   ],
   templateUrl: './app.html',
-  styleUrl: './app.css',
+  styleUrls: ['./app.css', './visual-refresh.css'],
   host: {
     '(window:keydown)': 'onWindowKeyDown($event)',
     '(document:fullscreenchange)': 'onFullscreenChange()',
@@ -130,6 +133,20 @@ function createPreviewMorrisState(variant: MorrisVariant): MorrisState {
 })
 export class App {
   readonly i18n = inject(I18n);
+  readonly languages: readonly ChoiceOption[] = [
+    {value: 'fa', label: 'فارسی', short: 'FA', lang: 'fa'},
+    {value: 'en', label: 'English', short: 'EN', lang: 'en'},
+    {value: 'ar', label: 'العربية', short: 'AR', lang: 'ar'},
+  ];
+  readonly soundOptions = computed<readonly ChoiceOption[]>(() => [
+    {value: 'wood', label: this.i18n.text('چوبی')},
+    {value: 'soft', label: this.i18n.text('آرام')},
+    {value: 'santur', label: this.i18n.text('طنین سنتور')},
+  ]);
+  readonly roomOptions = computed<readonly ChoiceOption[]>(() => [
+    {value: '0', label: this.i18n.text('بازی آزاد با دوست')},
+    {value: '3', label: this.i18n.text('رقابت خصوصی؛ هر کس زودتر سه برد')},
+  ]);
   private readonly platformId = inject(PLATFORM_ID);
   private readonly destroyRef = inject(DestroyRef);
   readonly soundFx = inject(SoundFx);
@@ -735,6 +752,10 @@ export class App {
   }
 
   onNativeBack(): void {
+    if (isPlatformBrowser(this.platformId)) {
+      const openSheet = document.querySelector<HTMLDialogElement>('.choice-panel[open]');
+      if (openSheet) { openSheet.close(); return; }
+    }
     if (this.showHelp()) this.closeHelp();
     else if (this.replayActive()) this.exitReplay();
     else if (this.isFullscreen()) this.exitFullscreen();
@@ -798,6 +819,10 @@ export class App {
   setEnvironment(env: EnvironmentTheme): void {
     this.soundFx.playClick();
     this.playerStats.setEnvironment(env);
+  }
+
+  updateSoundStyle(value: string): void {
+    if (value === 'wood' || value === 'soft' || value === 'santur') this.soundFx.setStyle(value);
   }
 
   setPieceStyle(style: PieceStyle): void {
@@ -1302,6 +1327,7 @@ export class App {
 
   onWindowKeyDown(event: KeyboardEvent): void {
     if (!isPlatformBrowser(this.platformId)) return;
+    if (document.querySelector('.choice-panel[open]')) return;
 
     // Let form controls handle their own keys.
     const target = event.target as HTMLElement | null;

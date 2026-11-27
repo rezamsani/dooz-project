@@ -5,18 +5,14 @@
       class="pointer-events-none fixed inset-0 -z-10 overflow-hidden transition-opacity duration-500"
       aria-hidden="true"
     >
-      @if (activeEnv.imagePath) {
-        <!-- Fallback gradient underneath image -->
+      @if (activeEnv.id !== 'simple') {
         <div
           class="absolute inset-0"
           [style.background]="activeEnv.fallbackGradient"
         ></div>
-        <img
-          [src]="activeEnv.imagePath"
-          alt=""
-          referrerpolicy="no-referrer"
-          class="absolute inset-0 h-full w-full scale-[1.02] object-cover transition-all duration-500"
-        />
+        @if (activeEnv.imagePath; as image) {
+          <img [src]="image" alt="" class="absolute inset-0 h-full w-full object-cover" />
+        }
         <!-- Measured dual-mode contrast scrim so scenic beauty shines while UI stays WCAG AA crisp -->
         <div
           class="absolute inset-0 bg-[#F8FAF8]/60 backdrop-blur-[1.5px] transition-colors duration-300 dark:bg-[#0E0E0E]/66"
@@ -32,19 +28,15 @@
         <span class="brand-mark" aria-hidden="true">✕<i></i></span><span>{{ 'دوز' | t }}<span class="brand-caption">{{ 'یک بازی، هزار فکر' | t }}</span></span>
       </button>
       <div class="header-tools">
-        <select class="language-picker" [attr.aria-label]="'زبان' | t" [value]="i18n.language()" (change)="i18n.setLanguage($any($event.target).value)">
-          <option value="fa" lang="fa">فارسی</option>
-          <option value="en" lang="en">English</option>
-          <option value="ar" lang="ar">العربية</option>
-        </select>
+        <app-choice-sheet class="language-picker" [compact]="true" [label]="'زبان' | t" [value]="i18n.language()" [options]="languages" (changed)="i18n.setLanguage($event)" />
         @if (gameState() === 'TITLE_MENU') {
           <button class="icon-button" type="button" (click)="homeTab.set('stats')" [attr.aria-label]="'پروفایل من' | t"><app-player-avatar [avatar]="profile.avatar()" [label]="'عکس پروفایل شما' | t" /></button>
         }
         @if (gameState() !== 'TITLE_MENU') {
           <button class="icon-button" type="button" (click)="goToTitleMenu()" [attr.aria-label]="'بازگشت به منو' | t"><mat-icon class="ltr:rotate-180">arrow_forward</mat-icon></button>
         }
-        <button class="icon-button" type="button" (click)="toggleColorMode()" [attr.aria-label]="playerStats.colorMode() === 'dark' ? ('ظاهر روشن' | t) : ('ظاهر تیره' | t)"><mat-icon>{{ playerStats.colorMode() === 'dark' ? 'light_mode' : 'dark_mode' }}</mat-icon></button>
-        <button class="icon-button" type="button" (click)="openHelp()" [attr.aria-label]="'راهنمای بازی' | t"><mat-icon>help_outline</mat-icon></button>
+        <button class="icon-button" type="button" (click)="toggleColorMode()" [attr.aria-label]="playerStats.colorMode() === 'dark' ? ('ظاهر روشن' | t) : ('ظاهر تیره' | t)"><app-dooz-icon [name]="playerStats.colorMode() === 'dark' ? 'day' : 'night'" /></button>
+        <button class="icon-button" type="button" (click)="openHelp()" [attr.aria-label]="'راهنمای بازی' | t"><app-dooz-icon name="help" /></button>
       </div>
     </header>
   }
@@ -72,27 +64,27 @@
 
       <div class="home-shell">
         <nav class="home-navigation" [attr.aria-label]="'بخش‌های بازی' | t">
-          <button type="button" [class.selected]="homeTab() === 'play'" [attr.aria-current]="homeTab() === 'play' ? 'page' : null" (click)="homeTab.set('play')"><mat-icon>sports_esports</mat-icon>{{ 'بازی' | t }}</button>
-          <button type="button" [class.selected]="homeTab() === 'appearance'" [attr.aria-current]="homeTab() === 'appearance' ? 'page' : null" (click)="homeTab.set('appearance')"><mat-icon>palette</mat-icon>{{ 'ظاهر' | t }}</button>
-          <button type="button" [class.selected]="homeTab() === 'stats'" [attr.aria-current]="homeTab() === 'stats' ? 'page' : null" (click)="homeTab.set('stats')"><mat-icon>person_outline</mat-icon>{{ 'پروفایل' | t }}</button>
+          <button type="button" [class.selected]="homeTab() === 'play'" [attr.aria-current]="homeTab() === 'play' ? 'page' : null" (click)="homeTab.set('play')"><app-dooz-icon name="play" />{{ 'بازی' | t }}</button>
+          <button type="button" [class.selected]="homeTab() === 'appearance'" [attr.aria-current]="homeTab() === 'appearance' ? 'page' : null" (click)="homeTab.set('appearance')"><app-dooz-icon name="style" />{{ 'ظاهر' | t }}</button>
+          <button type="button" [class.selected]="homeTab() === 'stats'" [attr.aria-current]="homeTab() === 'stats' ? 'page' : null" (click)="homeTab.set('stats')"><app-dooz-icon name="profile" />{{ 'پروفایل' | t }}</button>
         </nav>
         @if (homeTab() === 'play') {
-          <section class="home-play animate-panel-in" [attr.aria-label]="'آماده‌سازی بازی' | t">
+          <section class="home-play" [attr.aria-label]="'آماده‌سازی بازی' | t">
             <div class="welcome">
-              <div><span class="eyebrow">{{ 'ساده شروع کن. هوشمندانه بازی کن.' | t }}</span><h1>{{ 'نوبتِ یک' | t }}<br>{{ 'فکر تازه‌ست.' | t }}</h1><p>{{ 'یک هم‌بازی انتخاب کن؛' | t }}<br>{{ 'بقیه‌اش روی صفحه معلوم می‌شه.' | t }}</p></div>
-              <svg class="welcome-board" viewBox="0 0 160 170" aria-hidden="true"><g transform="translate(12 16) rotate(-9 68 68)"><rect x="0" y="0" width="136" height="136" rx="25" fill="currentColor" opacity=".05"/><path d="M47 15v106M89 15v106M15 47h106M15 89h106" fill="none" stroke="currentColor" stroke-opacity=".16" stroke-width="2"/><g stroke="#63c9b2" stroke-width="7" stroke-linecap="round"><path d="m22 22 15 15m0-15L22 37m42 27 15 15m0-15L64 79m42 27 15 15m0-15-15 15"/></g><g fill="none" stroke="#e9b77b" stroke-width="7"><circle cx="111" cy="29" r="11"/><circle cx="29" cy="111" r="11"/></g></g></svg>
+              <img class="welcome-art" src="/assets/dooz-table.jpg" width="1200" height="800" alt="" fetchpriority="high" />
+              <div class="welcome-copy"><h1>{{ 'نوبتِ یک' | t }}<br>{{ 'فکر تازه‌ست.' | t }}</h1><p>{{ 'یک هم‌بازی انتخاب کن؛' | t }}<br>{{ 'بقیه‌اش روی صفحه معلوم می‌شه.' | t }}</p></div>
             </div>
-            <button type="button" class="mb-5 flex min-h-16 w-full items-center justify-between gap-3 rounded-2xl border border-teal-500/25 bg-teal-500/10 p-4 text-start" (click)="homeTab.set('daily')"><span><strong class="block text-sm">{{ 'معمای امروز؛ برد در دو حرکت' | t }}</strong><small class="text-xs opacity-70">{{ 'یک فکر کوتاه، یک نتیجه برای اشتراک‌گذاری' | t }}</small></span><mat-icon>extension</mat-icon></button>
+            <button type="button" class="daily-entry" (click)="homeTab.set('daily')"><app-dooz-icon name="puzzle" /><span><strong>{{ 'معمای امروز؛ برد در دو حرکت' | t }}</strong><small>{{ 'یک فکر کوتاه، یک نتیجه برای اشتراک‌گذاری' | t }}</small></span><app-dooz-icon class="leading-arrow" name="arrow" /></button>
             <div class="setup-section">
-              <div class="section-label"><h2>{{ 'با کی بازی می‌کنی؟' | t }}</h2><span>{{ '۰۱' | t }}</span></div>
+              <div class="section-label"><h2>{{ 'با کی بازی می‌کنی؟' | t }}</h2></div>
               <div class="mode-options" role="group" [attr.aria-label]="'هم‌بازی' | t">
-                <button type="button" (click)="setGameMode('AI')" [class.chosen]="gameMode() === 'AI'" [attr.aria-pressed]="gameMode() === 'AI'"><mat-icon>smart_toy</mat-icon><strong>{{ 'با ربات' | t }}</strong><small>{{ 'تمرین و چالش' | t }}</small></button>
-                <button type="button" (click)="setGameMode('LOCAL_2P')" [class.chosen]="gameMode() === 'LOCAL_2P'" [attr.aria-pressed]="gameMode() === 'LOCAL_2P'"><mat-icon>people_outline</mat-icon><strong>{{ 'کنار هم' | t }}</strong><small>{{ 'روی یک گوشی' | t }}</small></button>
-                <button type="button" (click)="setGameMode('ONLINE')" [class.chosen]="gameMode() === 'ONLINE'" [attr.aria-pressed]="gameMode() === 'ONLINE'"><mat-icon>public</mat-icon><strong>{{ 'از راه دور' | t }}</strong><small>{{ 'با کد دعوت' | t }}</small></button>
+                <button type="button" (click)="setGameMode('AI')" [class.chosen]="gameMode() === 'AI'" [attr.aria-pressed]="gameMode() === 'AI'"><app-dooz-icon name="bot" /><strong>{{ 'با ربات' | t }}</strong><small>{{ 'تمرین و چالش' | t }}</small></button>
+                <button type="button" (click)="setGameMode('LOCAL_2P')" [class.chosen]="gameMode() === 'LOCAL_2P'" [attr.aria-pressed]="gameMode() === 'LOCAL_2P'"><app-dooz-icon name="friends" /><strong>{{ 'کنار هم' | t }}</strong><small>{{ 'روی یک گوشی' | t }}</small></button>
+                <button type="button" (click)="setGameMode('ONLINE')" [class.chosen]="gameMode() === 'ONLINE'" [attr.aria-pressed]="gameMode() === 'ONLINE'"><app-dooz-icon name="online" /><strong>{{ 'از راه دور' | t }}</strong><small>{{ 'با کد دعوت' | t }}</small></button>
               </div>
             </div>
             <div class="setup-section">
-              <div class="section-label"><h2>{{ 'کدوم دوز؟' | t }}</h2><span>{{ '۰۲' | t }}</span></div>
+              <div class="section-label"><h2>{{ 'کدوم دوز؟' | t }}</h2></div>
               <div class="variant-options" role="group" [attr.aria-label]="'نوع بازی' | t">
                 <button type="button" (click)="setGameVariant('THREE')" [class.chosen]="gameVariant() === 'THREE'" [attr.aria-pressed]="gameVariant() === 'THREE'"><b>{{ '۳' | t }}</b><span>{{ 'کلاسیک' | t }}</span></button>
                 <button type="button" (click)="setGameVariant('NINE')" [class.chosen]="gameVariant() === 'NINE'" [attr.aria-pressed]="gameVariant() === 'NINE'"><b>{{ '۹' | t }}</b><span>{{ 'استراتژیک' | t }}</span></button>
@@ -103,7 +95,7 @@
                         <!-- Online Room Lobby Panel -->
             @if (gameMode() === 'ONLINE') {
               <div class="space-y-4 border-t border-slate-900/10 pt-4 dark:border-white/10">
-                <label class="block text-xs font-semibold">{{ 'نوع اتاق' | t }}<select class="mt-2 min-h-11 w-full rounded-xl border border-teal-500/30 bg-transparent px-3" [value]="targetWins()" (change)="targetWins.set($any($event.target).value==='3'?3:0)"><option value="0">{{ 'بازی آزاد با دوست' | t }}</option><option value="3">{{ 'رقابت خصوصی؛ هر کس زودتر سه برد' | t }}</option></select></label>
+                <div class="choice-field"><span>{{ 'نوع اتاق' | t }}</span><app-choice-sheet icon="online" [label]="'نوع اتاق' | t" [options]="roomOptions()" [value]="targetWins() === 3 ? '3' : '0'" (changed)="targetWins.set($event === '3' ? 3 : 0)" /></div>
                 <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <label class="block space-y-1.5">
                     <span class="text-xs font-semibold text-slate-700 dark:text-slate-300">{{ 'نام نمایشی شما' | t }}</span>
@@ -148,7 +140,7 @@
 
 
                         <details class="advanced-settings">
-              <summary><span>{{ 'تنظیمات بیشتر بازی' | t }}</span><mat-icon aria-hidden="true">expand_more</mat-icon></summary>
+              <summary><span>{{ 'تنظیمات بیشتر بازی' | t }}</span><app-dooz-icon name="chevron" aria-hidden="true" /></summary>
               <div class="advanced-content space-y-5">
             <!-- Variant-specific rule toggle -->
             @if (gameVariant() === 'THREE') {
@@ -373,7 +365,7 @@
             </details>
 
             <div class="launch-area">
-              <button class="launch-button" type="button" (click)="startGame()"><span>{{ isOnlineMode() ? ('ساخت اتاق و دعوت دوست' | t) : ('بزن بریم' | t) }}</span><mat-icon>arrow_back</mat-icon></button>
+              <button class="launch-button" type="button" (click)="startGame()"><span>{{ isOnlineMode() ? ('ساخت اتاق و دعوت دوست' | t) : ('بزن بریم' | t) }}</span><app-dooz-icon name="arrow" /></button>
               <p>{{ isOnlineMode() ? ('برای بازی آنلاین به اینترنت نیاز داری' | t) : ('بدون اینترنت هم می‌تونی بازی کنی' | t) }}</p>
             </div>
           </section>
@@ -382,9 +374,9 @@
         } @else if (homeTab() === 'appearance') {
           <section class="home-appearance animate-panel-in" [attr.aria-label]="'تنظیمات ظاهر' | t"><div class="page-heading"><span class="eyebrow">{{ 'به سلیقهٔ خودت' | t }}</span><h1>{{ 'میز بازی تو' | t }}</h1><p>{{ 'محیط، صفحه و مهره‌ها رو انتخاب کن.' | t }}</p></div>
                     <details open class="appearance-panel lg:col-span-5">
-          <summary><span>{{ 'شخصی‌سازی صفحه و مهره‌ها' | t }}</span><mat-icon aria-hidden="true">expand_more</mat-icon></summary>
+          <summary><span>{{ 'شخصی‌سازی صفحه و مهره‌ها' | t }}</span><app-dooz-icon name="chevron" aria-hidden="true" /></summary>
           <div class="appearance-content space-y-5">
-            <label class="block text-sm font-semibold">{{ 'صدای مهره‌ها' | t }}<select class="mt-2 min-h-11 w-full rounded-xl border border-teal-500/30 bg-transparent px-3" [value]="soundFx.style()" (change)="soundFx.setStyle($any($event.target).value)"><option value="wood">{{ 'چوبی' | t }}</option><option value="soft">{{ 'آرام' | t }}</option><option value="santur">{{ 'طنین سنتور' | t }}</option></select></label>
+            <div class="choice-field"><span>{{ 'صدای مهره‌ها' | t }}</span><app-choice-sheet [label]="'صدای مهره‌ها' | t" [options]="soundOptions()" [value]="soundFx.style()" (changed)="updateSoundStyle($event)" /></div>
           <!-- Interactive Live Board Preview -->
           <div class="mx-auto max-w-[340px]">
             @if (gameVariant() === 'THREE') {
@@ -430,7 +422,7 @@
           <div class="space-y-4 rounded-2xl border border-slate-900/10 bg-white/90 p-5 shadow-sm backdrop-blur-md dark:border-white/10 dark:bg-[#171717]/88">
             <div class="flex items-center justify-between gap-2">
               <div class="flex items-center gap-2">
-                <mat-icon class="!h-[20px] !w-[20px] !text-[20px] text-teal-600 dark:text-teal-300">palette</mat-icon>
+                <app-dooz-icon name="style" class="!h-[20px] !w-[20px] !text-[20px] text-teal-600 dark:text-teal-300" />
                 <h2 class="text-sm font-bold text-slate-950 dark:text-white">{{ 'محیط بازی و طرح مهره‌ها' | t }}</h2>
               </div>
               <span class="text-xs font-medium text-slate-500 dark:text-slate-400">
@@ -439,7 +431,7 @@
             </div>
 
             <!-- 5 Environment Cards with Live Thumbnails -->
-            <div class="grid grid-cols-5 gap-2">
+            <div class="environment-grid grid gap-2">
               @for (env of environmentThemes; track env.id) {
                 <button
                   type="button"
@@ -465,7 +457,7 @@
                         class="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
                       />
                     } @else {
-                      <div class="flex h-full w-full items-center justify-center bg-gradient-to-br from-slate-200 via-teal-100 to-amber-100 text-slate-700 dark:from-[#0E1E30] dark:via-[#242424] dark:to-[#1E293B] dark:text-teal-300">
+                      <div class="flex h-full w-full items-center justify-center text-white/90">
                         <mat-icon class="!h-[20px] !w-[20px] !text-[20px]">{{ env.icon }}</mat-icon>
                       </div>
                     }
@@ -614,8 +606,8 @@
           <section class="home-stats animate-panel-in" [attr.aria-label]="'پروفایل و آمار بازیکن' | t"><div class="page-heading"><span class="eyebrow">{{ 'هر دست، یک تجربه' | t }}</span><h1>{{ 'پروفایل تو' | t }}</h1><p>{{ 'هر مسابقه، یک قدم در مسیر بهتر شدن.' | t }}</p></div>
             <app-player-dashboard />
             <app-journey-panel />
-            <details class="advanced-settings mb-6"><summary>{{ 'ویرایش نام و عکس پروفایل' | t }}<mat-icon aria-hidden="true">expand_more</mat-icon></summary><app-profile-panel /></details>
-            <button type="button" class="launch-button" (click)="homeTab.set('play')">{{ 'برگشت به بازی' | t }}<mat-icon>arrow_back</mat-icon></button>
+            <details class="advanced-settings mb-6"><summary>{{ 'ویرایش نام و عکس پروفایل' | t }}<app-dooz-icon name="chevron" aria-hidden="true" /></summary><app-profile-panel /></details>
+            <button type="button" class="launch-button" (click)="homeTab.set('play')">{{ 'برگشت به بازی' | t }}<app-dooz-icon name="arrow" /></button>
           </section>
         }
       </div>
@@ -654,7 +646,7 @@
                     [attr.aria-label]="'پیشنهاد حرکت' | t"
                     class="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-sky-500/35 bg-sky-50 text-sky-700 transition-colors hover:bg-sky-100 disabled:opacity-40 dark:border-sky-400/30 dark:bg-sky-500/15 dark:text-sky-200 dark:hover:bg-sky-500/25"
                   >
-                    <mat-icon class="!h-[18px] !w-[18px] !text-[18px]">lightbulb</mat-icon>
+                    <app-dooz-icon name="hint" class="!h-[18px] !w-[18px] !text-[18px]" />
                   </button>
                   <button
                     type="button"
@@ -664,7 +656,7 @@
                     [attr.aria-label]="'بازگشت حرکت' | t"
                     class="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-slate-300 bg-slate-100 text-slate-800 transition-colors hover:bg-slate-200 disabled:opacity-40 dark:border-white/10 dark:bg-[#202020] dark:text-slate-100 dark:hover:bg-[#2E2E2E]"
                   >
-                    <mat-icon class="!h-[18px] !w-[18px] !text-[18px]">undo</mat-icon>
+                    <app-dooz-icon name="undo" class="!h-[18px] !w-[18px] !text-[18px]" />
                   </button>
                   <button
                     type="button"
@@ -1055,11 +1047,11 @@
           @if (!isFullscreenPlay()) {
             <div class="match-toolbar" [attr.aria-label]="'ابزار بازی' | t">
               @if (!isOnlineMode()) {
-                <button type="button" (click)="undoLastMove()" [disabled]="!canUndo()"><mat-icon>undo</mat-icon><span>{{ 'برگشت' | t }}</span></button>
+                <button type="button" (click)="undoLastMove()" [disabled]="!canUndo()"><app-dooz-icon name="undo" /><span>{{ 'برگشت' | t }}</span></button>
                 <button type="button" (click)="requestSmartHint()" [disabled]="!canRequestHint()"><mat-icon>lightbulb_outline</mat-icon><span>{{ 'راهنمایی' | t }}</span></button>
               }
-              <button type="button" (click)="soundFx.toggleMute()" [attr.aria-pressed]="soundFx.muted()"><mat-icon>{{ soundFx.muted() ? 'volume_off' : 'volume_up' }}</mat-icon><span>{{ soundFx.muted() ? ('صدا خاموش' | t) : ('صدا روشن' | t) }}</span></button>
-              <button type="button" (click)="openHelp()"><mat-icon>help_outline</mat-icon><span>{{ 'قوانین' | t }}</span></button>
+              <button type="button" (click)="soundFx.toggleMute()" [attr.aria-pressed]="soundFx.muted()"><app-dooz-icon [name]="soundFx.muted() ? 'mute' : 'sound'" /><span>{{ soundFx.muted() ? ('صدا خاموش' | t) : ('صدا روشن' | t) }}</span></button>
+              <button type="button" (click)="openHelp()"><app-dooz-icon name="help" /><span>{{ 'قوانین' | t }}</span></button>
             </div>
           }
           <!-- Step-by-Step Replay Controls -->
@@ -1209,7 +1201,7 @@
             [class.lg:col-span-4]="is3DView()"
             [class.lg:col-span-5]="!is3DView()"
           >
-          <details class="match-extras"><summary>{{ 'تنظیمات و جزئیات مسابقه' | t }}<mat-icon aria-hidden="true">expand_more</mat-icon></summary><div class="space-y-5 pt-4">
+          <details class="match-extras"><summary>{{ 'تنظیمات و جزئیات مسابقه' | t }}<app-dooz-icon name="chevron" aria-hidden="true" /></summary><div class="space-y-5 pt-4">
           <!-- Scoreboard -->
           <div class="rounded-2xl border border-slate-900/10 bg-white/90 p-5 shadow-sm backdrop-blur-md dark:border-white/10 dark:bg-[#171717]/88">
             <div class="mb-4 flex items-baseline justify-between gap-4">
@@ -1336,7 +1328,7 @@
                   (click)="requestSmartHint()"
                   class="inline-flex min-h-[44px] items-center justify-center gap-2 whitespace-nowrap rounded-xl border border-sky-500/35 bg-sky-50 px-3 py-2 text-sm font-semibold text-sky-800 transition-colors hover:bg-sky-100 disabled:opacity-40 dark:border-sky-400/30 dark:bg-sky-500/10 dark:text-sky-200 dark:hover:bg-sky-500/20"
                 >
-                  <mat-icon class="!h-[18px] !w-[18px] !text-[18px]">lightbulb</mat-icon>
+                  <app-dooz-icon name="hint" class="!h-[18px] !w-[18px] !text-[18px]" />
                   <span>{{ 'پیشنهاد حرکت' | t }}</span>
                 </button>
 
@@ -1346,7 +1338,7 @@
                   (click)="undoLastMove()"
                   class="inline-flex min-h-[44px] items-center justify-center gap-2 whitespace-nowrap rounded-xl border border-slate-300 bg-slate-100 px-3 py-2 text-sm font-semibold text-slate-800 transition-colors hover:bg-slate-200 disabled:opacity-40 dark:border-white/10 dark:bg-[#202020] dark:text-slate-100 dark:hover:bg-[#2E2E2E]"
                 >
-                  <mat-icon class="!h-[18px] !w-[18px] !text-[18px]">undo</mat-icon>
+                  <app-dooz-icon name="undo" class="!h-[18px] !w-[18px] !text-[18px]" />
                   <span>{{ 'بازگشت حرکت' | t }}</span>
                 </button>
 

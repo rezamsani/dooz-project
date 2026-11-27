@@ -1,0 +1,91 @@
+:host {
+  --canvas: #f5f1e8; --surface: #fffdf7; --ink: #1a332a; --muted: #576d62;
+  --line: #d9dfd2; --soft: #e6efe4; --accent: #216b54; --gold: #8c5a23;
+}
+:host-context(.dark) {
+  --canvas: #101d18; --surface: #192a22; --ink: #f7f3e7; --muted: #aec2b6;
+  --line: #33483d; --soft: #253e32; --accent: #a6ddba; --gold: #f0c188;
+}
+.mobile-header { gap: 6px; }
+.header-tools { align-items: center; }
+.header-tools app-dooz-icon { font-size: 17px; }
+.language-picker { padding: 0; background: transparent; min-width: 54px; }
+
+.home-navigation { border-radius: 18px; box-shadow: 0 3px 14px #1637260a; }
+.home-navigation app-dooz-icon { font-size: 16px; }
+.welcome {
+  position: relative; isolation: isolate; overflow: hidden;
+  display: grid; align-items: center; min-height: 214px; padding: 22px;
+  margin-block: 16px 12px; border: 1px solid #355647; border-radius: 24px;
+  background: #102d22; color: #fff5df;
+}
+.welcome-art {
+  position: absolute; inset: 0; z-index: -2; width: 100%; height: 100%;
+  object-fit: cover; object-position: right center;
+}
+.welcome::before {
+  content: ''; position: absolute; inset: 0; z-index: -1;
+  background: linear-gradient(90deg, #0b261e 0%, #102a22ed 30%, #102a2238 61%, transparent 83%);
+}
+:host-context([dir="rtl"]) .welcome-art { transform: scaleX(-1); }
+:host-context([dir="rtl"]) .welcome::before { transform: scaleX(-1); }
+.welcome-copy { width: 56%; }
+.welcome .welcome-copy h1 {
+  font-size: clamp(23px, 5.5vw, 38px); line-height: 1.34; letter-spacing: -.025em;
+  margin: 0 0 10px; text-wrap: balance;
+}
+.welcome .welcome-copy p { font-size: 12px; color: #deebdc; line-height: 1.8; }
+
+.daily-entry {
+  display: grid; grid-template-columns: 42px minmax(0,1fr) 20px; align-items: center; gap: 11px;
+  min-height: 74px; width: 100%; margin-block-end: 20px; padding: 11px;
+  border: 1px solid var(--line); border-radius: 18px; background: var(--surface); text-align: start;
+}
+.daily-entry > app-dooz-icon:first-child {
+  width: 42px; height: 42px; padding: 9px; border-radius: 13px; background: var(--soft); color: var(--gold);
+}
+.daily-entry strong { display: block; font-size: 13px; font-weight: 800; }
+.daily-entry small { display: block; font-size: 11px; line-height: 1.65; color: var(--muted); margin-top: 3px; }
+.leading-arrow { color: var(--accent); }
+:host-context([dir="ltr"]) .leading-arrow,
+:host-context([dir="ltr"]) .launch-button app-dooz-icon { transform: rotate(180deg); }
+
+.section-label h2 { font-size: 15px; }
+.mode-options button {
+  min-height: 110px; gap: 5px; padding: 10px 5px;
+  box-shadow: 0 2px 4px #14291d08; color: var(--ink);
+}
+.mode-options app-dooz-icon {
+  width: 38px; height: 38px; padding: 7px; border-radius: 12px;
+  background: var(--soft); color: var(--accent);
+}
+.mode-options button:nth-child(2) app-dooz-icon { color: var(--gold); }
+.mode-options small { font-size: 10px; line-height: 1.45; }
+.mode-options .chosen, .variant-options .chosen {
+  box-shadow: inset 0 0 0 1px var(--accent);
+}
+.variant-options button { min-height: 54px; color: var(--ink); }
+.variant-options b { color: var(--accent); }
+.variant-options .chosen { color: var(--accent); }
+.advanced-settings, .match-extras {
+  border: 1px solid var(--line); border-radius: 17px; background: var(--surface);
+  padding-inline: 13px;
+}
+summary app-dooz-icon { color: var(--accent); }
+details[open] > summary app-dooz-icon { transform: rotate(180deg); }
+.launch-area { position: static; margin-top: 13px; padding: 0; background: transparent; }
+.launch-button { background: #1b654f; color: #fffaf0; box-shadow: 0 6px 15px #12473626; }
+:host-context(.dark) .launch-button { background: #a8d8b5; color: #133328; }
+.launch-area p { font-size: 11px; }
+.choice-field { display: grid; gap: 7px; font-size: 13px; color: var(--ink); font-weight: 750; }
+.environment-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.environment-grid button { min-width: 0; }
+.environment-grid button > span { align-self: stretch; white-space: normal; font-size: 11px; min-height: 31px; }
+.environment-grid button > div { height: 70px; }
+.match-toolbar app-dooz-icon { font-size: 17px; color: var(--accent); }
+@media (min-width: 480px) { .environment-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media (max-width: 360px) {
+  .welcome { min-height: 183px; padding: 16px; }
+  .welcome .welcome-copy h1 { font-size: 23px; }
+  .welcome .welcome-copy p { font-size: 11px; }
+}
