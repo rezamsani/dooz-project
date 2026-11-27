@@ -74,7 +74,8 @@
               <img class="welcome-art" src="/assets/dooz-table.jpg" width="1200" height="800" alt="" fetchpriority="high" />
               <div class="welcome-copy"><h1>{{ 'نوبتِ یک' | t }}<br>{{ 'فکر تازه‌ست.' | t }}</h1><p>{{ 'یک هم‌بازی انتخاب کن؛' | t }}<br>{{ 'بقیه‌اش روی صفحه معلوم می‌شه.' | t }}</p></div>
             </div>
-            <button type="button" class="daily-entry" (click)="homeTab.set('daily')"><app-dooz-icon name="puzzle" /><span><strong>{{ 'معمای امروز؛ برد در دو حرکت' | t }}</strong><small>{{ 'یک فکر کوتاه، یک نتیجه برای اشتراک‌گذاری' | t }}</small></span><app-dooz-icon class="leading-arrow" name="arrow" /></button>
+            <button type="button" class="daily-entry history-compact" (click)="homeTab.set('daily')"><app-dooz-icon name="puzzle" /><span><strong>{{ 'معمای امروز؛ برد در دو حرکت' | t }}</strong><small>{{ 'یک فکر کوتاه، یک نتیجه برای اشتراک‌گذاری' | t }}</small></span><app-dooz-icon class="leading-arrow" name="arrow" /></button>
+            <button type="button" class="daily-entry history-entry" (click)="homeTab.set('history')"><app-dooz-icon name="arch" /><span><strong>{{ 'تاریخچهٔ دوز؛ از سنگ‌نگاره‌های کهن تا امروز' | t }}</strong><small>{{ 'ریشه‌های سه‌هزارساله در ایران، مصر و جاده ابریشم' | t }}</small></span><app-dooz-icon class="leading-arrow" name="arrow" /></button>
             <div class="setup-section">
               <div class="section-label"><h2>{{ 'با کی بازی می‌کنی؟' | t }}</h2></div>
               <div class="mode-options" role="group" [attr.aria-label]="'هم‌بازی' | t">
@@ -389,6 +390,8 @@
           </section>
         } @else if (homeTab() === 'daily') {
           <app-daily-challenge (back)="homeTab.set('play')" />
+        } @else if (homeTab() === 'history') {
+          <app-dooz-history-panel (back)="homeTab.set('play')" (playVariant)="quickLaunchVariant($event)" />
         } @else if (homeTab() === 'appearance') {
           <section class="home-appearance animate-panel-in" [attr.aria-label]="'تنظیمات ظاهر' | t"><div class="page-heading"><span class="eyebrow">{{ 'به سلیقهٔ خودت' | t }}</span><h1>{{ 'میز بازی تو' | t }}</h1><p>{{ 'محیط، صفحه و مهره‌ها رو انتخاب کن.' | t }}</p></div>
                     <details open class="appearance-panel lg:col-span-5">
@@ -1668,7 +1671,15 @@
           </div>
         </div>
 
-        <div class="mt-5 flex justify-end">
+        <div class="mt-5 flex flex-wrap items-center justify-between gap-2.5">
+          <button
+            type="button"
+            (click)="openHistoryFromHelp()"
+            class="inline-flex min-h-[42px] items-center gap-2 rounded-xl border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-800 transition-colors hover:border-teal-500 hover:text-teal-700 dark:border-white/15 dark:text-slate-200 dark:hover:border-teal-400 dark:hover:text-teal-300"
+          >
+            <app-dooz-icon name="arch" class="!h-[18px] !w-[18px] !text-[18px]" />
+            <span>{{ 'تاریخچهٔ دوز' | t }}</span>
+          </button>
           <button
             type="button"
             (click)="closeHelp()"

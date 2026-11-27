@@ -74,6 +74,7 @@ import { PlayerAvatar } from './game/avatar';
 import { PlayerJourney, BADGES } from './game/player-journey';
 import { BotRoster, JourneyPanel } from './game/journey-panel';
 import { DailyChallenge } from './game/daily-challenge';
+import { DoozHistoryPanel } from './game/dooz-history-panel';
 import { CoachReview, MorrisLesson, reviewMorris } from './game/coach-review';
 import { RivalryPanel } from './game/rivalry-panel';
 import { BotId, botForDifficulty, personalityMove, personalityMorris } from './game/bot-personalities';
@@ -120,7 +121,7 @@ function createPreviewMorrisState(variant: MorrisVariant): MorrisState {
     ColorPalettePicker,
     ProfilePanel,
     PlayerAvatarComponent,
-    PlayerDashboard, BotRoster, JourneyPanel, DailyChallenge, CoachReview, RivalryPanel,
+    PlayerDashboard, BotRoster, JourneyPanel, DailyChallenge, DoozHistoryPanel, CoachReview, RivalryPanel,
   ],
   templateUrl: './app.html',
   styleUrls: ['./app.css', './visual-refresh.css'],
@@ -183,7 +184,7 @@ export class App {
 
   // Game state machine
   readonly gameState = signal<GameState>('TITLE_MENU');
-  readonly homeTab = signal<'play' | 'appearance' | 'stats' | 'daily'>('play');
+  readonly homeTab = signal<'play' | 'appearance' | 'stats' | 'daily' | 'history'>('play');
 
   // Match settings
   readonly gameVariant = signal<GameVariant>('THREE');
@@ -880,6 +881,13 @@ export class App {
     }
     this.gameVariant.set(variant);
     this.startGame();
+  }
+
+  openHistoryFromHelp(): void {
+    this.soundFx.playClick();
+    this.showHelp.set(false);
+    this.gameState.set('TITLE_MENU');
+    this.homeTab.set('history');
   }
 
   openHelp(): void {

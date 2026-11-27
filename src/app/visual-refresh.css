@@ -42,6 +42,8 @@
   min-height: 74px; width: 100%; margin-block-end: 20px; padding: 11px;
   border: 1px solid var(--line); border-radius: 18px; background: var(--surface); text-align: start;
 }
+.daily-entry.history-compact { margin-block-end: 10px; }
+.daily-entry.history-entry > app-dooz-icon:first-child { color: var(--accent); }
 .daily-entry > app-dooz-icon:first-child {
   width: 42px; height: 42px; padding: 9px; border-radius: 13px; background: var(--soft); color: var(--gold);
 }

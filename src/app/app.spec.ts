@@ -64,6 +64,19 @@ describe('App', () => {
     expect(app.gameState()).toBe('TITLE_MENU');
   });
 
+  it('opens the history of Dooz panel from help and returns on back', () => {
+    const fixture = TestBed.createComponent(App);
+    const app = fixture.componentInstance;
+    app.showHelp.set(true);
+    app.openHistoryFromHelp();
+    fixture.detectChanges();
+    expect(app.showHelp()).toBe(false);
+    expect(app.homeTab()).toBe('history');
+    expect(fixture.nativeElement.querySelector('app-dooz-history-panel')).toBeTruthy();
+    app.onNativeBack();
+    expect(app.homeTab()).toBe('play');
+  });
+
   it('counts a local two-player win once without changing the personal rating',()=>{
     const app=TestBed.createComponent(App).componentInstance;
     app.setGameMode('LOCAL_2P');app.startGame();
