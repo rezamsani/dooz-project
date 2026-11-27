@@ -91,8 +91,32 @@
               <div class="variant-options" role="group" [attr.aria-label]="'نوع بازی' | t">
                 <button type="button" (click)="setGameVariant('THREE')" [class.chosen]="gameVariant() === 'THREE'" [attr.aria-pressed]="gameVariant() === 'THREE'"><b>{{ '۳' | t }}</b><span>{{ 'کلاسیک' | t }}</span></button>
                 <button type="button" (click)="setGameVariant('NINE')" [class.chosen]="gameVariant() === 'NINE'" [attr.aria-pressed]="gameVariant() === 'NINE'"><b>{{ '۹' | t }}</b><span>{{ 'استراتژیک' | t }}</span></button>
-                <button type="button" (click)="setGameVariant('TWELVE')" [class.chosen]="gameVariant() === 'TWELVE'" [attr.aria-pressed]="gameVariant() === 'TWELVE'"><b>{{ '۱۲' | t }}</b><span>{{ 'حرفه‌ای' | t }}</span></button>
+                <button type="button" (click)="setGameVariant('TWELVE')" [class.chosen]="gameVariant() === 'TWELVE'" [attr.aria-pressed]="gameVariant() === 'TWELVE'"><b>{{ '۱۲' | t }}</b><span class="inline-flex items-center gap-1">@if (!twelveBilling.canPlay()) { <app-dooz-icon name="lock" /> }{{ 'حرفه‌ای' | t }}</span></button>
               </div>
+              @if (gameVariant() === 'TWELVE' && !twelveBilling.canPlay()) {
+                <section class="mt-3 rounded-2xl border border-amber-500/40 bg-amber-500/10 p-4" [attr.aria-label]="'باز کردن دوز ۱۲ تایی' | t">
+                  <h3 class="flex items-center gap-2 text-sm font-bold"><app-dooz-icon name="lock" />{{ 'باز کردن دوز ۱۲ تایی' | t }}</h3>
+                  <p class="my-2 text-sm">{{ 'یک‌بار بخر و دوز ۱۲ تایی را آفلاین و آنلاین بازی کن.' | t }}</p>
+                  @if (twelveBilling.storefrontRequired()) {
+                    <p class="mt-2 text-sm">{{ 'برای خرید و بازی، نسخهٔ Android دوز را از مایکت یا بازار نصب کن.' | t }}</p>
+                  } @else if (twelveBilling.status()?.configured) {
+                    <div class="mt-3 flex flex-wrap gap-2">
+                      <button type="button" class="min-h-11 rounded-xl bg-amber-400 px-3 py-2 text-sm font-bold text-slate-950 disabled:opacity-60" [disabled]="!!twelveBilling.busy()" (click)="twelveBilling.purchase()">
+                        {{ 'خرید از {0}' | t: [(twelveBilling.storeName() | t)] }}
+                        @if (twelveBilling.price(); as price) { <span class="ms-1">· {{ price }}</span> }
+                      </button>
+                      <button type="button" class="min-h-11 rounded-xl border border-amber-500/40 px-3 py-2 text-sm font-semibold disabled:opacity-60" [disabled]="!!twelveBilling.busy()" (click)="twelveBilling.restore()">{{ 'بازیابی خرید' | t }}</button>
+                    </div>
+                  } @else if (twelveBilling.status()) {
+                    <p class="text-sm" role="status">{{ 'خرید در این نسخه هنوز آماده نیست.' | t }}</p>
+                  }
+                  @if (twelveBilling.busy()) {
+                    <p class="mt-2 text-sm" role="status">{{ 'در حال بررسی پرداخت…' | t }}</p>
+                  } @else if (twelveBilling.message(); as message) {
+                    <p class="mt-2 text-sm" role="status">{{ message | t }}</p>
+                  }
+                </section>
+              }
             </div>
                         <!-- Online Room Lobby Panel -->
             @if (isLanMode()) {
@@ -384,7 +408,7 @@
             </details>
 
             <div class="launch-area">
-              <button class="launch-button" type="button" (click)="startGame()" [disabled]="isLanMode() && (!onlineClient.localSupported || onlineClient.connectionStatus() === 'CONNECTING')"><span>{{ isLanMode() ? ('میزبانی با وای‌فای' | t) : isOnlineMode() ? ('ساخت اتاق و دعوت دوست' | t) : gameMode() === 'AI' ? botMatchLabel() : ('بزن بریم' | t) }}</span><app-dooz-icon name="arrow" /></button>
+              <button class="launch-button disabled:opacity-60" type="button" (click)="startGame()" [disabled]="(gameVariant() === 'TWELVE' && !twelveBilling.canPlay()) || (isLanMode() && (!onlineClient.localSupported || onlineClient.connectionStatus() === 'CONNECTING'))"><span>{{ isLanMode() ? ('میزبانی با وای‌فای' | t) : isOnlineMode() ? ('ساخت اتاق و دعوت دوست' | t) : gameMode() === 'AI' ? botMatchLabel() : ('بزن بریم' | t) }}</span><app-dooz-icon name="arrow" /></button>
               @if (!isLanMode()) { <p>{{ isOnlineMode() ? ('برای بازی آنلاین به اینترنت نیاز داری' | t) : ('بدون اینترنت هم می‌تونی بازی کنی' | t) }}</p> }
             </div>
           </section>

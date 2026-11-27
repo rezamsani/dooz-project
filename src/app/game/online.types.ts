@@ -68,6 +68,7 @@ export type ClientWsMessage =
       code: string;
       playerName: string;
       avatar?: PlayerAvatar;
+      allowTwelve?: boolean;
     }
   | { type: 'room:move_three'; index: number }
   | { type: 'room:morris_place'; nodeId: number }

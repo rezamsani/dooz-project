@@ -135,6 +135,16 @@ test('online server: health, create room, join and synchronize moves', { timeout
   result=await exchange(host,{type:'room:resign'});
   assert.equal(result.winner,'O');
   assert.deepEqual(result.scores,{X:1,O:1,draws:1});
+
+  const premiumRoom = nextMessage(host, msg => msg.type === 'room:state' && msg.room.variant === 'TWELVE');
+  host.send(JSON.stringify({ type: 'room:create', playerName: 'Host', variant: 'TWELVE' }));
+  const { room: premium } = await premiumRoom;
+  const denied = nextMessage(guest, msg => msg.type === 'room:error');
+  guest.send(JSON.stringify({ type: 'room:join', code: premium.code, playerName: 'Guest', allowTwelve: false }));
+  assert.match((await denied).message, /دوز ۱۲ تایی/);
+  const allowed = nextMessage(guest, msg => msg.type === 'room:state' && msg.room.code === premium.code);
+  guest.send(JSON.stringify({ type: 'room:join', code: premium.code, playerName: 'Guest' }));
+  assert.equal((await allowed).room.status, 'PLAYING');
 });
 
 test('rivalry journal survives restart and deduplicates round and championship results',()=>{

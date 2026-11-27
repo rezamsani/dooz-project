@@ -101,7 +101,7 @@ export class OnlineClient {
     }
   }
 
-  async joinLocal(invitation: string, playerName: string, avatar: PlayerAvatar): Promise<void> {
+  async joinLocal(invitation: string, playerName: string, avatar: PlayerAvatar, allowTwelve = true): Promise<void> {
     if (!this.localSupported || this.connectionStatus() === 'CONNECTING') return;
     const invite = parseLanInvite(invitation);
     if (!invite) {
@@ -113,7 +113,7 @@ export class OnlineClient {
       if (attempt === this.localAttempt) this.failLocal('اتصال وای‌فای برقرار نشد. هر دو گوشی باید روی یک شبکه باشند.');
     }, 8500);
     try {
-      await this.lan.join(invite, { type: 'room:join', code: invite.code, playerName, avatar });
+      await this.lan.join(invite, { type: 'room:join', code: invite.code, playerName, avatar, allowTwelve: allowTwelve ? undefined : false });
     } catch {
       if (attempt === this.localAttempt) this.failLocal('اتصال وای‌فای برقرار نشد. هر دو گوشی باید روی یک شبکه باشند.');
     }
@@ -147,7 +147,7 @@ export class OnlineClient {
     });
   }
 
-  joinRoom(code: string, playerName: string, avatar?: PlayerAvatar): void {
+  joinRoom(code: string, playerName: string, avatar?: PlayerAvatar, allowTwelve = true): void {
     if (this.localMode()) this.disconnect();
     this.errorMessage.set(null);
     this.send({
@@ -155,6 +155,7 @@ export class OnlineClient {
       code,
       playerName,
       avatar,
+      allowTwelve: allowTwelve ? undefined : false,
     });
   }
 

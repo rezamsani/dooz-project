@@ -1,5 +1,13 @@
 apply plugin: 'com.android.application'
 
+def billingKey = { String name ->
+    def key = (providers.gradleProperty(name).orElse(providers.environmentVariable(name)).orElse('').get()).trim()
+    if (key && !(key ==~ /[A-Za-z0-9+\/=]+/)) throw new GradleException("${name} must be a Base64 public key")
+    return key
+}
+def myketKey = billingKey('DOOZ_MYKET_BILLING_PUBLIC_KEY')
+def bazaarKey = billingKey('DOOZ_BAZAAR_BILLING_PUBLIC_KEY')
+
 android {
     namespace = "ir.dooz.game"
     compileSdk = rootProject.ext.compileSdkVersion
@@ -22,15 +30,55 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
+    buildFeatures { buildConfig true }
+    flavorDimensions += 'store'
+    productFlavors {
+        standalone {
+            dimension 'store'
+            isDefault = true
+        }
+        myket {
+            dimension 'store'
+            manifestPlaceholders = [marketApplicationId: 'ir.mservices.market',
+                marketBindAddress: 'ir.mservices.market.InAppBillingService.BIND',
+                marketPermission: 'ir.mservices.market.BILLING']
+            buildConfigField 'String', 'BILLING_PUBLIC_KEY', '"' + myketKey + '"'
+        }
+        bazaar {
+            dimension 'store'
+            manifestPlaceholders = [marketApplicationId: 'com.farsitel.bazaar',
+                marketBindAddress: 'ir.cafebazaar.pardakht.InAppBillingService.BIND',
+                marketPermission: 'com.farsitel.bazaar.permission.PAY_THROUGH_BAZAAR']
+            buildConfigField 'String', 'BILLING_PUBLIC_KEY', '"' + bazaarKey + '"'
+        }
+    }
+    sourceSets {
+        myket.java.srcDir 'src/store/java'
+        bazaar.java.srcDir 'src/store/java'
+    }
+}
+
+['Myket': myketKey, 'Bazaar': bazaarKey].each { store, key ->
+    tasks.matching { it.name == "pre${store}ReleaseBuild" }.configureEach {
+        doFirst {
+            if (!key) throw new GradleException("Set DOOZ_${store.toUpperCase(java.util.Locale.ROOT)}_BILLING_PUBLIC_KEY before building the store release")
+        }
+    }
 }
 
 repositories {
+    maven {
+        url 'https://maven.myket.ir'
+        content { includeGroup 'ir.myket' }
+    }
     flatDir{
         dirs '../capacitor-cordova-android-plugins/src/main/libs', 'libs'
     }
 }
 
 dependencies {
+    myketImplementation 'ir.myket:billing:2.2'
+    bazaarImplementation 'ir.myket:billing:2.2'
     implementation fileTree(include: ['*.jar'], dir: 'libs')
     implementation "androidx.appcompat:appcompat:$androidxAppCompatVersion"
     implementation "androidx.coordinatorlayout:coordinatorlayout:$androidxCoordinatorLayoutVersion"

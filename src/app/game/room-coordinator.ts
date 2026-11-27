@@ -182,7 +182,7 @@ export class RoomCoordinator {
         this.createRoom(ws, msg);
         return;
       case 'room:join':
-        this.joinRoom(ws, msg.code, msg.playerName, msg.avatar);
+        this.joinRoom(ws, msg.code, msg.playerName, msg.avatar, msg.allowTwelve);
         return;
       case 'room:leave':
         this.detachSocket(ws);
@@ -286,7 +286,7 @@ export class RoomCoordinator {
     this.broadcastRoomState(room);
   }
 
-  private joinRoom(ws: RoomPeer, rawCode: unknown, rawName: unknown, rawAvatar: unknown): void {
+  private joinRoom(ws: RoomPeer, rawCode: unknown, rawName: unknown, rawAvatar: unknown, allowTwelve: unknown): void {
     const code = sanitizeRoomCode(rawCode);
     if (!code) {
       sendJson(ws, { type: 'room:error', message: 'کد اتاق باید ۵ حرف یا عدد معتبر باشد.' });
@@ -296,6 +296,10 @@ export class RoomCoordinator {
     const room = this.rooms.get(code);
     if (!room) {
       sendJson(ws, { type: 'room:error', message: 'اتاقی با این کد پیدا نشد یا منقضی شده است.' });
+      return;
+    }
+    if (room.variant === 'TWELVE' && allowTwelve === false) {
+      sendJson(ws, { type: 'room:error', message: 'برای ورود به این اتاق، دوز ۱۲ تایی را باز کنید.' });
       return;
     }
 

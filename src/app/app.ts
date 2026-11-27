@@ -67,6 +67,7 @@ import { OnlineClient } from './game/online-client';
 import { RoomSnapshotDto } from './game/online.types';
 import { PieceTray } from './game/piece-tray';
 import { PlayerStats } from './game/player-stats';
+import { TwelveBilling } from './game/twelve-billing';
 import { SoundFx } from './game/sound-fx';
 import { App as NativeApp } from '@capacitor/app';
 import { RuntimeConfig } from './runtime-config';
@@ -160,6 +161,7 @@ export class App {
   readonly runtimeConfig = inject(RuntimeConfig);
   readonly profile = inject(PlayerProfile);
   readonly journey = inject(PlayerJourney);
+  readonly twelveBilling = inject(TwelveBilling);
   readonly badgeCatalog = BADGES;
   readonly freshBadges = signal<string[]>([]);
   readonly threeLesson = signal<ThreeLesson|null>(null);
@@ -762,6 +764,15 @@ export class App {
   setGameVariant(variant: GameVariant): void {
     this.soundFx.playClick();
     this.gameVariant.set(variant);
+    if (variant === 'TWELVE' && !this.twelveBilling.canPlay()) this.twelveBilling.prepareOffer();
+  }
+
+  private requireVariantAccess(variant = this.gameVariant()): boolean {
+    if (variant !== 'TWELVE' || this.twelveBilling.canPlay()) return true;
+    this.gameVariant.set('TWELVE');
+    this.homeTab.set('play');
+    this.twelveBilling.prepareOffer();
+    return false;
   }
 
   setGameMode(mode: GameMode): void {
@@ -948,7 +959,7 @@ export class App {
   // ---------- ONLINE MULTIPLAYER ACTIONS ----------
 
   createOnlineRoom(): void {
-    if (!this.playerStats.storage.canReadStats()) return;
+    if (!this.requireVariantAccess() || !this.playerStats.storage.canReadStats()) return;
     this.soundFx.playClick();
     this.gameMode.set('ONLINE');
     this.lastOnlineStatus = null;
@@ -969,6 +980,7 @@ export class App {
   }
 
   hostWifiRoom(): void {
+    if (!this.requireVariantAccess()) return;
     this.soundFx.playClick();
     this.lastOnlineTurnKey = '';
     this.lastOnlineStatus = null;
@@ -981,7 +993,8 @@ export class App {
     this.lastOnlineTurnKey = '';
     this.lastOnlineStatus = null;
     const name = this.playerNameControl.value.trim() || this.profile.name() || this.i18n.text('بازیکن ۲');
-    void this.onlineClient.joinLocal(this.lanInviteControl.value, name, { ...this.profile.avatar(), gravatarHash: null });
+    void this.onlineClient.joinLocal(this.lanInviteControl.value, name,
+      { ...this.profile.avatar(), gravatarHash: null }, this.twelveBilling.canPlay());
   }
 
   joinOnlineRoom(): void {
@@ -992,7 +1005,8 @@ export class App {
     this.gameMode.set('ONLINE');
     this.lastOnlineStatus = null;
     this.lastOnlineTurnKey = '';
-    this.onlineClient.joinRoom(code, this.playerNameControl.value.trim() || this.profile.name() || this.i18n.text("بازیکن ۲"), this.profile.avatar());
+    this.onlineClient.joinRoom(code, this.playerNameControl.value.trim() || this.profile.name() || this.i18n.text("بازیکن ۲"),
+      this.profile.avatar(), this.twelveBilling.canPlay());
   }
 
   avatarForPlayer(player: Player): PlayerAvatar {
@@ -1085,6 +1099,7 @@ export class App {
   // ---------- OFFLINE MATCH FLOW ----------
 
   startGame(): void {
+    if (!this.requireVariantAccess()) return;
     if (this.isLanMode()) {
       this.hostWifiRoom();
       return;
@@ -1438,6 +1453,11 @@ export class App {
   // ---------- INTERNAL SYNC & ENGINE HELPERS ----------
 
   private syncFromOnlineRoom(room: RoomSnapshotDto, role: Player): void {
+    if (!this.requireVariantAccess(room.variant)) {
+      this.onlineClient.leaveRoom();
+      this.gameState.set('TITLE_MENU');
+      return;
+    }
     const local = this.onlineClient.localMode();
     const roundNumber=room.scores.X+room.scores.O+room.scores.draws+(room.status==='FINISHED'?0:1);
     const roundId = room.roundId ?? `${room.code}:${roundNumber}`;

@@ -1,7 +1,9 @@
 import {TestBed} from '@angular/core/testing';
+import { signal } from '@angular/core';
 import {App} from './app';
 import { OnlineClient } from './game/online-client';
 import { RoomSnapshotDto } from './game/online.types';
+import { TwelveBilling, TwelveStoreStatus } from './game/twelve-billing';
 
 describe('App', () => {
   beforeEach(async () => {
@@ -17,6 +19,48 @@ describe('App', () => {
     const fixture = TestBed.createComponent(App);
     const app = fixture.componentInstance;
     expect(app).toBeTruthy();
+  });
+
+  it('keeps 12-piece play behind the Android store purchase, including the history shortcut', () => {
+    const canPlay = signal(false);
+    const prepareOffer = vi.fn();
+    const purchase = vi.fn(async () => { canPlay.set(true); });
+    TestBed.overrideProvider(TwelveBilling, { useValue: {
+      canPlay, prepareOffer, purchase, restore: vi.fn(), busy: signal(null), storefrontRequired: () => false,
+      message: signal(''), price: signal('۵۰٬۰۰۰ ریال'), storeName: () => 'بازار',
+      status: signal<TwelveStoreStatus>({ store: 'bazaar', configured: true, owned: false }),
+    } });
+    const fixture = TestBed.createComponent(App);
+    const app = fixture.componentInstance;
+    app.homeTab.set('history');
+    app.quickLaunchVariant('TWELVE');
+    fixture.detectChanges();
+    expect(app.gameState()).toBe('TITLE_MENU');
+    expect(prepareOffer).toHaveBeenCalled();
+    expect(fixture.nativeElement.querySelector('.launch-button').disabled).toBe(true);
+    const offer: HTMLElement = fixture.nativeElement.querySelector('[aria-label="باز کردن دوز ۱۲ تایی"]');
+    expect(offer.textContent).toContain('خرید از بازار');
+    expect(offer.textContent).toContain('۵۰٬۰۰۰ ریال');
+    offer.querySelector('button')?.click();
+    fixture.detectChanges();
+    expect(purchase).toHaveBeenCalledOnce();
+    app.startGame();
+    expect(app.gameState()).toBe('PLAYING');
+    expect(app.morrisState().variant).toBe('TWELVE');
+  });
+
+  it('shows the store requirement when 12-piece Dooz is selected on the web', () => {
+    const fixture = TestBed.createComponent(App);
+    const app = fixture.componentInstance;
+    app.setGameVariant('TWELVE');
+    app.startGame();
+    fixture.detectChanges();
+    expect(app.gameState()).toBe('TITLE_MENU');
+    expect(fixture.nativeElement.querySelector('.launch-button').disabled).toBe(true);
+    expect(fixture.nativeElement.textContent).toContain('از مایکت یا بازار نصب کن.');
+    app.setGameVariant('NINE');
+    app.startGame();
+    expect(app.gameState()).toBe('PLAYING');
   });
 
   it('shows every robot and updates the selected opponent as coins unlock it', () => {
