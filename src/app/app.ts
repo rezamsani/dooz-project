@@ -70,6 +70,13 @@ import { PlayerProfile } from './game/player-profile';
 import { ProfilePanel } from './game/profile-panel';
 import { PlayerAvatarComponent } from './game/player-avatar';
 import { PlayerAvatar } from './game/avatar';
+import { PlayerJourney, BADGES } from './game/player-journey';
+import { BotRoster, JourneyPanel } from './game/journey-panel';
+import { DailyChallenge } from './game/daily-challenge';
+import { CoachReview, MorrisLesson, reviewMorris } from './game/coach-review';
+import { RivalryPanel } from './game/rivalry-panel';
+import { BotId, botForDifficulty, personalityMove, personalityMorris } from './game/bot-personalities';
+import { ThreeLesson, reviewThree, immediateWins } from './game/learning-engine';
 import { PlayerDashboard } from './game/player-dashboard';
 
 function createPreviewMorrisState(variant: MorrisVariant): MorrisState {
@@ -111,7 +118,7 @@ function createPreviewMorrisState(variant: MorrisVariant): MorrisState {
     ColorPalettePicker,
     ProfilePanel,
     PlayerAvatarComponent,
-    PlayerDashboard,
+    PlayerDashboard, BotRoster, JourneyPanel, DailyChallenge, CoachReview, RivalryPanel,
   ],
   templateUrl: './app.html',
   styleUrl: './app.css',
@@ -128,6 +135,13 @@ export class App {
   readonly onlineClient = inject(OnlineClient);
   readonly runtimeConfig = inject(RuntimeConfig);
   readonly profile = inject(PlayerProfile);
+  readonly journey = inject(PlayerJourney);
+  readonly badgeCatalog = BADGES;
+  readonly freshBadges = signal<string[]>([]);
+  readonly threeLesson = signal<ThreeLesson|null>(null);
+  readonly morrisLesson = signal<MorrisLesson|null>(null);
+  readonly targetWins = signal<0|3>(0);
+  private assistedRound = false;
   private readonly zone = inject(NgZone);
 
   private aiTimerId: ReturnType<typeof setTimeout> | null = null;
@@ -136,6 +150,7 @@ export class App {
   private copyToastTimerId: ReturnType<typeof setTimeout> | null = null;
   private roundCounter = 0;
   private offlineMatchId = '';
+  private journeyOnlineRound = '';
   private lastOnlineTurnKey = '';
   private lastOnlineStatus: 'WAITING' | 'PLAYING' | 'FINISHED' | null = null;
   private wasNativeFullscreen = false;
@@ -150,12 +165,12 @@ export class App {
 
   // Game state machine
   readonly gameState = signal<GameState>('TITLE_MENU');
-  readonly homeTab = signal<'play' | 'appearance' | 'stats'>('play');
+  readonly homeTab = signal<'play' | 'appearance' | 'stats' | 'daily'>('play');
 
   // Match settings
   readonly gameVariant = signal<GameVariant>('THREE');
   readonly gameMode = signal<GameMode>('AI');
-  readonly difficulty = signal<Difficulty>('MEDIUM');
+  readonly difficulty = signal<Difficulty>(this.journey.bot().difficulty);
   readonly boardRule = signal<BoardRule>('CLASSIC');
   readonly allowFlying = signal<boolean>(true);
   readonly turnTimeLimit = signal<TurnTimeLimit>(0);
@@ -405,7 +420,7 @@ export class App {
       return this.onlineRole() === 'X' ? `${name} (شما)` : name;
     }
     if (this.gameMode() === 'LOCAL_2P') return 'بازیکن X';
-    return this.humanSymbol() === 'X' ? `${this.profile.name() || 'شما'} (X)` : 'ربات (X)';
+    return this.humanSymbol() === 'X' ? `${this.profile.name() || 'شما'} (X)` : `${this.journey.bot().name} (X)`;
   });
 
   readonly playerOLabel = computed<string>(() => {
@@ -414,7 +429,7 @@ export class App {
       return this.onlineRole() === 'O' ? `${name} (شما)` : name;
     }
     if (this.gameMode() === 'LOCAL_2P') return 'بازیکن O';
-    return this.humanSymbol() === 'O' ? `${this.profile.name() || 'شما'} (O)` : 'ربات (O)';
+    return this.humanSymbol() === 'O' ? `${this.profile.name() || 'شما'} (O)` : `${this.journey.bot().name} (O)`;
   });
 
   readonly morrisOnBoardX = computed<number>(() =>
@@ -690,6 +705,7 @@ export class App {
 
     if (isPlatformBrowser(this.platformId)) {
       const params = new URLSearchParams(window.location.search);
+      if (params.has('puzzle')) this.homeTab.set('daily');
       const invitedCode = params.get('room');
       if (invitedCode && /^[A-Za-z2-9]{5}$/.test(invitedCode.trim())) {
         this.gameMode.set('ONLINE');
@@ -740,7 +756,11 @@ export class App {
 
   setDifficulty(level: Difficulty): void {
     this.soundFx.playClick();
-    this.difficulty.set(level);
+    if (this.journey.selectBot(botForDifficulty(level).id)) this.difficulty.set(level);
+  }
+
+  selectBot(id: BotId): void {
+    if (this.journey.selectBot(id)) { this.difficulty.set(this.journey.bot().difficulty); this.soundFx.playClick(); }
   }
 
   setBoardRule(rule: BoardRule): void {
@@ -905,6 +925,7 @@ export class App {
     this.lastOnlineStatus = null;
     this.lastOnlineTurnKey = '';
     this.onlineClient.createRoom({
+      targetWins: this.targetWins(),
       playerName: this.playerNameControl.value.trim() || this.profile.name() || 'بازیکن ۱',
       avatar: this.profile.avatar(),
       rating: this.playerStats.stats().elo,
@@ -1057,6 +1078,7 @@ export class App {
   // ---------- SMART HINT ----------
 
   requestSmartHint(): void {
+    if(this.canRequestHint()) this.assistedRound = true;
     if (!this.canRequestHint()) return;
     this.soundFx.playHint();
 
@@ -1202,6 +1224,7 @@ export class App {
 
   undoLastMove(): void {
     if (!this.canUndo()) return;
+    this.assistedRound = true;
 
     this.clearAiTimer();
     this.clearHints();
@@ -1364,6 +1387,7 @@ export class App {
   private syncFromOnlineRoom(room: RoomSnapshotDto, role: Player): void {
     const roundNumber=room.scores.X+room.scores.O+room.scores.draws+(room.status==='FINISHED'?0:1);
     const matchId=`online:${room.roundId ?? `${room.code}:${roundNumber}`}:${role}`;
+    if(this.journeyOnlineRound!==matchId){this.journeyOnlineRound=matchId;this.freshBadges.set([]);}
     if(room.status==='PLAYING') this.playerStats.beginOnlineMatch(matchId);
     this.gameMode.set('ONLINE');
     this.gameVariant.set(room.variant);
@@ -1404,10 +1428,10 @@ export class App {
         if (room.winner) {
           this.soundFx.playWin();
           const outcome = room.winner === role ? 'WIN' : 'LOSS';
-          this.playerStats.recordMatchOutcome(outcome, room.roundRatings?.[getOpponent(role)] ?? 1200, matchId, 'ONLINE');
+          if(this.playerStats.recordMatchOutcome(outcome, room.roundRatings?.[getOpponent(role)] ?? 1200, matchId, 'ONLINE')) this.freshBadges.set(this.journey.recordMatch(matchId,outcome,null,room.variant,false));
         } else if (room.isDraw) {
           this.soundFx.playDraw();
-          this.playerStats.recordMatchOutcome('DRAW', room.roundRatings?.[getOpponent(role)] ?? 1200, matchId, 'ONLINE');
+          if(this.playerStats.recordMatchOutcome('DRAW', room.roundRatings?.[getOpponent(role)] ?? 1200, matchId, 'ONLINE')) this.freshBadges.set(this.journey.recordMatch(matchId,'DRAW',null,room.variant,false));
         }
       }
     } else {
@@ -1450,6 +1474,7 @@ export class App {
   }
 
   private resetRoundState(starter: Player): void {
+    this.assistedRound=false; this.freshBadges.set([]); this.threeLesson.set(null); this.morrisLesson.set(null);
     this.offlineMatchId=`ai:${Date.now()}:${Math.random().toString(36).slice(2)}`;
     this.clearAiTimer();
     this.stopTurnTimer();
@@ -1648,7 +1673,15 @@ export class App {
         : winnerPlayer === this.humanSymbol()
           ? 'WIN'
           : 'LOSS';
-      this.playerStats.recordMatchOutcome(outcome, oppElo, this.offlineMatchId);
+      if(this.playerStats.recordMatchOutcome(outcome, oppElo, this.offlineMatchId)) {
+        const hero=this.humanSymbol(), frames=this.threeReplayFrames();
+        const saved=this.gameVariant()==='THREE' && this.boardRule()==='CLASSIC' && frames.some((f,i)=>f.currentTurn===hero && i<frames.length-1 && immediateWins(f.board,getOpponent(hero)).length>0 && immediateWins(frames[i+1].board,getOpponent(hero)).length===0);
+        this.freshBadges.set(this.journey.recordMatch(this.offlineMatchId,outcome,this.journey.bot().id,this.gameVariant(),this.assistedRound,saved));
+      }
+      if(outcome==='LOSS') {
+        if(this.isMorrisVariant()) this.morrisLesson.set(reviewMorris(this.morrisReplayFrames(),this.humanSymbol()));
+        else this.threeLesson.set(reviewThree(this.threeReplayFrames(),this.humanSymbol(),this.boardRule()));
+      }
     }
 
     this.roundCounter += 1;
@@ -1729,12 +1762,12 @@ export class App {
       this.isAiThinking.set(false);
       if (this.gameState() !== 'PLAYING' || this.isMorrisVariant() || this.isOnlineMode()) return;
 
-      const aiMove = chooseAiMove(
+      const aiMove = personalityMove(
+        this.journey.bot().id,
         this.board(),
         this.xQueue(),
         this.oQueue(),
         this.aiSymbol(),
-        this.difficulty(),
         this.boardRule(),
       );
       if (aiMove !== null) {
@@ -1760,7 +1793,7 @@ export class App {
       const latest = this.morrisState();
       if (latest.winner || latest.isDraw || latest.currentTurn !== this.aiSymbol()) return;
 
-      const decision = chooseMorrisAiDecision(latest, this.aiSymbol(), this.difficulty());
+      const decision = personalityMorris(this.journey.bot().id, latest, this.aiSymbol());
       if (!decision) return;
 
       this.saveMorrisSnapshot(latest);

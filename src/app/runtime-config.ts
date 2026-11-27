@@ -57,4 +57,10 @@ export class RuntimeConfig {
     url.searchParams.set('room', code);
     return url.href;
   }
+
+  challengeLink(date:string):string|null{
+    const origin=this.publicWeb??(this.isNative?null:window.location.origin);
+    if(!origin)return null;
+    const url=new URL('/',origin);url.searchParams.set('puzzle',date);return url.href;
+  }
 }

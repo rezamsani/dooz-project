@@ -6,6 +6,7 @@ import { RoomSnapshotDto } from './game/online.types';
 describe('App', () => {
   beforeEach(async () => {
     localStorage.removeItem('dooz_player_stats_v1');
+    localStorage.removeItem('dooz_journey_v1');
     await TestBed.configureTestingModule({
       imports: [App],
     }).compileComponents();
@@ -43,6 +44,22 @@ describe('App', () => {
     expect(app.scores()).toEqual({X:1,O:0,draws:0});
     expect(app.playerStats.totalGames()).toBe(0);
     expect(app.playerStats.stats().elo).toBe(1200);
+  });
+
+  it('awards progress from an actual AI win and reveals coaching after an actual loss',()=>{
+    vi.useFakeTimers();const random=vi.spyOn(Math,'random').mockReturnValue(.99);
+    try{
+      const fixture=TestBed.createComponent(App),app=fixture.componentInstance;
+      app.setGameMode('AI');app.startGame();
+      for(const index of [0,1,2]){app.onCellSelected(index);vi.advanceTimersByTime(1000);}
+      expect(app.gameState()).toBe('ROUND_SUMMARY');expect(app.journey.isUnlocked('simin')).toBe(true);
+      expect(app.journey.state().badges['clean_win']).toBeTruthy();expect(app.journey.state().wins.baran).toBe(1);
+      app.restartCurrentRound();
+      for(const index of [0,1,4]){app.onCellSelected(index);vi.advanceTimersByTime(1000);}
+      expect(app.gameState()).toBe('ROUND_SUMMARY');expect(app.threeLesson()).toBeTruthy();
+      fixture.detectChanges();expect(fixture.nativeElement.querySelector('app-coach-review')).toBeTruthy();
+      expect(app.journey.state().wins.baran).toBe(1);
+    }finally{random.mockRestore();vi.useRealTimers();}
   });
 
   it('records a participated online round once using the opponent rating, not a finished room visit',()=>{

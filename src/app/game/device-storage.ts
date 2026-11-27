@@ -7,6 +7,7 @@ const KEYS = [
   'dooz_player_stats_v1', 'dooz_profile_v1', 'dooz_board_theme_v1', 'dooz_color_mode_v1',
   'dooz_environment_theme_v1', 'dooz_piece_style_v1', 'dooz_view_mode_v1',
   'dooz_custom_x_color_v1', 'dooz_custom_o_color_v1', 'dooz_custom_board_color_v1',
+  'dooz_journey_v1', 'dooz_online_session_v1', 'dooz_sound_muted', 'dooz_sound_style_v1',
 ];
 export const NATIVE_STORAGE = new InjectionToken<boolean>('native player storage',{providedIn:'root',factory:()=>Capacitor.isNativePlatform()});
 

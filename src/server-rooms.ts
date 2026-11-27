@@ -1,6 +1,7 @@
 import { randomBytes } from 'node:crypto';
 import { normalizeAvatar, PlayerAvatar } from './app/game/avatar';
 import { ratingAfterMatch, validRating } from './app/game/player-score';
+import { GuestIdentity, RivalryStore } from './server-rivalries';
 import type { IncomingMessage } from 'node:http';
 import type { Duplex } from 'node:stream';
 import { WebSocket, WebSocketServer } from 'ws';
@@ -45,12 +46,15 @@ interface PlayerSlot {
   name: string;
   avatar: PlayerAvatar;
   rating: number;
+  identityId:string;
 }
 
 interface ActiveRoom {
   code: string;
   roundId: string;
   roundRatings: Record<Player,number>;
+  targetWins:0|3;
+  seriesWinner:Player|null;
   variant: GameVariant;
   boardRule: BoardRule;
   allowFlying: boolean;
@@ -79,6 +83,7 @@ interface ActiveRoom {
 interface SocketMeta {
   roomCode: string | null;
   role: Player | null;
+  identity?:GuestIdentity;
 }
 
 function sanitizePlayerName(raw: unknown, fallback: string): string {
@@ -113,6 +118,7 @@ function sendJson(socket: WebSocket | null, payload: ServerWsMessage): void {
 }
 
 export class OnlineRoomManager {
+  private readonly rivalries=new RivalryStore();
   private readonly wss = new WebSocketServer({ noServer: true, maxPayload: 4096 });
   private readonly rooms = new Map<string, ActiveRoom>();
   private readonly socketMeta = new WeakMap<WebSocket, SocketMeta>();
@@ -145,7 +151,10 @@ export class OnlineRoomManager {
         return;
       }
 
-      this.handleMessage(ws, parsed as ClientWsMessage);
+      try{this.handleMessage(ws, parsed as ClientWsMessage);}catch(error){
+        console.error('Online persistence unavailable:',error instanceof Error?error.message:'unknown error');
+        sendJson(ws,{type:'room:error',message:'ذخیره‌سازی سرور در دسترس نیست؛ کمی بعد دوباره تلاش کنید.'});
+      }
     });
 
     ws.on('close', () => {
@@ -155,6 +164,12 @@ export class OnlineRoomManager {
 
   private handleMessage(ws: WebSocket, msg: ClientWsMessage): void {
     switch (msg.type) {
+      case 'session:hello':{
+        const meta=this.socketMeta.get(ws)!;
+        if(meta.roomCode)return;
+        const identity=this.rivalries.identify(msg.token);meta.identity=identity;
+        sendJson(ws,{type:'session:welcome',token:identity.token,playerId:identity.id});return;
+      }
       case 'room:create':
         this.createRoom(ws, msg);
         return;
@@ -202,6 +217,7 @@ export class OnlineRoomManager {
     ws: WebSocket,
     msg: Extract<ClientWsMessage, { type: 'room:create' }>,
   ): void {
+    const identity=this.identityFor(ws);
     this.detachSocket(ws);
     if (this.rooms.size >= MAX_ROOMS) {
       this.pruneIdleRooms();
@@ -225,6 +241,7 @@ export class OnlineRoomManager {
     const room: ActiveRoom = {
       code,
       roundId: randomBytes(12).toString('hex'),
+      targetWins:msg.targetWins===3?3:0,seriesWinner:null,
       roundRatings: {X: validRating(msg.rating), O:1200},
       variant,
       boardRule,
@@ -232,7 +249,7 @@ export class OnlineRoomManager {
       turnTimeLimit,
       status: 'WAITING',
       players: {
-        X: { socket: ws, name: playerName, avatar: normalizeAvatar(msg.avatar), rating:validRating(msg.rating) },
+        X: { socket: ws, name: playerName, avatar: normalizeAvatar(msg.avatar), rating:validRating(msg.rating), identityId:identity.id },
         O: null,
       },
       scores: { X: 0, O: 0, draws: 0 },
@@ -258,7 +275,7 @@ export class OnlineRoomManager {
     };
 
     this.rooms.set(code, room);
-    this.socketMeta.set(ws, { roomCode: code, role: 'X' });
+    this.socketMeta.set(ws, { roomCode: code, role: 'X', identity });
     this.broadcastRoomState(room);
   }
 
@@ -275,22 +292,28 @@ export class OnlineRoomManager {
       return;
     }
 
+    const identity=this.identityFor(ws);
+    if(this.socketMeta.get(ws)?.roomCode===code){this.broadcastRoomState(room);return;}
+    if(room.seriesWinner){sendJson(ws,{type:'room:error',message:'این رقابت تمام شده؛ یک اتاق تازه بسازید.'});return;}
+    const ownedRole:Player|null=room.players.X?.identityId===identity.id?'X':room.players.O?.identityId===identity.id?'O':null;
+    if(!ownedRole&&room.players.O){sendJson(ws,{type:'room:error',message:'این رقابت مخصوص دو بازیکن اولیه است.'});return;}
+    if(ownedRole&&room.players[ownedRole]?.socket&&room.players[ownedRole]?.socket!==ws){sendJson(ws,{type:'room:error',message:'این بازیکن در دستگاه یا تب دیگری به اتاق وصل است.'});return;}
     this.detachSocket(ws);
     const name = sanitizePlayerName(rawName, 'بازیکن ۲');
     const avatar = rawAvatar === undefined ? normalizeAvatar({cartoon:'sky'}) : normalizeAvatar(rawAvatar);
     const rating = validRating(rawRating);
 
     let assignedRole: Player | null = null;
-    if (!room.players.O) {
-      room.players.O = { socket: ws, name, avatar, rating };
+    if (!room.players.O && ownedRole!=='X') {
+      room.players.O = { socket: ws, name, avatar, rating, identityId:identity.id };
       assignedRole = 'O';
-    } else if (!room.players.O.socket) {
+    } else if (ownedRole==='O'&&room.players.O&&!room.players.O.socket) {
       room.players.O.socket = ws;
       room.players.O.name = name;
       room.players.O.avatar = avatar;
       assignedRole = 'O';
-    } else if (!room.players.X || !room.players.X.socket) {
-      room.players.X = { socket: ws, name, avatar, rating };
+    } else if (ownedRole==='X'&&(!room.players.X||!room.players.X.socket)) {
+      room.players.X = { socket: ws, name, avatar, rating:room.players.X?.rating??rating, identityId:identity.id };
       assignedRole = 'X';
     }
 
@@ -305,7 +328,7 @@ export class OnlineRoomManager {
       room.status = 'PLAYING';
     }
 
-    this.socketMeta.set(ws, { roomCode: code, role: assignedRole });
+    this.socketMeta.set(ws, { roomCode: code, role: assignedRole, identity });
     this.broadcastRoomState(room);
   }
 
@@ -466,6 +489,7 @@ export class OnlineRoomManager {
     if (!ctx) return;
     const { room, role } = ctx;
     if (room.status !== 'FINISHED') return;
+    if(room.seriesWinner){sendJson(ws,{type:'room:error',message:'رقابت سه‌بردی تمام شده؛ اتاق تازه‌ای بسازید.'});return;}
 
     room.rematchVotes.add(role);
     room.lastActivityAt = Date.now();
@@ -542,6 +566,10 @@ export class OnlineRoomManager {
       room.scores.draws += 1;
     }
 
+    if(winner&&room.targetWins===3&&room.scores[winner]>=3)room.seriesWinner=winner;
+    const x=room.players.X?.identityId,o=room.players.O?.identityId;
+    if(x&&o)this.rivalries.record(x,o,winner?room.players[winner]!.identityId:null,room.roundId,room.seriesWinner?room.players[room.seriesWinner]!.identityId:null);
+
     room.lastActivityAt = Date.now();
     this.broadcastRoomState(room);
   }
@@ -567,14 +595,24 @@ export class OnlineRoomManager {
       }
     }
 
-    this.socketMeta.set(ws, { roomCode: null, role: null });
+    this.socketMeta.set(ws, { roomCode: null, role: null, identity:meta?.identity });
+  }
+
+  private identityFor(ws:WebSocket):GuestIdentity{
+    const meta=this.socketMeta.get(ws)!;
+    if(!meta.identity){meta.identity=this.rivalries.identify(undefined);sendJson(ws,{type:'session:welcome',token:meta.identity.token,playerId:meta.identity.id});}
+    return meta.identity;
   }
 
   private toDto(room: ActiveRoom): RoomSnapshotDto {
+    const x=room.players.X?.identityId,o=room.players.O?.identityId;
+    const history=x&&o?this.rivalries.history(x,o):null;
     return {
       code: room.code,
       roundId: room.roundId,
       roundRatings: {...room.roundRatings},
+      series:{targetWins:room.targetWins,winner:room.seriesWinner},
+      ...(history&&x&&o?{rivalry:{X:history.wins[x]??0,O:history.wins[o]??0,draws:history.draws,seriesX:history.series[x]??0,seriesO:history.series[o]??0,persisted:!this.rivalries.issue,recent:history.recent.map(m=>({winner:m.winner===null?null:m.winner===x?'X' as const:'O' as const,at:m.at}))}}:{}),
       variant: room.variant,
       boardRule: room.boardRule,
       allowFlying: room.allowFlying,

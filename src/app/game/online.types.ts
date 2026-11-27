@@ -21,6 +21,8 @@ export interface RoomSnapshotDto {
   code: string;
   roundId?: string;
   roundRatings?: Record<Player, number>;
+  series?: {targetWins:0|3;winner:Player|null};
+  rivalry?: {X:number;O:number;draws:number;seriesX:number;seriesO:number;persisted:boolean;recent:{winner:Player|null;at:number}[]};
   variant: GameVariant;
   boardRule: BoardRule;
   allowFlying: boolean;
@@ -51,11 +53,13 @@ export interface RoomSnapshotDto {
 }
 
 export type ClientWsMessage =
+  | {type:'session:hello';token?:string}
   | {
       type: 'room:create';
       playerName: string;
       avatar?: PlayerAvatar;
       rating?: number;
+      targetWins?:0|3;
       variant: GameVariant;
       boardRule: BoardRule;
       allowFlying: boolean;
@@ -81,6 +85,7 @@ export type ClientWsMessage =
   | { type: 'room:leave' };
 
 export type ServerWsMessage =
+  | {type:'session:welcome';token:string;playerId:string}
   | {
       type: 'room:state';
       room: RoomSnapshotDto;

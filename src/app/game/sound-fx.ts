@@ -1,17 +1,22 @@
 import { isPlatformBrowser } from '@angular/common';
 import { Injectable, PLATFORM_ID, inject, signal } from '@angular/core';
+import { DeviceStorage } from './device-storage';
 
 @Injectable({ providedIn: 'root' })
 export class SoundFx {
   private readonly platformId = inject(PLATFORM_ID);
+  private readonly storage=inject(DeviceStorage);
   private audioCtx: AudioContext | null = null;
 
   readonly muted = signal<boolean>(false);
+  readonly style=signal<'wood'|'soft'|'santur'>('wood');
 
   constructor() {
     if (isPlatformBrowser(this.platformId)) {
       try {
-        const stored = window.localStorage.getItem('dooz_sound_muted');
+        const stored = this.storage.getItem('dooz_sound_muted');
+        const style=this.storage.getItem('dooz_sound_style_v1');
+        if(style==='soft'||style==='santur')this.style.set(style);
         if (stored === 'true') {
           this.muted.set(true);
         }
@@ -26,7 +31,7 @@ export class SoundFx {
     this.muted.set(next);
     if (isPlatformBrowser(this.platformId)) {
       try {
-        window.localStorage.setItem('dooz_sound_muted', String(next));
+        this.storage.setItem('dooz_sound_muted', String(next));
       } catch {
         // Ignore storage restrictions
       }
@@ -125,10 +130,14 @@ export class SoundFx {
   }
 
   playMoveX(): void {
+    if(this.style()==='soft'){this.playTone(450,.04,'sine',.055);return;}
+    if(this.style()==='santur'){this.playTone(587.33,.16,'triangle',.1);this.playTone(1174.66,.09,'sine',.025);return;}
     this.playTabletopKnock(420, 0.2);
   }
 
   playMoveO(): void {
+    if(this.style()==='soft'){this.playTone(340,.04,'sine',.055);return;}
+    if(this.style()==='santur'){this.playTone(440,.16,'triangle',.1);this.playTone(880,.09,'sine',.025);return;}
     this.playTabletopKnock(310, 0.2);
   }
 
@@ -169,4 +178,5 @@ export class SoundFx {
   playHint(): void {
     this.playTone(620, 0.08, 'sine', 0.09, 0, 780);
   }
+  setStyle(style:'wood'|'soft'|'santur'):void{this.style.set(style);this.storage.setItem('dooz_sound_style_v1',style);this.playMoveX();}
 }

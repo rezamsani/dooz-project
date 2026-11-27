@@ -71,6 +71,7 @@
               <div><span class="eyebrow">ساده شروع کن. هوشمندانه بازی کن.</span><h1>نوبتِ یک<br>فکر تازه‌ست.</h1><p>یک هم‌بازی انتخاب کن؛<br>بقیه‌اش روی صفحه معلوم می‌شه.</p></div>
               <svg class="welcome-board" viewBox="0 0 160 170" aria-hidden="true"><g transform="translate(12 16) rotate(-9 68 68)"><rect x="0" y="0" width="136" height="136" rx="25" fill="currentColor" opacity=".05"/><path d="M47 15v106M89 15v106M15 47h106M15 89h106" fill="none" stroke="currentColor" stroke-opacity=".16" stroke-width="2"/><g stroke="#63c9b2" stroke-width="7" stroke-linecap="round"><path d="m22 22 15 15m0-15L22 37m42 27 15 15m0-15L64 79m42 27 15 15m0-15-15 15"/></g><g fill="none" stroke="#e9b77b" stroke-width="7"><circle cx="111" cy="29" r="11"/><circle cx="29" cy="111" r="11"/></g></g></svg>
             </div>
+            <button type="button" class="mb-5 flex min-h-16 w-full items-center justify-between gap-3 rounded-2xl border border-teal-500/25 bg-teal-500/10 p-4 text-right" (click)="homeTab.set('daily')"><span><strong class="block text-sm">معمای امروز؛ برد در دو حرکت</strong><small class="text-xs opacity-70">یک فکر کوتاه، یک نتیجه برای اشتراک‌گذاری</small></span><mat-icon>extension</mat-icon></button>
             <div class="setup-section">
               <div class="section-label"><h2>با کی بازی می‌کنی؟</h2><span>۰۱</span></div>
               <div class="mode-options" role="group" aria-label="هم‌بازی">
@@ -87,9 +88,11 @@
                 <button type="button" (click)="setGameVariant('TWELVE')" [class.chosen]="gameVariant() === 'TWELVE'" [attr.aria-pressed]="gameVariant() === 'TWELVE'"><b>۱۲</b><span>حرفه‌ای</span></button>
               </div>
             </div>
+            @if(gameMode()==='AI'){<app-bot-roster (selected)="selectBot($event)" />}
                         <!-- Online Room Lobby Panel -->
             @if (gameMode() === 'ONLINE') {
               <div class="space-y-4 border-t border-slate-900/10 pt-4 dark:border-white/10">
+                <label class="block text-xs font-semibold">نوع اتاق<select class="mt-2 min-h-11 w-full rounded-xl border border-teal-500/30 bg-transparent px-3" [value]="targetWins()" (change)="targetWins.set($any($event.target).value==='3'?3:0)"><option value="0">بازی آزاد با دوست</option><option value="3">رقابت خصوصی؛ هر کس زودتر سه برد</option></select></label>
                 <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <label class="block space-y-1.5">
                     <span class="text-xs font-semibold text-slate-700 dark:text-slate-300">نام نمایشی شما</span>
@@ -320,54 +323,6 @@
             @if (gameMode() === 'AI') {
               <div class="grid grid-cols-1 gap-5 sm:grid-cols-2">
                 <div class="space-y-2.5">
-                  <div class="text-sm font-semibold text-slate-800 dark:text-slate-200">سطح هوش مصنوعی</div>
-                  <div class="grid grid-cols-3 gap-1.5 rounded-xl bg-slate-100 p-1.5 dark:bg-[#0E0E0E]">
-                    <button
-                      type="button"
-                      (click)="setDifficulty('EASY')"
-                      class="min-h-[40px] whitespace-nowrap rounded-lg px-2 py-1.5 text-sm font-semibold transition-colors"
-                      [class.bg-white]="difficulty() === 'EASY'"
-                      [class.dark:bg-[#2A2A2A]]="difficulty() === 'EASY'"
-                      [class.text-slate-950]="difficulty() === 'EASY'"
-                      [class.dark:text-white]="difficulty() === 'EASY'"
-                      [class.shadow-xs]="difficulty() === 'EASY'"
-                      [class.text-slate-500]="difficulty() !== 'EASY'"
-                      [class.dark:text-slate-400]="difficulty() !== 'EASY'"
-                    >
-                      آسان
-                    </button>
-                    <button
-                      type="button"
-                      (click)="setDifficulty('MEDIUM')"
-                      class="min-h-[40px] whitespace-nowrap rounded-lg px-2 py-1.5 text-sm font-semibold transition-colors"
-                      [class.bg-white]="difficulty() === 'MEDIUM'"
-                      [class.dark:bg-[#2A2A2A]]="difficulty() === 'MEDIUM'"
-                      [class.text-slate-950]="difficulty() === 'MEDIUM'"
-                      [class.dark:text-white]="difficulty() === 'MEDIUM'"
-                      [class.shadow-xs]="difficulty() === 'MEDIUM'"
-                      [class.text-slate-500]="difficulty() !== 'MEDIUM'"
-                      [class.dark:text-slate-400]="difficulty() !== 'MEDIUM'"
-                    >
-                      متوسط
-                    </button>
-                    <button
-                      type="button"
-                      (click)="setDifficulty('HARD')"
-                      class="min-h-[40px] whitespace-nowrap rounded-lg px-2 py-1.5 text-sm font-semibold transition-colors"
-                      [class.bg-white]="difficulty() === 'HARD'"
-                      [class.dark:bg-[#2A2A2A]]="difficulty() === 'HARD'"
-                      [class.text-slate-950]="difficulty() === 'HARD'"
-                      [class.dark:text-white]="difficulty() === 'HARD'"
-                      [class.shadow-xs]="difficulty() === 'HARD'"
-                      [class.text-slate-500]="difficulty() !== 'HARD'"
-                      [class.dark:text-slate-400]="difficulty() !== 'HARD'"
-                    >
-                      سخت
-                    </button>
-                  </div>
-                </div>
-
-                <div class="space-y-2.5">
                   <div class="text-sm font-semibold text-slate-800 dark:text-slate-200">مهره شما</div>
                   <div class="grid grid-cols-2 gap-1.5 rounded-xl bg-slate-100 p-1.5 dark:bg-[#0E0E0E]">
                     <button
@@ -411,11 +366,14 @@
               <p>{{ isOnlineMode() ? 'برای بازی آنلاین به اینترنت نیاز داری' : 'بدون اینترنت هم می‌تونی بازی کنی' }}</p>
             </div>
           </section>
+        } @else if (homeTab() === 'daily') {
+          <app-daily-challenge (back)="homeTab.set('play')" />
         } @else if (homeTab() === 'appearance') {
           <section class="home-appearance animate-panel-in" aria-label="تنظیمات ظاهر"><div class="page-heading"><span class="eyebrow">به سلیقهٔ خودت</span><h1>میز بازی تو</h1><p>محیط، صفحه و مهره‌ها رو انتخاب کن.</p></div>
                     <details open class="appearance-panel lg:col-span-5">
           <summary><span>شخصی‌سازی صفحه و مهره‌ها</span><mat-icon aria-hidden="true">expand_more</mat-icon></summary>
           <div class="appearance-content space-y-5">
+            <label class="block text-sm font-semibold">صدای مهره‌ها<select class="mt-2 min-h-11 w-full rounded-xl border border-teal-500/30 bg-transparent px-3" [value]="soundFx.style()" (change)="soundFx.setStyle($any($event.target).value)"><option value="wood">چوبی</option><option value="soft">آرام</option><option value="santur">طنین سنتور</option></select></label>
           <!-- Interactive Live Board Preview -->
           <div class="mx-auto max-w-[340px]">
             @if (gameVariant() === 'THREE') {
@@ -644,6 +602,7 @@
         } @else {
           <section class="home-stats animate-panel-in" aria-label="پروفایل و آمار بازیکن"><div class="page-heading"><span class="eyebrow">هر دست، یک تجربه</span><h1>پروفایل تو</h1><p>هر مسابقه، یک قدم در مسیر بهتر شدن.</p></div>
             <app-player-dashboard />
+            <app-journey-panel />
             <details class="advanced-settings mb-6"><summary>ویرایش نام و عکس پروفایل<mat-icon aria-hidden="true">expand_more</mat-icon></summary><app-profile-panel /></details>
             <button type="button" class="launch-button" (click)="homeTab.set('play')">برگشت به بازی<mat-icon>arrow_back</mat-icon></button>
           </section>
@@ -1198,14 +1157,14 @@
               <div class="flex flex-wrap items-center gap-2">
                 <button
                   type="button"
-                  [disabled]="isOnlineMode() && hasVotedRematch()"
+                  [disabled]="isOnlineMode() && (hasVotedRematch() || !!onlineRoom()?.series?.winner)"
                   (click)="nextRound()"
                   class="inline-flex min-h-[42px] items-center gap-1.5 whitespace-nowrap rounded-xl bg-teal-600 px-4 py-2 text-sm font-bold text-white transition-colors hover:bg-teal-500 disabled:opacity-60 dark:bg-teal-400 dark:text-slate-950 dark:hover:bg-teal-300"
                 >
                   <mat-icon class="!h-[18px] !w-[18px] !text-[18px]">replay</mat-icon>
                   <span>
                     @if (isOnlineMode()) {
-                      {{ hasVotedRematch() ? 'در انتظار تایید حریف...' : 'درخواست بازی مجدد' }}
+                      {{ onlineRoom()?.series?.winner ? 'رقابت به پایان رسید' : hasVotedRematch() ? 'در انتظار تایید حریف...' : 'درخواست بازی مجدد' }}
                     } @else {
                       دست بعدی
                     }
@@ -1233,6 +1192,8 @@
                 </button>
               </div>
             </div>
+            @for(badge of badgeCatalog;track badge.id){@if(freshBadges().includes(badge.id)){<p class="text-sm text-teal-700 dark:text-teal-300" role="status">نشان تازه: {{ badge.name }}</p>}}
+            @if(gameMode()==='AI' && !isDraw() && (timeoutWinner() ?? winResult()?.winner ?? morrisState().winner)!==humanSymbol()) {<app-coach-review [three]="threeLesson()" [morris]="morrisLesson()" />}
           } @else if (!isMorrisVariant() && boardRule() === 'INFINITE') {
             <div class="flex w-full max-w-[440px] items-center justify-between gap-3 rounded-xl border border-slate-900/10 bg-white/85 px-3.5 py-2 text-xs text-slate-600 backdrop-blur-md dark:border-white/10 dark:bg-[#171717]/85 dark:text-slate-300">
               <span>حالت بی‌نهایت: حداکثر ۳ مهره هم‌زمان روی صفحه</span>
@@ -1241,6 +1202,7 @@
               </span>
             </div>
           }
+          @if(isOnlineMode() && onlineRoom()?.players?.O){<app-rivalry-panel [room]="onlineRoom()" />}
         </div>
 
         <!-- Scoreboard & Tabletop Controls Sidebar (hidden in Fullscreen Cinema Play) -->

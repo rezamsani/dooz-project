@@ -8,7 +8,7 @@ export type Difficulty = 'EASY' | 'MEDIUM' | 'HARD';
 export type BoardRule = 'CLASSIC' | 'INFINITE';
 export type BoardTheme = 'navy' | 'walnut' | 'felt' | 'tile' | 'glass';
 export type ColorMode = 'dark' | 'light';
-export type EnvironmentTheme = 'simple' | 'carpet' | 'meadow' | 'waterfall' | 'lounge';
+export type EnvironmentTheme = 'simple' | 'carpet' | 'meadow' | 'waterfall' | 'lounge' | 'courtyard' | 'khatam';
 export type PieceStyle = 'gemstone' | 'wood' | 'nature' | 'classic';
 export type ViewMode = '3d' | '2d';
 export type TurnTimeLimit = 0 | 15 | 30 | 60;
@@ -24,6 +24,8 @@ export interface EnvironmentOption {
 }
 
 export const ENVIRONMENT_THEMES: readonly EnvironmentOption[] = [
+  {id:'courtyard',label:'حیاط فیروزه',subtitle:'کاشی و آرامش',imagePath:'/environments/courtyard.svg',fallbackGradient:'linear-gradient(135deg,#134a5b,#579b9a)',recommendedBoard:'tile',icon:'mosque'},
+  {id:'khatam',label:'میز خاتم',subtitle:'گرمای چوب و نقش',imagePath:'/environments/khatam.svg',fallbackGradient:'linear-gradient(135deg,#4e3425,#b98a51)',recommendedBoard:'walnut',icon:'auto_awesome'},
   {
     id: 'simple',
     label: 'ساده و مدرن',

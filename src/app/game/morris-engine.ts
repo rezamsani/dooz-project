@@ -447,7 +447,7 @@ export type MorrisAiDecision =
   | { type: 'MOVE'; from: number; to: number }
   | { type: 'REMOVE'; target: number };
 
-function evaluateMorrisBoard(state: MorrisState, aiPlayer: Player): number {
+export function evaluateMorrisBoard(state: MorrisState, aiPlayer: Player): number {
   const humanPlayer = getOpponent(aiPlayer);
   if (state.winner === aiPlayer) return 10000;
   if (state.winner === humanPlayer) return -10000;
@@ -489,7 +489,7 @@ function evaluateMorrisBoard(state: MorrisState, aiPlayer: Player): number {
   return score;
 }
 
-function generateLegalDecisions(state: MorrisState): MorrisAiDecision[] {
+export function generateLegalDecisions(state: MorrisState): MorrisAiDecision[] {
   const player = state.currentTurn;
   if (state.action === 'REMOVE') {
     const opponent = getOpponent(player);
@@ -522,7 +522,7 @@ function generateLegalDecisions(state: MorrisState): MorrisAiDecision[] {
   return decisions;
 }
 
-function applyDecision(state: MorrisState, decision: MorrisAiDecision): MorrisState | null {
+export function applyDecision(state: MorrisState, decision: MorrisAiDecision): MorrisState | null {
   switch (decision.type) {
     case 'PLACE':
       return applyMorrisPlace(state, decision.to);

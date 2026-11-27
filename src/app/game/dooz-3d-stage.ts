@@ -45,6 +45,8 @@ interface StageEnvironmentConfig {
 }
 
 const STAGE_ENV_CONFIG: Record<EnvironmentTheme, StageEnvironmentConfig> = {
+  courtyard:{pitchDeg:30,rollDeg:0,offsetX:0,offsetY:4,tableScale:.82,lightTint:'radial-gradient(circle at 50% 35%,#b4ece320,transparent 65%)',shadowTint:'rgba(8,40,44,.65)'},
+  khatam:{pitchDeg:32,rollDeg:0,offsetX:0,offsetY:5,tableScale:.8,lightTint:'radial-gradient(circle at 50% 35%,#ffe4b520,transparent 65%)',shadowTint:'rgba(40,22,8,.7)'},
   carpet: {
     pitchDeg: 36,
     rollDeg: 0,

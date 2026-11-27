@@ -2,6 +2,7 @@ import { isPlatformBrowser } from '@angular/common';
 import { DestroyRef, Injectable, PLATFORM_ID, inject, signal } from '@angular/core';
 import { RuntimeConfig } from '../runtime-config';
 import { PlayerAvatar } from './avatar';
+import { DeviceStorage } from './device-storage';
 import {
   BoardRule,
   GameVariant,
@@ -27,6 +28,7 @@ export class OnlineClient {
   private readonly platformId = inject(PLATFORM_ID);
   private readonly destroyRef = inject(DestroyRef);
   private readonly config = inject(RuntimeConfig);
+  private readonly storage = inject(DeviceStorage);
 
   private ws: WebSocket | null = null;
   private pendingQueue: ClientWsMessage[] = [];
@@ -57,6 +59,7 @@ export class OnlineClient {
     boardRule: BoardRule;
     allowFlying: boolean;
     turnTimeLimit: TurnTimeLimit;
+    targetWins?: 0 | 3;
   }): void {
     this.errorMessage.set(null);
     this.send({
@@ -68,6 +71,7 @@ export class OnlineClient {
       boardRule: params.boardRule,
       allowFlying: params.allowFlying,
       turnTimeLimit: params.turnTimeLimit,
+      targetWins: params.targetWins,
     });
   }
 
@@ -183,6 +187,7 @@ export class OnlineClient {
     socket.onopen = () => {
       if (this.ws !== socket) return;
       this.connectionStatus.set('CONNECTED');
+      socket.send(JSON.stringify({type:'session:hello',token:this.storage.getItem('dooz_online_session_v1')??undefined}));
       const queued = [...this.pendingQueue];
       this.pendingQueue = [];
       for (const msg of queued) {
@@ -230,6 +235,9 @@ export class OnlineClient {
 
   private handleServerMessage(msg: ServerWsMessage): void {
     switch (msg.type) {
+      case 'session:welcome':
+        if (/^[a-f0-9]{64}$/.test(msg.token)) this.storage.setItem('dooz_online_session_v1',msg.token);
+        return;
       case 'room:state':
         this.errorMessage.set(null);
         this.room.set(msg.room);

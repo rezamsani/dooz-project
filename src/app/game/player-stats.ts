@@ -245,7 +245,7 @@ export class PlayerStats {
 
       const rawEnv = this.storage.getItem(ENV_KEY);
       if (
-        rawEnv === 'simple' ||
+        rawEnv === 'courtyard' || rawEnv === 'khatam' || rawEnv === 'simple' ||
         rawEnv === 'carpet' ||
         rawEnv === 'meadow' ||
         rawEnv === 'waterfall' ||

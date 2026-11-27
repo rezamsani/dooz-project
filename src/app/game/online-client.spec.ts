@@ -52,7 +52,9 @@ describe('OnlineClient mobile connections', () => {
     const second = TestSocket.instances[1];
     second.open();
     expect(second.url).toBe('wss://play.example.com/api/ws');
-    expect(second.send).toHaveBeenCalledExactlyOnceWith(JSON.stringify({ type: 'room:join', code: 'FGHJK', playerName: 'Player' }));
+    expect(second.send).toHaveBeenCalledTimes(2);
+    expect(JSON.parse(second.send.mock.calls[0][0]).type).toBe('session:hello');
+    expect(second.send).toHaveBeenNthCalledWith(2, JSON.stringify({ type: 'room:join', code: 'FGHJK', playerName: 'Player' }));
     first.onerror?.();
     expect(client.connectionStatus()).toBe('CONNECTED');
   });
