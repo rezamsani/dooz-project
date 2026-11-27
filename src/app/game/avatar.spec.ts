@@ -25,7 +25,7 @@ describe('player avatars', () => {
     remote.dispatchEvent(new Event('error'));
     fixture.detectChanges();
     expect(fixture.nativeElement.querySelector('.remote')).toBeNull();
-    expect(fixture.nativeElement.querySelector('img').getAttribute('src')).toBe('/avatars/peach.svg');
+    expect(fixture.nativeElement.querySelector('img').getAttribute('src')).toBe('/avatars/ceramic/peach.jpg');
     fixture.componentRef.setInput('avatar',{cartoon:'peach',gravatarHash:'b'.repeat(64)});
     fixture.detectChanges();
     expect(fixture.nativeElement.querySelector('.remote').getAttribute('src')).toContain('b'.repeat(64));

@@ -1,7 +1,7 @@
 import { TranslatePipe } from '../i18n';
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
-import { CARTOON_AVATARS } from './avatar';
+import { CARTOON_AVATARS, cartoonAvatarUrl } from './avatar';
 import { PlayerProfile } from './player-profile';
 import { PlayerAvatarComponent } from './player-avatar';
 
@@ -27,7 +27,7 @@ import { PlayerAvatarComponent } from './player-avatar';
             <button type="button" [class.selected]="profile.avatar().cartoon === id && !profile.avatar().gravatarHash"
               [attr.aria-pressed]="profile.avatar().cartoon === id && !profile.avatar().gravatarHash"
               [attr.aria-label]="('انتخاب آواتار کارتونی {0}' | t: [i + 1])" (click)="profile.useCartoon(id); feedback.set('آواتار کارتونی انتخاب شد.')">
-              <img [src]="'/avatars/' + id + '.svg'" alt="" width="64" height="64" />
+              <img [src]="cartoonUrl(id)" alt="" width="192" height="192" />
             </button>
           }
         </div>
@@ -77,6 +77,7 @@ import { PlayerAvatarComponent } from './player-avatar';
 export class ProfilePanel {
   readonly profile = inject(PlayerProfile);
   readonly cartoons = CARTOON_AVATARS;
+  protected readonly cartoonUrl = cartoonAvatarUrl;
   readonly nameControl = new FormControl(this.profile.name(), {nonNullable:true});
   readonly emailControl = new FormControl('', {nonNullable:true, validators:[Validators.required,Validators.email,Validators.maxLength(254)]});
   readonly feedback = signal<string | null>(null);

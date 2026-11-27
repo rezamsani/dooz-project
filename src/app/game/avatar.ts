@@ -1,5 +1,11 @@
 export const CARTOON_AVATARS = ['mint', 'peach', 'lilac', 'sunny', 'sky', 'rose'] as const;
 export type CartoonAvatar = typeof CARTOON_AVATARS[number];
+
+export const AVATAR_ART_DIR = '/avatars/ceramic';
+
+export function cartoonAvatarUrl(id: CartoonAvatar): string {
+  return `${AVATAR_ART_DIR}/${id}.jpg`;
+}
 export interface PlayerAvatar {
   cartoon: CartoonAvatar;
   gravatarHash: string | null;

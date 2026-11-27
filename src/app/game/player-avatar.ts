@@ -1,12 +1,12 @@
 import { I18n } from '../i18n';
 import { inject, ChangeDetectionStrategy, Component, computed, input, output, signal } from '@angular/core';
-import { gravatarUrl, normalizeAvatar, PlayerAvatar } from './avatar';
+import { AVATAR_ART_DIR, cartoonAvatarUrl, gravatarUrl, normalizeAvatar, PlayerAvatar } from './avatar';
 
 @Component({
   selector: 'app-player-avatar',
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <img [src]="fallbackUrl()" [alt]="label() || i18n.text('عکس بازیکن')" width="80" height="80" />
+    <img [src]="fallbackUrl()" [alt]="label() || i18n.text('عکس بازیکن')" width="192" height="192" />
     @if (remoteUrl(); as url) {
       @if (failedUrl() !== url) {
         <img class="remote" [class.ready]="loadedUrl() === url" [src]="url" alt="" width="80" height="80"
@@ -31,7 +31,7 @@ export class PlayerAvatarComponent {
   readonly failedUrl = signal<string | null>(null);
   readonly loadedUrl = signal<string | null>(null);
   readonly fallbackUrl = computed(() => this.robot()
-    ? `/avatars/robot-${this.robot()!.toLowerCase()}.svg`
-    : `/avatars/${normalizeAvatar(this.avatar()).cartoon}.svg`);
+    ? `${AVATAR_ART_DIR}/robot-${this.robot()!.toLowerCase()}.jpg`
+    : cartoonAvatarUrl(normalizeAvatar(this.avatar()).cartoon));
   readonly remoteUrl = computed(() => this.robot() ? null : gravatarUrl(this.avatar()?.gravatarHash ?? null));
 }
