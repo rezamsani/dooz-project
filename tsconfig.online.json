@@ -4,6 +4,7 @@
     "module": "CommonJS",
     "moduleResolution": "node",
     "esModuleInterop": true,
+    "allowJs": true,
     "types": ["node"],
     "rootDir": "src",
     "outDir": "out-tsc/online-server",

@@ -2,8 +2,7 @@
 
 # Env variables
 .env*
-!.env.example
-!.env.mobile.example
+/appsettings.json
 
 # Android local configuration and signing keys
 android/local.properties

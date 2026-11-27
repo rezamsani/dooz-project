@@ -1,6 +1,7 @@
 import { createHash, randomBytes } from 'node:crypto';
 import { existsSync, mkdirSync, readFileSync, writeFileSync, renameSync, openSync, fsyncSync, closeSync } from 'node:fs';
 import { resolve } from 'node:path';
+import { serverSettings } from './project-settings.cjs';
 export interface GuestIdentity{id:string;token:string;}
 interface Meeting{id:string;winner:string|null;at:number;}
 interface Rivalry{players:string[];wins:Record<string,number>;draws:number;series:Record<string,number>;recent:Meeting[];recorded:string[];}
@@ -9,7 +10,7 @@ export class RivalryStore{
   private readonly file:string;
   private data:Journal={version:1,identities:{},rivalries:{}};
   issue=false;
-  constructor(directory=process.env['DOOZ_DATA_DIR']??'.data'){
+  constructor(directory=serverSettings().dataDirectory){
     const root=resolve(directory);mkdirSync(root,{recursive:true});this.file=resolve(root,'rivalries.json');
     if(existsSync(this.file)){
       const value=JSON.parse(readFileSync(this.file,'utf8')) as Journal;

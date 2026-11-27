@@ -10,14 +10,13 @@ const ALLOWED_ROOT_FILES = new Set([
   'tsconfig.app.json',
   'tsconfig.spec.json',
   'tsconfig.online.json',
-  'proxy.conf.json',
+  'proxy.conf.cjs',
+  'appsettings.example.json',
   'README.md',
   'capacitor.config.ts',
-  '.env.mobile.example',
   'eslint.config.js',
   '.postcssrc.json',
   '.gitignore',
-  '.env.example',
   'metadata.json',
 ]);
 
@@ -129,7 +128,8 @@ function collectSafeFiles(projectRoot: string, currentDir: string, out: ZipEntry
       item.name === '.git' ||
       item.name === 'dist' ||
       item.name === '.angular' ||
-      (item.name.startsWith('.env') && item.name !== '.env.example')
+      item.name === 'appsettings.json' ||
+      item.name.startsWith('.env')
     ) {
       continue;
     }

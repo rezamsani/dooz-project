@@ -1,7 +1,9 @@
 import { fork, spawn, spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
+import { developmentSettings, readProjectSettings } from '../src/project-settings.cjs';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
+const { webPort } = developmentSettings(readProjectSettings(root));
 const compile = spawnSync(process.execPath, ['node_modules/typescript/bin/tsc', '-p', 'tsconfig.online.json'], {
   cwd: root,
   stdio: 'inherit',
@@ -14,8 +16,6 @@ let stopping = false;
 const online = fork('out-tsc/online-server/dev-online-server.js', [], {
   cwd: root,
   stdio: ['inherit', 'inherit', 'inherit', 'ipc'],
-  // Must match proxy.conf.json, regardless of the caller's environment.
-  env: { ...process.env, DOOZ_ONLINE_PORT: '4201' },
 });
 
 function stop(code) {
@@ -28,9 +28,13 @@ function stop(code) {
 
 online.once('message', (message) => {
   if (message?.type !== 'ready' || stopping) return;
-  const args = ['node_modules/@angular/cli/bin/ng.js', 'serve', '--port=3000', ...process.argv.slice(2)];
+  const args = ['node_modules/@angular/cli/bin/ng.js', 'serve', `--port=${webPort}`, ...process.argv.slice(2)];
   if (process.env.DISABLE_HMR) args.push('--live-reload=false');
-  angular = spawn(process.execPath, args, { cwd: root, stdio: 'inherit' });
+  angular = spawn(process.execPath, args, {
+    cwd: root,
+    stdio: 'inherit',
+    env: { ...process.env, DOOZ_ONLINE_PORT: String(message.port) },
+  });
   angular.once('error', (error) => {
     console.error(error);
     stop(1);

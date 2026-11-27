@@ -22,7 +22,7 @@ import org.json.JSONObject;
 
 @CapacitorPlugin(name = "DoozBilling")
 public class DoozBillingPlugin extends Plugin {
-    private static final String PRODUCT = "dooz_twelve_unlock";
+    private static final String PRODUCT = BuildConfig.BILLING_PRODUCT_ID;
     private static final String RECEIPT = "receipt";
     private static final String SIGNATURE = "signature";
 

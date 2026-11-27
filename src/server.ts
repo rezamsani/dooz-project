@@ -9,12 +9,19 @@ import { createServer } from 'node:http';
 import { join } from 'node:path';
 import { OnlineRoomManager } from './server-rooms';
 import { createProjectZipArchive } from './server-zip';
+import { publicRuntimeSettings, serverSettings } from './project-settings.cjs';
 
 const browserDistFolder = join(import.meta.dirname, '../browser');
 
 const app = express();
 const angularApp = new AngularNodeAppEngine();
-const roomManager = new OnlineRoomManager();
+const settings = serverSettings();
+const roomManager = new OnlineRoomManager(settings.dataDirectory);
+
+app.get('/runtime-config.json', (_req, res) => {
+  res.setHeader('Cache-Control', 'no-store');
+  res.json(publicRuntimeSettings());
+});
 
 /**
  * Health endpoint for the production server.
@@ -70,7 +77,7 @@ app.use((req, res, next) => {
  * Start the server if this module is the main entry point, or it is ran via PM2.
  */
 if (isMainModule(import.meta.url) || process.env['pm_id']) {
-  const port = process.env['PORT'] || 4000;
+  const port = settings.port;
   const server = createServer(app);
   server.on('upgrade', (req, socket, head) => {
     if (req.url === '/api/ws') {

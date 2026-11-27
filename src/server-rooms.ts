@@ -6,10 +6,11 @@ import { RoomCoordinator, RoomPeer } from './app/game/room-coordinator';
 import { RivalryStore } from './server-rivalries';
 
 export class OnlineRoomManager {
-  private readonly rooms = new RoomCoordinator(new RivalryStore(), randomBytes);
+  private readonly rooms: RoomCoordinator;
   private readonly wss = new WebSocketServer({ noServer: true, maxPayload: 4096 });
 
-  constructor() {
+  constructor(dataDirectory: string) {
+    this.rooms = new RoomCoordinator(new RivalryStore(dataDirectory), randomBytes);
     this.wss.on('connection', socket => {
       const peer: RoomPeer = {
         send: payload => {

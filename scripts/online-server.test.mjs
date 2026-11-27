@@ -2,12 +2,46 @@ import assert from 'node:assert/strict';
 import { fork } from 'node:child_process';
 import { once } from 'node:events';
 import { test } from 'node:test';
-import { mkdtempSync, readFileSync } from 'node:fs';
+import { mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import WebSocket from 'ws';
 import { RivalryStore } from '../out-tsc/online-server/server-rivalries.js';
+import { publicRuntimeSettings, readProjectSettings } from '../src/project-settings.cjs';
+
+test('serves only public settings and allows Android to use its own server URL', { timeout: 15000 }, async (t) => {
+  const directory = mkdtempSync(join(tmpdir(), 'dooz-settings-'));
+  const settingsFile = join(directory, 'appsettings.json');
+  const settings = {
+    online: { serverUrl: 'http://web.example', mobileServerUrl: 'https://mobile.example', publicWebUrl: 'https://invite.example' },
+    server: { dataDirectory: 'private-data' },
+    android: { billing: { myket: { publicKey: 'sample-key' }, bazaar: { apiToken: 'sample-token' } } },
+  };
+  writeFileSync(settingsFile, '\uFEFF' + JSON.stringify(settings));
+  const server = fork(fileURLToPath(new URL('../out-tsc/online-server/dev-online-server.js', import.meta.url)), [], {
+    cwd: directory,
+    env: { ...process.env, DOOZ_ONLINE_PORT: '0', DOOZ_DATA_DIR: join(directory, 'private-data') },
+    stdio: ['ignore', 'inherit', 'inherit', 'ipc'],
+  });
+  t.after(() => server.kill());
+  const [ready] = await once(server, 'message');
+  const url = `http://127.0.0.1:${ready.port}/runtime-config.json`;
+  const response = await fetch(url);
+  assert.equal(response.headers.get('cache-control'), 'no-store');
+  assert.deepEqual(await response.json(), { onlineServerUrl: 'http://web.example', publicWebUrl: 'https://invite.example' });
+
+  const configured = readProjectSettings(directory);
+  assert.deepEqual(publicRuntimeSettings(configured, { mobile: true, env: {} }), {
+    onlineServerUrl: 'https://mobile.example', publicWebUrl: 'https://invite.example',
+  });
+  assert.equal(publicRuntimeSettings(configured, { mobile: true, env: { DOOZ_ONLINE_URL: '' } }).onlineServerUrl, '');
+  assert.throws(() => publicRuntimeSettings({ online: { serverUrl: 'http://web.example' } }, { mobile: true, env: {} }), /HTTPS/);
+
+  settings.online.serverUrl = 'https://updated.example';
+  writeFileSync(settingsFile, JSON.stringify(settings));
+  assert.equal((await (await fetch(url)).json()).onlineServerUrl, 'https://updated.example');
+});
 
 function nextMessage(socket, predicate) {
   return new Promise((resolve, reject) => {
