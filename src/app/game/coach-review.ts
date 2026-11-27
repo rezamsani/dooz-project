@@ -1,3 +1,4 @@
+import { TranslatePipe } from '../i18n';
 import { ChangeDetectionStrategy, Component, computed, input, signal } from '@angular/core';
 import { CellValue, Player } from './dooz.types';
 import { DoozBoard } from './dooz-board';
@@ -18,12 +19,12 @@ export function reviewMorris(frames:readonly MorrisState[],hero:Player):MorrisLe
   return null;
 }
 @Component({
-  selector:'app-coach-review',imports:[DoozBoard,MorrisBoard],changeDetection:ChangeDetectionStrategy.OnPush,
-  template:`<details class="coach"><summary>کجا می‌تونستم بهتر بازی کنم؟</summary>
-    @if(three();as lesson){<p>{{ lesson.message }}</p><app-dooz-board [board]="practiceBoard()??lesson.board" [currentTurn]="lesson.player" [showCellNumbers]="false" [hintIndex]="revealed()?lesson.better:null" [disabled]="done()" [winResult]="practiceWin()" pieceStyle="classic" (cellSelected)="tryThree($event)"/>}
-    @else if(morris();as lesson){<p>{{ lesson.message }}</p><app-morris-board [state]="practiceState()??lesson.state" [disabled]="done()" pieceStyle="classic" [hintDecision]="revealed()?lesson.decision:null" (nodeSelected)="tryMorris($event)"/>}
-    @else{<p>در این بازی اشتباه روشنی برای تمرین پیدا نشد. از بازپخش حرکت‌ها می‌تونی مسیر بازی را بررسی کنی.</p>}
-    @if(three()||morris()){<p class="feedback" role="status">{{ feedback() }}</p><div class="actions"><button type="button" (click)="revealed.set(true);feedback.set('حرکت پیشنهادی روی صفحه مشخص شد.')">نشان دادن پیشنهاد</button><button type="button" (click)="reset()">تمرین دوباره</button></div><small>این تمرین روی امتیاز، نتیجه و نشان‌های مسابقه اثر ندارد.</small>}
+  selector:'app-coach-review',imports: [TranslatePipe, DoozBoard,MorrisBoard],changeDetection:ChangeDetectionStrategy.OnPush,
+  template:`<details class="coach"><summary>{{ 'کجا می‌تونستم بهتر بازی کنم؟' | t }}</summary>
+    @if(three();as lesson){<p>{{ (lesson.message | t) }}</p><app-dooz-board [board]="practiceBoard()??lesson.board" [currentTurn]="lesson.player" [showCellNumbers]="false" [hintIndex]="revealed()?lesson.better:null" [disabled]="done()" [winResult]="practiceWin()" pieceStyle="classic" (cellSelected)="tryThree($event)"/>}
+    @else if(morris();as lesson){<p>{{ (lesson.message | t) }}</p><app-morris-board [state]="practiceState()??lesson.state" [disabled]="done()" pieceStyle="classic" [hintDecision]="revealed()?lesson.decision:null" (nodeSelected)="tryMorris($event)"/>}
+    @else{<p>{{ 'در این بازی اشتباه روشنی برای تمرین پیدا نشد. از بازپخش حرکت‌ها می‌تونی مسیر بازی را بررسی کنی.' | t }}</p>}
+    @if(three()||morris()){<p class="feedback" role="status">{{ (feedback() | t) }}</p><div class="actions"><button type="button" (click)="revealed.set(true);feedback.set('حرکت پیشنهادی روی صفحه مشخص شد.')">{{ 'نشان دادن پیشنهاد' | t }}</button><button type="button" (click)="reset()">{{ 'تمرین دوباره' | t }}</button></div><small>{{ 'این تمرین روی امتیاز، نتیجه و نشان‌های مسابقه اثر ندارد.' | t }}</small>}
   </details>`,
   styles:`:host{display:block;width:100%;max-width:440px}.coach{border:1px solid var(--line);border-radius:18px;background:var(--surface);padding:4px 16px}summary{cursor:pointer;min-height:52px;align-content:center;font-size:13px;font-weight:700}p{font-size:12px;line-height:2;color:var(--muted);margin-block:12px}.feedback{min-height:46px}.actions{display:flex;flex-wrap:wrap;gap:8px}button{min-height:44px;border-radius:12px;padding:8px 12px;background:var(--soft);color:var(--accent);font-size:11px}small{display:block;margin-block:14px;font-size:10px;color:var(--muted)}`,
 })

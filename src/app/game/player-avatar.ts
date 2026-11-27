@@ -1,11 +1,12 @@
-import { ChangeDetectionStrategy, Component, computed, input, output, signal } from '@angular/core';
+import { I18n } from '../i18n';
+import { inject, ChangeDetectionStrategy, Component, computed, input, output, signal } from '@angular/core';
 import { gravatarUrl, normalizeAvatar, PlayerAvatar } from './avatar';
 
 @Component({
   selector: 'app-player-avatar',
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <img [src]="fallbackUrl()" [alt]="label()" width="80" height="80" />
+    <img [src]="fallbackUrl()" [alt]="label() || i18n.text('عکس بازیکن')" width="80" height="80" />
     @if (remoteUrl(); as url) {
       @if (failedUrl() !== url) {
         <img class="remote" [class.ready]="loadedUrl() === url" [src]="url" alt="" width="80" height="80"
@@ -21,9 +22,10 @@ import { gravatarUrl, normalizeAvatar, PlayerAvatar } from './avatar';
   `,
 })
 export class PlayerAvatarComponent {
+  readonly i18n = inject(I18n);
   readonly avatar = input<PlayerAvatar | undefined>(undefined);
   readonly robot = input<'EASY' | 'MEDIUM' | 'HARD' | null>(null);
-  readonly label = input('عکس بازیکن');
+  readonly label = input('');
   readonly imageLoaded = output<void>();
   readonly imageUnavailable = output<void>();
   readonly failedUrl = signal<string | null>(null);

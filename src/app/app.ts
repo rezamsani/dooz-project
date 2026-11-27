@@ -1,3 +1,4 @@
+import { I18n, TranslatePipe } from './i18n';
 import { isPlatformBrowser } from '@angular/common';
 import {
   ChangeDetectionStrategy,
@@ -21,7 +22,6 @@ import {
   createEmptyBoard,
   getOpponent,
   isBoardFull,
-  toPersianDigits,
 } from './game/dooz-engine';
 import {
   BoardRule,
@@ -109,6 +109,7 @@ function createPreviewMorrisState(variant: MorrisVariant): MorrisState {
   changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-root',
   imports: [
+    TranslatePipe,
     MatIconModule,
     ReactiveFormsModule,
     DoozBoard,
@@ -128,6 +129,7 @@ function createPreviewMorrisState(variant: MorrisVariant): MorrisState {
   },
 })
 export class App {
+  readonly i18n = inject(I18n);
   private readonly platformId = inject(PLATFORM_ID);
   private readonly destroyRef = inject(DestroyRef);
   readonly soundFx = inject(SoundFx);
@@ -416,20 +418,20 @@ export class App {
 
   readonly playerXLabel = computed<string>(() => {
     if (this.isOnlineMode()) {
-      const name = this.onlineRoom()?.players.X?.name ?? 'بازیکن X';
-      return this.onlineRole() === 'X' ? `${name} (شما)` : name;
+      const name = this.onlineRoom()?.players.X?.name ?? this.i18n.text("بازیکن X");
+      return this.onlineRole() === 'X' ? this.i18n.text("{0} (شما)", [name]) : name;
     }
-    if (this.gameMode() === 'LOCAL_2P') return 'بازیکن X';
-    return this.humanSymbol() === 'X' ? `${this.profile.name() || 'شما'} (X)` : `${this.journey.bot().name} (X)`;
+    if (this.gameMode() === 'LOCAL_2P') return this.i18n.text("بازیکن X");
+    return this.humanSymbol() === 'X' ? `${this.profile.name() || this.i18n.text("شما")} (X)` : `${this.i18n.text(this.journey.bot().name)} (X)`;
   });
 
   readonly playerOLabel = computed<string>(() => {
     if (this.isOnlineMode()) {
-      const name = this.onlineRoom()?.players.O?.name ?? 'در انتظار حریف';
-      return this.onlineRole() === 'O' ? `${name} (شما)` : name;
+      const name = this.onlineRoom()?.players.O?.name ?? this.i18n.text("در انتظار حریف");
+      return this.onlineRole() === 'O' ? this.i18n.text("{0} (شما)", [name]) : name;
     }
-    if (this.gameMode() === 'LOCAL_2P') return 'بازیکن O';
-    return this.humanSymbol() === 'O' ? `${this.profile.name() || 'شما'} (O)` : `${this.journey.bot().name} (O)`;
+    if (this.gameMode() === 'LOCAL_2P') return this.i18n.text("بازیکن O");
+    return this.humanSymbol() === 'O' ? `${this.profile.name() || this.i18n.text("شما")} (O)` : `${this.i18n.text(this.journey.bot().name)} (O)`;
   });
 
   readonly morrisOnBoardX = computed<number>(() =>
@@ -506,77 +508,77 @@ export class App {
 
   readonly morrisPhaseHint = computed<string>(() => {
     if (this.replayActive()) {
-      return `در حال مشاهده بازپخش — حرکت ${toPersianDigits(this.replayStep())} از ${toPersianDigits(this.replayTotalSteps())}`;
+      return this.i18n.text("در حال مشاهده بازپخش — حرکت {0} از {1}", [this.i18n.digits(this.replayStep()), this.i18n.digits(this.replayTotalSteps())]);
     }
     const m = this.displayMorrisState();
     if (m.winner || m.isDraw) return '';
     if (this.isOnlineMode() && this.isBoardLocked()) {
-      return 'در انتظار حرکت حریف آنلاین...';
+      return this.i18n.text("در انتظار حرکت حریف آنلاین...");
     }
     if (m.action === 'REMOVE') {
-      return 'دوز شد! روی یکی از مهره‌های خط‌چین طلایی حریف کلیک کنید تا حذف شود.';
+      return this.i18n.text("دوز شد! روی یکی از مهره‌های خط‌چین طلایی حریف کلیک کنید تا حذف شود.");
     }
     if (m.action === 'PLACE') {
-      return 'مرحله ۱ (چیدن مهره‌ها): روی یکی از نقاط خالی صفحه کلیک کنید تا مهره بگذارید.';
+      return this.i18n.text("مرحله ۱ (چیدن مهره‌ها): روی یکی از نقاط خالی صفحه کلیک کنید تا مهره بگذارید.");
     }
     if (m.selectedNode !== null) {
-      return 'مهره انتخاب شد — حالا روی یکی از خانه‌های مقصد سبز کلیک کنید تا جابه‌جا شود.';
+      return this.i18n.text("مهره انتخاب شد — حالا روی یکی از خانه‌های مقصد سبز کلیک کنید تا جابه‌جا شود.");
     }
     if (canPlayerFly(m, m.currentTurn)) {
-      return 'مرحله پرش آزاد (۳ مهره): یکی از مهره‌های حلقه‌دار خود را انتخاب کرده و به هر خانه خالی ببرید.';
+      return this.i18n.text("مرحله پرش آزاد (۳ مهره): یکی از مهره‌های حلقه‌دار خود را انتخاب کرده و به هر خانه خالی ببرید.");
     }
-    return 'مرحله ۲ (حرکت مهره‌ها): روی یکی از مهره‌های حلقه‌دار خود کلیک کنید و سپس خانه سبز مجاور را بزنید.';
+    return this.i18n.text("مرحله ۲ (حرکت مهره‌ها): روی یکی از مهره‌های حلقه‌دار خود کلیک کنید و سپس خانه سبز مجاور را بزنید.");
   });
 
   readonly statusHeadline = computed<string>(() => {
     if (this.replayActive()) {
-      return 'بازپخش حرکت‌به‌حرکت بازی';
+      return this.i18n.text("بازپخش حرکت‌به‌حرکت بازی");
     }
     if (this.isWaitingForOnlineOpponent()) {
-      return 'در انتظار پیوستن حریف به اتاق...';
+      return this.i18n.text("در انتظار پیوستن حریف به اتاق...");
     }
     const winner = this.activeWinner();
     if (winner) {
       if (this.isOnlineMode()) {
-        return winner === this.onlineRole() ? 'شما برنده شدید!' : 'حریف برنده شد';
+        return winner === this.onlineRole() ? this.i18n.text("شما برنده شدید!") : this.i18n.text("حریف برنده شد");
       }
       if (this.gameMode() === 'AI') {
-        return winner === this.humanSymbol() ? 'شما برنده شدید!' : 'ربات برنده شد';
+        return winner === this.humanSymbol() ? this.i18n.text("شما برنده شدید!") : this.i18n.text("ربات برنده شد");
       }
-      return `بازیکن ${winner} برنده شد!`;
+      return this.i18n.text("بازیکن {0} برنده شد!", [winner]);
     }
     if (this.activeIsDraw()) {
-      return 'بازی مساوی شد';
+      return this.i18n.text("بازی مساوی شد");
     }
     if (this.isAiThinking()) {
       if (this.isMorrisVariant() && this.morrisState().action === 'REMOVE') {
-        return 'ربات دوز کرد — انتخاب مهره برای حذف...';
+        return this.i18n.text("ربات دوز کرد — انتخاب مهره برای حذف...");
       }
-      return 'ربات فکر می‌کند...';
+      return this.i18n.text("ربات فکر می‌کند...");
     }
 
     const turn = this.activeTurn();
     if (this.isOnlineMode()) {
       const isYours = turn === this.onlineRole();
       if (this.isMorrisVariant() && this.morrisState().action === 'REMOVE') {
-        return isYours ? 'دوز شد! یک مهره حریف را حذف کنید' : 'حریف در حال حذف یک مهره است...';
+        return isYours ? this.i18n.text("دوز شد! یک مهره حریف را حذف کنید") : this.i18n.text("حریف در حال حذف یک مهره است...");
       }
-      return isYours ? `نوبت شما (${turn})` : `نوبت حریف (${turn})`;
+      return isYours ? this.i18n.text("نوبت شما ({0})", [turn]) : this.i18n.text("نوبت حریف ({0})", [turn]);
     }
 
     if (this.isMorrisVariant() && this.morrisState().action === 'REMOVE') {
       if (this.gameMode() === 'AI') {
         return turn === this.humanSymbol()
-          ? 'دوز شد! یک مهره ربات را حذف کنید'
-          : 'ربات در حال حذف مهره...';
+          ? this.i18n.text("دوز شد! یک مهره ربات را حذف کنید")
+          : this.i18n.text("ربات در حال حذف مهره...");
       }
-      return `دوز شد! بازیکن ${turn} یک مهره حذف کند`;
+      return this.i18n.text("دوز شد! بازیکن {0} یک مهره حذف کند", [turn]);
     }
 
     if (this.gameMode() === 'AI') {
-      return turn === this.humanSymbol() ? `نوبت شما (${turn})` : `نوبت ربات (${turn})`;
+      return turn === this.humanSymbol() ? this.i18n.text("نوبت شما ({0})", [turn]) : this.i18n.text("نوبت ربات ({0})", [turn]);
     }
-    return `نوبت بازیکن ${turn}`;
+    return this.i18n.text("نوبت بازیکن {0}", [turn]);
   });
 
   readonly statusIcon = computed<string>(() => {
@@ -597,22 +599,22 @@ export class App {
   readonly difficultyLabel = computed<string>(() => {
     switch (this.difficulty()) {
       case 'EASY':
-        return 'آسان';
+        return this.i18n.text("آسان");
       case 'MEDIUM':
-        return 'متوسط';
+        return this.i18n.text("متوسط");
       case 'HARD':
-        return 'سخت';
+        return this.i18n.text("سخت");
     }
   });
 
   readonly variantTitle = computed<string>(() => {
     switch (this.gameVariant()) {
       case 'THREE':
-        return this.boardRule() === 'CLASSIC' ? 'دوز ۳ تایی (کلاسیک)' : 'دوز ۳ تایی (بی‌نهایت)';
+        return this.boardRule() === 'CLASSIC' ? this.i18n.text("دوز ۳ تایی (کلاسیک)") : this.i18n.text("دوز ۳ تایی (بی‌نهایت)");
       case 'NINE':
-        return 'دوز ۹ تایی';
+        return this.i18n.text("دوز ۹ تایی");
       case 'TWELVE':
-        return 'دوز ۱۲ تایی';
+        return this.i18n.text("دوز ۱۲ تایی");
     }
   });
 
@@ -621,45 +623,45 @@ export class App {
     const mins = Math.floor(secs / 60);
     const rem = secs % 60;
     const padded = rem < 10 ? `0${rem}` : String(rem);
-    return toPersianDigits(`${mins}:${padded}`);
+    return this.i18n.digits(`${mins}:${padded}`);
   });
 
   readonly summaryDescription = computed<string>(() => {
     if (this.isOnlineMode()) {
       const room = this.onlineRoom();
       if (room?.endReason === 'RESIGN') {
-        return `بازی با تسلیم شدن حریف به سود مهره ${room.winner} پایان یافت.`;
+        return this.i18n.text("بازی با تسلیم شدن حریف به سود مهره {0} پایان یافت.", [room.winner]);
       }
       if (room?.endReason === 'TIMEOUT') {
-        return `زمان حرکت به پایان رسید و مهره ${room.winner} برنده شد.`;
+        return this.i18n.text("زمان حرکت به پایان رسید و مهره {0} برنده شد.", [room.winner]);
       }
       if (room?.endReason === 'DRAW_AGREED') {
-        return 'هر دو بازیکن روی مساوی توافق کردند.';
+        return this.i18n.text("هر دو بازیکن روی مساوی توافق کردند.");
       }
     }
     if (this.timeoutWinner() !== null) {
-      return `زمان حرکت به پایان رسید و مهره ${this.timeoutWinner()} برنده شد.`;
+      return this.i18n.text("زمان حرکت به پایان رسید و مهره {0} برنده شد.", [this.timeoutWinner()]);
     }
     const winner = this.activeWinner();
     if (!winner) {
-      return 'تمامی خانه‌ها پر شد و بازی مساوی گردید.';
+      return this.i18n.text("تمامی خانه‌ها پر شد و بازی مساوی گردید.");
     }
     if (this.isMorrisVariant()) {
       const reason = this.morrisState().winReason;
       if (reason === 'BLOCKED') {
-        return `مهره‌های حریف کاملاً قفل شدند و مهره ${winner} برنده شد.`;
+        return this.i18n.text("مهره‌های حریف کاملاً قفل شدند و مهره {0} برنده شد.", [winner]);
       }
-      return `تعداد مهره‌های حریف به کمتر از ۳ رسید و مهره ${winner} برنده شد.`;
+      return this.i18n.text("تعداد مهره‌های حریف به کمتر از ۳ رسید و مهره {0} برنده شد.", [winner]);
     }
-    return `دست با پیروزی مهره ${winner} به پایان رسید.`;
+    return this.i18n.text("دست با پیروزی مهره {0} به پایان رسید.", [winner]);
   });
 
   readonly formattedEloDelta = computed<string | null>(() => {
     const delta = this.playerStats.lastEloDelta();
     if (delta === null) return null;
-    if (delta > 0) return `+${toPersianDigits(delta)}`;
-    if (delta < 0) return `-${toPersianDigits(Math.abs(delta))}`;
-    return '۰';
+    if (delta > 0) return `+${this.i18n.digits(delta)}`;
+    if (delta < 0) return `-${this.i18n.digits(Math.abs(delta))}`;
+    return this.i18n.text("۰");
   });
 
   readonly activeReaction = computed(() => {
@@ -729,7 +731,7 @@ export class App {
   }
 
   formatNumber(n: number): string {
-    return toPersianDigits(n);
+    return this.i18n.digits(n);
   }
 
   onNativeBack(): void {
@@ -926,7 +928,7 @@ export class App {
     this.lastOnlineTurnKey = '';
     this.onlineClient.createRoom({
       targetWins: this.targetWins(),
-      playerName: this.playerNameControl.value.trim() || this.profile.name() || 'بازیکن ۱',
+      playerName: this.playerNameControl.value.trim() || this.profile.name() || this.i18n.text("بازیکن ۱"),
       avatar: this.profile.avatar(),
       rating: this.playerStats.stats().elo,
       variant: this.gameVariant(),
@@ -944,7 +946,7 @@ export class App {
     this.gameMode.set('ONLINE');
     this.lastOnlineStatus = null;
     this.lastOnlineTurnKey = '';
-    this.onlineClient.joinRoom(code, this.playerNameControl.value.trim() || this.profile.name() || 'بازیکن ۲', this.profile.avatar(), this.playerStats.stats().elo);
+    this.onlineClient.joinRoom(code, this.playerNameControl.value.trim() || this.profile.name() || this.i18n.text("بازیکن ۲"), this.profile.avatar(), this.playerStats.stats().elo);
   }
 
   avatarForPlayer(player: Player): PlayerAvatar {
@@ -969,7 +971,7 @@ export class App {
     if (!code || !isPlatformBrowser(this.platformId)) return;
     this.soundFx.playClick();
     const url = this.runtimeConfig.inviteLink(code);
-    await this.copyToClipboard(url ?? code, url ? 'لینک دعوت کپی شد' : 'کد اتاق کپی شد');
+    await this.copyToClipboard(url ?? code, url ? this.i18n.text("لینک دعوت کپی شد") : this.i18n.text("کد اتاق کپی شد"));
   }
 
   sendQuickEmote(emoteId: QuickEmoteId): void {
@@ -1301,9 +1303,9 @@ export class App {
   onWindowKeyDown(event: KeyboardEvent): void {
     if (!isPlatformBrowser(this.platformId)) return;
 
-    // Ignore shortcuts while typing in inputs
+    // Let form controls handle their own keys.
     const target = event.target as HTMLElement | null;
-    if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA')) {
+    if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.tagName === 'SELECT')) {
       return;
     }
 
@@ -1366,20 +1368,20 @@ export class App {
   }
 
   getRoundResultText(record: RoundRecord): string {
-    if (record.winner === 'DRAW') return 'مساوی';
-    return `برد ${record.winner}`;
+    if (record.winner === 'DRAW') return this.i18n.text("مساوی");
+    return this.i18n.text("برد {0}", [record.winner]);
   }
 
   getRoundMetaText(record: RoundRecord): string {
     let variantLabel: string;
     if (record.variant === 'NINE') {
-      variantLabel = '۹ تایی';
+      variantLabel = this.i18n.text("۹ تایی");
     } else if (record.variant === 'TWELVE') {
-      variantLabel = '۱۲ تایی';
+      variantLabel = this.i18n.text("۱۲ تایی");
     } else {
-      variantLabel = record.rule === 'CLASSIC' ? '۳ تایی کلاسیک' : '۳ تایی بی‌نهایت';
+      variantLabel = record.rule === 'CLASSIC' ? this.i18n.text("۳ تایی کلاسیک") : this.i18n.text("۳ تایی بی‌نهایت");
     }
-    return `${variantLabel} · ${toPersianDigits(record.moves)} حرکت`;
+    return this.i18n.text("{0} · {1} حرکت", [variantLabel, this.i18n.digits(record.moves)]);
   }
 
   // ---------- INTERNAL SYNC & ENGINE HELPERS ----------
@@ -1465,7 +1467,8 @@ export class App {
       '۸': 8,
       '۹': 9,
     };
-    return persianMap[key] ?? null;
+    const arabicDigit = '٠١٢٣٤٥٦٧٨٩'.indexOf(key);
+    return persianMap[key] ?? (key.length === 1 && arabicDigit > 0 ? arabicDigit : null);
   }
 
   private clearHints(): void {

@@ -4,6 +4,7 @@ import { Capacitor } from '@capacitor/core';
 import { Preferences } from '@capacitor/preferences';
 
 const KEYS = [
+  'dooz_language_v1',
   'dooz_player_stats_v1', 'dooz_profile_v1', 'dooz_board_theme_v1', 'dooz_color_mode_v1',
   'dooz_environment_theme_v1', 'dooz_piece_style_v1', 'dooz_view_mode_v1',
   'dooz_custom_x_color_v1', 'dooz_custom_o_color_v1', 'dooz_custom_board_color_v1',

@@ -1,3 +1,4 @@
+import { TranslatePipe } from '../i18n';
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
 import { CARTOON_AVATARS } from './avatar';
@@ -6,44 +7,44 @@ import { PlayerAvatarComponent } from './player-avatar';
 
 @Component({
   selector: 'app-profile-panel',
-  imports: [ReactiveFormsModule, PlayerAvatarComponent],
+  imports: [TranslatePipe, ReactiveFormsModule, PlayerAvatarComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <section class="profile-card" aria-label="پروفایل من">
+    <section class="profile-card" [attr.aria-label]="'پروفایل من' | t">
       <div class="profile-heading">
-        <app-player-avatar [avatar]="profile.avatar()" label="عکس پروفایل شما"
+        <app-player-avatar [avatar]="profile.avatar()" [label]="'عکس پروفایل شما' | t"
           (imageLoaded)="feedback.set('عکس Gravatar دریافت شد.')"
           (imageUnavailable)="feedback.set('عکس در دسترس نیست؛ فعلاً آواتار کارتونی نمایش داده می‌شود.')" />
-        <div><h2>{{ profile.name() || 'بازیکن دوز' }}</h2><p>یک چهره برای میز بازی‌ات انتخاب کن.</p></div>
+        <div><h2>{{ profile.name() || ('بازیکن دوز' | t) }}</h2><p>{{ 'یک چهره برای میز بازی‌ات انتخاب کن.' | t }}</p></div>
       </div>
       <form (submit)="$event.preventDefault(); saveName()">
-        <label for="profile-name">نام بازیکن</label>
-        <div class="input-row"><input id="profile-name" autocomplete="nickname" maxlength="18" placeholder="دوست داری چی صدات کنیم؟" [formControl]="nameControl" /><button type="submit">ذخیره</button></div>
+        <label for="profile-name">{{ 'نام بازیکن' | t }}</label>
+        <div class="input-row"><input id="profile-name" autocomplete="nickname" maxlength="18" [placeholder]="'دوست داری چی صدات کنیم؟' | t" [formControl]="nameControl" /><button type="submit">{{ 'ذخیره' | t }}</button></div>
       </form>
-      <fieldset><legend>آواتارهای کارتونی</legend>
+      <fieldset><legend>{{ 'آواتارهای کارتونی' | t }}</legend>
         <div class="avatar-options">
           @for (id of cartoons; track id; let i = $index) {
             <button type="button" [class.selected]="profile.avatar().cartoon === id && !profile.avatar().gravatarHash"
               [attr.aria-pressed]="profile.avatar().cartoon === id && !profile.avatar().gravatarHash"
-              [attr.aria-label]="'انتخاب آواتار کارتونی ' + (i + 1)" (click)="profile.useCartoon(id); feedback.set('آواتار کارتونی انتخاب شد.')">
+              [attr.aria-label]="('انتخاب آواتار کارتونی {0}' | t: [i + 1])" (click)="profile.useCartoon(id); feedback.set('آواتار کارتونی انتخاب شد.')">
               <img [src]="'/avatars/' + id + '.svg'" alt="" width="64" height="64" />
             </button>
           }
         </div>
       </fieldset>
       <details [open]="!!profile.avatar().gravatarHash">
-        <summary>عکس خودت از Gravatar <span aria-hidden="true">＋</span></summary>
-        <p>اگر در <a href="https://gravatar.com" target="_blank" rel="noopener noreferrer">Gravatar</a> عکس داری، ایمیل همون حساب رو وارد کن.</p>
+        <summary>{{ 'عکس خودت از Gravatar' | t }} <span aria-hidden="true">＋</span></summary>
+        <p>{{ 'اگر در' | t }} <a href="https://gravatar.com" target="_blank" rel="noopener noreferrer">Gravatar</a> {{ 'عکس داری، ایمیل همون حساب رو وارد کن.' | t }}</p>
         <form (submit)="$event.preventDefault(); connectGravatar()">
-          <label for="gravatar-email">ایمیل Gravatar</label>
+          <label for="gravatar-email">{{ 'ایمیل Gravatar' | t }}</label>
           <input id="gravatar-email" type="email" dir="ltr" autocomplete="email" maxlength="254" placeholder="you@example.com" [formControl]="emailControl" [attr.aria-invalid]="emailControl.touched && emailControl.invalid" />
-          @if (emailControl.touched && emailControl.invalid) { <p class="error" role="alert">یک آدرس ایمیل معتبر وارد کن.</p> }
-          <button class="connect-button" type="submit">دریافت عکس پروفایل</button>
+          @if (emailControl.touched && emailControl.invalid) { <p class="error" role="alert">{{ 'یک آدرس ایمیل معتبر وارد کن.' | t }}</p> }
+          <button class="connect-button" type="submit">{{ 'دریافت عکس پروفایل' | t }}</button>
         </form>
-        <p>ایمیل ذخیره نمی‌شود. اگر عکسی پیدا نشه، آواتار کارتونی‌ات نمایش داده می‌شه.</p>
-        @if (profile.avatar().gravatarHash) { <button class="remove-button" type="button" (click)="profile.useCartoon(profile.avatar().cartoon); emailControl.reset(); feedback.set('عکس Gravatar حذف شد.')">استفاده از آواتار کارتونی</button> }
+        <p>{{ 'ایمیل ذخیره نمی‌شود. اگر عکسی پیدا نشه، آواتار کارتونی‌ات نمایش داده می‌شه.' | t }}</p>
+        @if (profile.avatar().gravatarHash) { <button class="remove-button" type="button" (click)="profile.useCartoon(profile.avatar().cartoon); emailControl.reset(); feedback.set('عکس Gravatar حذف شد.')">{{ 'استفاده از آواتار کارتونی' | t }}</button> }
       </details>
-      @if (feedback()) { <p class="feedback" role="status">{{ feedback() }}</p> }
+      @if (feedback()) { <p class="feedback" role="status">{{ (feedback() | t) }}</p> }
     </section>
   `,
   styles: `

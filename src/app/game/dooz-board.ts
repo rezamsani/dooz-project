@@ -1,13 +1,13 @@
-import { ChangeDetectionStrategy, Component, computed, input, output } from '@angular/core';
+import { I18n, TranslatePipe } from '../i18n';
+import { inject, ChangeDetectionStrategy, Component, computed, input, output } from '@angular/core';
 import { BoardColorTokens, resolveBoardColorTokens } from './color-palette';
 import { BoardTheme, CellValue, ColorMode, PieceStyle, Player, WinResult } from './dooz.types';
-import { toPersianDigits } from './dooz-engine';
 import { DoozPieceSvg } from './dooz-piece-svg';
 
 @Component({
   selector: 'app-dooz-board',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [DoozPieceSvg],
+  imports: [TranslatePipe, DoozPieceSvg],
   template: `
     <div
       class="relative mx-auto w-full rounded-2xl border p-4 shadow-md transition-colors duration-200 sm:p-5"
@@ -28,7 +28,7 @@ import { DoozPieceSvg } from './dooz-piece-svg';
       <div
         dir="ltr"
         role="grid"
-        aria-label="صفحه بازی دوز سه در سه"
+        [attr.aria-label]="'صفحه بازی دوز سه در سه' | t"
         class="relative grid aspect-square w-full grid-cols-3 grid-rows-3 gap-3 sm:gap-3.5"
       >
         @for (cell of board(); track $index) {
@@ -74,17 +74,17 @@ import { DoozPieceSvg } from './dooz-piece-svg';
 
             @if (isExpiringCell($index)) {
               <span
-                dir="rtl"
+                dir="auto"
                 class="pointer-events-none absolute bottom-1.5 text-[10px] font-semibold text-amber-600 dark:text-amber-300"
               >
-                حذف بعدی
+                {{ 'حذف بعدی' | t }}
               </span>
             } @else if (isHintCell($index)) {
               <span
-                dir="rtl"
+                dir="auto"
                 class="pointer-events-none absolute bottom-1.5 text-[10px] font-semibold text-sky-600 dark:text-sky-300"
               >
-                پیشنهاد
+                {{ 'پیشنهاد' | t }}
               </span>
             }
           </button>
@@ -113,6 +113,7 @@ import { DoozPieceSvg } from './dooz-piece-svg';
   `,
 })
 export class DoozBoard {
+  readonly i18n = inject(I18n);
   readonly board = input.required<readonly CellValue[]>();
   readonly currentTurn = input.required<Player>();
   readonly winResult = input<WinResult | null>(null);
@@ -181,15 +182,15 @@ export class DoozBoard {
   }
 
   formatDigit(n: number): string {
-    return toPersianDigits(n);
+    return this.i18n.digits(n);
   }
 
   getCellAriaLabel(index: number, value: CellValue): string {
     const row = Math.floor(index / 3) + 1;
     const col = (index % 3) + 1;
-    const stateText = value === null ? 'خالی' : `مهره ${value}`;
-    const expireNote = this.isExpiringCell(index) ? '، در حرکت بعدی حذف می‌شود' : '';
-    const hintNote = this.isHintCell(index) ? '، حرکت پیشنهادی' : '';
-    return `خانه ${toPersianDigits(index + 1)}، ردیف ${toPersianDigits(row)} ستون ${toPersianDigits(col)}، ${stateText}${expireNote}${hintNote}`;
+    const stateText = value === null ? this.i18n.text("خالی") : this.i18n.text("مهره {0}", [value]);
+    const expireNote = this.isExpiringCell(index) ? this.i18n.text("، در حرکت بعدی حذف می‌شود") : '';
+    const hintNote = this.isHintCell(index) ? this.i18n.text("، حرکت پیشنهادی") : '';
+    return this.i18n.text("خانه {0}، ردیف {1} ستون {2}، {3}{4}{5}", [this.i18n.digits(index + 1), this.i18n.digits(row), this.i18n.digits(col), stateText, expireNote, hintNote]);
   }
 }

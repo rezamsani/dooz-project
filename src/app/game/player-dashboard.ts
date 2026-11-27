@@ -1,42 +1,42 @@
+import { I18n, TranslatePipe } from '../i18n';
 import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
 import { PlayerStats } from './player-stats';
 import { PlayerProfile } from './player-profile';
 import { PlayerAvatarComponent } from './player-avatar';
-import { toPersianDigits } from './dooz-engine';
 
 const RANKS=[{min:800,title:'تازه‌کار'},{min:1120,title:'بازیکن باتجربه'},{min:1260,title:'بازیکن حرفه‌ای'},{min:1400,title:'استاد دوز'},{min:1550,title:'استاد بزرگ'}];
 @Component({
   selector:'app-player-dashboard',
-  imports:[MatIconModule,PlayerAvatarComponent],
+  imports: [TranslatePipe, MatIconModule,PlayerAvatarComponent],
   changeDetection:ChangeDetectionStrategy.OnPush,
   template:`
-    <section aria-label="کارنامهٔ شخصی بازیکن">
-      <div class="identity"><app-player-avatar [avatar]="profile.avatar()" label="آواتار شما" /><div><span>کارنامهٔ شخصی</span><h2>{{ profile.name() || 'بازیکن دوز' }}</h2></div><span class="personal-badge">روی این دستگاه</span></div>
+    <section [attr.aria-label]="'کارنامهٔ شخصی بازیکن' | t">
+      <div class="identity"><app-player-avatar [avatar]="profile.avatar()" [label]="'آواتار شما' | t" /><div><span>{{ 'کارنامهٔ شخصی' | t }}</span><h2>{{ profile.name() || ('بازیکن دوز' | t) }}</h2></div><span class="personal-badge">{{ 'روی این دستگاه' | t }}</span></div>
       <div class="rating-card">
-        <div class="rating-top"><span><mat-icon>workspace_premium</mat-icon>{{ stats.totalGames() ? stats.rankTitle() : 'آمادهٔ اولین چالش' }}</span><span class="rating-label">امتیاز مهارت</span></div>
-        <div class="rating-value"><strong>{{ n(stats.stats().elo) }}</strong>@if(stats.stats().recentResults.length){<span class="delta" [class.negative]="lastDelta()<0">{{ lastDelta()>0 ? '+' : '' }}{{ n(lastDelta()) }}<small>آخرین مسابقه</small></span>}</div>
+        <div class="rating-top"><span><mat-icon>workspace_premium</mat-icon>{{ stats.totalGames() ? (stats.rankTitle() | t) : ('آمادهٔ اولین چالش' | t) }}</span><span class="rating-label">{{ 'امتیاز مهارت' | t }}</span></div>
+        <div class="rating-value"><strong>{{ n(stats.stats().elo) }}</strong>@if(stats.stats().recentResults.length){<span class="delta" [class.negative]="lastDelta()<0">{{ lastDelta()>0 ? '+' : '' }}{{ n(lastDelta()) }}<small>{{ 'آخرین مسابقه' | t }}</small></span>}</div>
         <div class="rank-progress">
-          <div><span>{{ nextRank() ? 'تا ' + nextRank()!.title : 'بالاترین نشان دوز' }}</span><strong>{{ nextRank() ? n(pointsToNext()) + ' امتیاز' : 'استاد بزرگ' }}</strong></div>
-          <div class="progress-track" role="progressbar" aria-label="پیشرفت رتبه" [attr.aria-valuenow]="progress()" aria-valuemin="0" aria-valuemax="100"><span [style.width.%]="progress()"></span></div>
+          <div><span>{{ nextRank() ? ('تا {0}' | t: [(nextRank()!.title | t)]) : ('بالاترین نشان دوز' | t) }}</span><strong>{{ nextRank() ? ('{0} امتیاز' | t: [n(pointsToNext())]) : ('استاد بزرگ' | t) }}</strong></div>
+          <div class="progress-track" role="progressbar" [attr.aria-label]="'پیشرفت رتبه' | t" [attr.aria-valuenow]="progress()" aria-valuemin="0" aria-valuemax="100"><span [style.width.%]="progress()"></span></div>
         </div>
       </div>
-      <div class="overview"><div><span>مسابقهٔ ثبت‌شده</span><strong>{{ n(stats.totalGames()) }}</strong></div><div><span>نرخ پیروزی</span><strong>{{ n(stats.winRate()) }}<small>٪</small></strong></div></div>
-      <div class="result-counts"><div><span class="dot win"></span><b>{{ n(stats.stats().wins) }}</b><span>برد</span></div><div><span class="dot draw"></span><b>{{ n(stats.stats().draws) }}</b><span>مساوی</span></div><div><span class="dot loss"></span><b>{{ n(stats.stats().losses) }}</b><span>باخت</span></div></div>
+      <div class="overview"><div><span>{{ 'مسابقهٔ ثبت‌شده' | t }}</span><strong>{{ n(stats.totalGames()) }}</strong></div><div><span>{{ 'نرخ پیروزی' | t }}</span><strong>{{ n(stats.winRate()) }}<small>{{ '٪' | t }}</small></strong></div></div>
+      <div class="result-counts"><div><span class="dot win"></span><b>{{ n(stats.stats().wins) }}</b><span>{{ 'برد' | t }}</span></div><div><span class="dot draw"></span><b>{{ n(stats.stats().draws) }}</b><span>{{ 'مساوی' | t }}</span></div><div><span class="dot loss"></span><b>{{ n(stats.stats().losses) }}</b><span>{{ 'باخت' | t }}</span></div></div>
       @if(stats.totalGames()) { <div class="result-bar" aria-hidden="true"><span class="win" [style.flex-grow]="stats.stats().wins"></span><span class="draw" [style.flex-grow]="stats.stats().draws"></span><span class="loss" [style.flex-grow]="stats.stats().losses"></span></div> }
-      <div class="streaks"><div><mat-icon>local_fire_department</mat-icon><span>برد پیاپی فعلی<strong>{{ n(stats.stats().currentStreak) }}</strong></span></div><div><mat-icon>emoji_events</mat-icon><span>بهترین رکورد<strong>{{ n(stats.stats().bestStreak) }}</strong></span></div></div>
-      <div class="recent"><div class="section-title"><h3>فرم اخیر تو</h3><span>تا ۱۲ مسابقهٔ آخر</span></div>
+      <div class="streaks"><div><mat-icon>local_fire_department</mat-icon><span>{{ 'برد پیاپی فعلی' | t }}<strong>{{ n(stats.stats().currentStreak) }}</strong></span></div><div><mat-icon>emoji_events</mat-icon><span>{{ 'بهترین رکورد' | t }}<strong>{{ n(stats.stats().bestStreak) }}</strong></span></div></div>
+      <div class="recent"><div class="section-title"><h3>{{ 'فرم اخیر تو' | t }}</h3><span>{{ 'تا ۱۲ مسابقهٔ آخر' | t }}</span></div>
         @if(stats.stats().recentResults.length) {
-          <ol class="form-strip" aria-label="نتایج اخیر از قدیمی به جدید">@for(result of stats.stats().recentResults;track result.id){<li [class.win]="result.outcome==='WIN'" [class.loss]="result.outcome==='LOSS'" [class.draw]="result.outcome==='DRAW'" [attr.aria-label]="outcomeLabel(result.outcome)">{{ result.outcome==='WIN'?'ب':result.outcome==='LOSS'?'ش':'م' }}</li>}</ol>
-          <p class="recent-note">ب: برد · ش: شکست · م: مساوی</p>
-        } @else { <p class="empty">{{ stats.totalGames() ? 'نتایج تازه از مسابقهٔ بعدی اینجا ثبت می‌شوند.' : 'اولین مسابقه‌ات رو شروع کن؛ اینجا جای داستان پیشرفت توئه.' }}</p> }
+          <ol class="form-strip" [attr.aria-label]="'نتایج اخیر از قدیمی به جدید' | t">@for(result of stats.stats().recentResults;track result.id){<li [class.win]="result.outcome==='WIN'" [class.loss]="result.outcome==='LOSS'" [class.draw]="result.outcome==='DRAW'" [attr.aria-label]="outcomeLabel(result.outcome)">{{ result.outcome==='WIN'?('ب' | t):result.outcome==='LOSS'?('ش' | t):('م' | t) }}</li>}</ol>
+          <p class="recent-note">{{ 'ب: برد · ش: شکست · م: مساوی' | t }}</p>
+        } @else { <p class="empty">{{ stats.totalGames() ? ('نتایج تازه از مسابقهٔ بعدی اینجا ثبت می‌شوند.' | t) : ('اولین مسابقه‌ات رو شروع کن؛ اینجا جای داستان پیشرفت توئه.' | t) }}</p> }
       </div>
-      <details class="score-help"><summary>امتیاز چطور حساب می‌شه؟</summary><p>امتیاز اولیه ۱۲۰۰ است. تغییر امتیاز به نتیجه و قدرت حریف بستگی دارد؛ برد مقابل حریف قوی‌تر امتیاز بیشتری دارد. مساوی هم بسته به اختلاف امتیاز می‌تواند امتیازت را کم یا زیاد کند. کف امتیاز ۸۰۰ است.</p><p>فقط بازی با ربات و مسابقهٔ آنلاین در این کارنامه ثبت می‌شود. بازی دونفره روی یک گوشی در امتیاز شخصی حساب نمی‌شود. این امتیاز، رتبه‌بندی سراسری نیست.</p></details>
+      <details class="score-help"><summary>{{ 'امتیاز چطور حساب می‌شه؟' | t }}</summary><p>{{ 'امتیاز اولیه ۱۲۰۰ است. تغییر امتیاز به نتیجه و قدرت حریف بستگی دارد؛ برد مقابل حریف قوی‌تر امتیاز بیشتری دارد. مساوی هم بسته به اختلاف امتیاز می‌تواند امتیازت را کم یا زیاد کند. کف امتیاز ۸۰۰ است.' | t }}</p><p>{{ 'فقط بازی با ربات و مسابقهٔ آنلاین در این کارنامه ثبت می‌شود. بازی دونفره روی یک گوشی در امتیاز شخصی حساب نمی‌شود. این امتیاز، رتبه‌بندی سراسری نیست.' | t }}</p></details>
       @if(stats.storage.issue()) {
-        <div class="storage-issue" role="alert">{{ stats.storage.issue()==='load' ? 'اطلاعات ذخیره‌شده خوانده نشد. برای محافظت از آمار، برنامه را دوباره باز کنید.' : 'آمار در این اجرا ثبت شده، اما ذخیرهٔ آن کامل نشده است.' }}
-          @if(stats.storage.issue()==='write'){<button type="button" (click)="stats.storage.retry()">تلاش دوباره برای ذخیره</button>}
+        <div class="storage-issue" role="alert">{{ stats.storage.issue()==='load' ? ('اطلاعات ذخیره‌شده خوانده نشد. برای محافظت از آمار، برنامه را دوباره باز کنید.' | t) : ('آمار در این اجرا ثبت شده، اما ذخیرهٔ آن کامل نشده است.' | t) }}
+          @if(stats.storage.issue()==='write'){<button type="button" (click)="stats.storage.retry()">{{ 'تلاش دوباره برای ذخیره' | t }}</button>}
         </div>
-      } @else if(stats.storage.pending()) { <p class="save-state" role="status">در حال ذخیرهٔ کارنامه…</p> }
+      } @else if(stats.storage.pending()) { <p class="save-state" role="status">{{ 'در حال ذخیرهٔ کارنامه…' | t }}</p> }
     </section>
   `,
   styles:`
@@ -52,9 +52,10 @@ const RANKS=[{min:800,title:'تازه‌کار'},{min:1120,title:'بازیکن �
   `,
 })
 export class PlayerDashboard {
+  readonly i18n = inject(I18n);
   readonly stats=inject(PlayerStats);
   readonly profile=inject(PlayerProfile);
-  readonly n=toPersianDigits;
+  readonly n=this.i18n.digits;
   readonly nextRank=computed(()=>RANKS.find(r=>r.min>this.stats.stats().elo)??null);
   readonly pointsToNext=computed(()=>Math.max(0,(this.nextRank()?.min??this.stats.stats().elo)-this.stats.stats().elo));
   readonly progress=computed(()=>{
@@ -64,5 +65,5 @@ export class PlayerDashboard {
     return Math.max(0,Math.min(100,Math.round((elo-lower)/(next.min-lower)*100)));
   });
   readonly lastDelta=computed(()=>this.stats.stats().recentResults.at(-1)?.delta??0);
-  outcomeLabel(outcome:string):string{return outcome==='WIN'?'برد':outcome==='LOSS'?'شکست':'مساوی';}
+  outcomeLabel(outcome:string):string{return outcome==='WIN'?this.i18n.text("برد"):outcome==='LOSS'?this.i18n.text("شکست"):this.i18n.text("مساوی");}
 }

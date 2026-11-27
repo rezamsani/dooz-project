@@ -1,7 +1,7 @@
-import { ChangeDetectionStrategy, Component, computed, input, output } from '@angular/core';
+import { I18n } from '../i18n';
+import { inject, ChangeDetectionStrategy, Component, computed, input, output } from '@angular/core';
 import { BoardColorTokens, resolveBoardColorTokens } from './color-palette';
 import { BoardTheme, ColorMode, PieceStyle } from './dooz.types';
-import { toPersianDigits } from './dooz-engine';
 import { DoozPieceSvg } from './dooz-piece-svg';
 import {
   MORRIS_NODES,
@@ -256,6 +256,7 @@ import { MorrisEdge, MorrisMill, MorrisNodeCoord, MorrisState } from './morris.t
   `,
 })
 export class MorrisBoard {
+  readonly i18n = inject(I18n);
   readonly state = input.required<MorrisState>();
   readonly disabled = input<boolean>(false);
   readonly hintDecision = input<MorrisAiDecision | null>(null);
@@ -372,8 +373,8 @@ export class MorrisBoard {
 
   readonly boardAriaLabel = computed<string>(() => {
     return this.state().variant === 'TWELVE'
-      ? 'صفحه بازی دوز ۱۲ تایی با ۲۴ خانه و خطوط مورب'
-      : 'صفحه بازی دوز ۹ تایی با ۲۴ خانه';
+      ? this.i18n.text("صفحه بازی دوز ۱۲ تایی با ۲۴ خانه و خطوط مورب")
+      : this.i18n.text("صفحه بازی دوز ۹ تایی با ۲۴ خانه");
   });
 
   isBlockedCurrentPlayerPiece(nodeId: number): boolean {
@@ -414,26 +415,26 @@ export class MorrisBoard {
   getNodeAriaLabel(nodeId: number): string {
     const s = this.state();
     const owner = s.board[nodeId];
-    const num = toPersianDigits(nodeId + 1);
+    const num = this.i18n.digits(nodeId + 1);
     if (owner === null) {
       if (this.validDestinations().has(nodeId)) {
-        return `خانه ${num}، مقصد مجاز حرکت`;
+        return this.i18n.text("خانه {0}، مقصد مجاز حرکت", [num]);
       }
-      return `خانه ${num}، خالی`;
+      return this.i18n.text("خانه {0}، خالی", [num]);
     }
-    const pieceLabel = owner === 'X' ? 'مهره X' : 'مهره O';
+    const pieceLabel = owner === 'X' ? this.i18n.text("مهره X") : this.i18n.text("مهره O");
     if (this.removableNodes().has(nodeId)) {
-      return `خانه ${num}، ${pieceLabel}، قابل حذف`;
+      return this.i18n.text("خانه {0}، {1}، قابل حذف", [num, pieceLabel]);
     }
     if (s.selectedNode === nodeId) {
-      return `خانه ${num}، ${pieceLabel}، انتخاب شده`;
+      return this.i18n.text("خانه {0}، {1}، انتخاب شده", [num, pieceLabel]);
     }
     if (this.movableNodes().has(nodeId)) {
-      return `خانه ${num}، ${pieceLabel}، قابل حرکت`;
+      return this.i18n.text("خانه {0}، {1}، قابل حرکت", [num, pieceLabel]);
     }
     if (this.isBlockedCurrentPlayerPiece(nodeId)) {
-      return `خانه ${num}، ${pieceLabel}، مسدود`;
+      return this.i18n.text("خانه {0}، {1}، مسدود", [num, pieceLabel]);
     }
-    return `خانه ${num}، ${pieceLabel}`;
+    return this.i18n.text("خانه {0}، {1}", [num, pieceLabel]);
   }
 }

@@ -5,6 +5,7 @@ import { RoomSnapshotDto } from './game/online.types';
 
 describe('App', () => {
   beforeEach(async () => {
+    localStorage.removeItem('dooz_language_v1');
     localStorage.removeItem('dooz_player_stats_v1');
     localStorage.removeItem('dooz_journey_v1');
     await TestBed.configureTestingModule({
@@ -16,6 +17,32 @@ describe('App', () => {
     const fixture = TestBed.createComponent(App);
     const app = fixture.componentInstance;
     expect(app).toBeTruthy();
+  });
+
+  it('switches the language and board labels during a match without resetting it', async () => {
+    const fixture = TestBed.createComponent(App);
+    const app = fixture.componentInstance;
+    app.setGameMode('LOCAL_2P');
+    app.startGame();
+    app.onCellSelected(0);
+
+    await app.i18n.setLanguage('en');
+    fixture.detectChanges();
+    expect(document.documentElement.dir).toBe('ltr');
+    expect(app.statusHeadline()).toBe('Player O’s turn');
+    const firstCell = fixture.nativeElement.querySelector('[role="gridcell"]');
+    expect(firstCell.getAttribute('aria-label')).toContain('Cell 1');
+
+    await app.i18n.setLanguage('ar');
+    fixture.detectChanges();
+    expect(document.documentElement.lang).toBe('ar');
+    expect(document.documentElement.dir).toBe('rtl');
+    expect(firstCell.getAttribute('aria-label')).toContain('الخانة ١');
+    expect(app.board()[0]).toBe('X');
+    expect(localStorage.getItem('dooz_language_v1')).toBe('ar');
+
+    await app.i18n.setLanguage('fa');
+    fixture.detectChanges();
   });
 
   it('closes help before returning to the title menu on Android back', () => {

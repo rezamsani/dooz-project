@@ -1,3 +1,4 @@
+import { TranslatePipe } from '../i18n';
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
 import {
@@ -14,13 +15,13 @@ type PaletteTarget = 'X' | 'O' | 'BOARD';
 @Component({
   selector: 'app-color-palette-picker',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [MatIconModule],
+  imports: [TranslatePipe, MatIconModule],
   template: `
     <div class="space-y-2.5 rounded-xl border border-slate-900/10 bg-slate-50/90 p-2.5 dark:border-white/10 dark:bg-[#0E0E0E]/90">
       <div class="flex items-center justify-between gap-2">
         <div class="flex items-center gap-1.5 text-xs font-bold text-slate-700 dark:text-slate-200">
           <mat-icon class="!h-[16px] !w-[16px] !text-[16px] text-teal-600 dark:text-teal-300">palette</mat-icon>
-          <span>پالت رنگ آزاد (CSS)</span>
+          <span>{{ 'پالت رنگ آزاد (CSS)' | t }}</span>
         </div>
 
         @if (playerStats.hasCustomColors()) {
@@ -29,7 +30,7 @@ type PaletteTarget = 'X' | 'O' | 'BOARD';
             (click)="resetAll()"
             class="rounded-md px-1.5 py-0.5 text-[10px] font-semibold text-amber-700 transition-colors hover:bg-amber-500/15 dark:text-amber-300"
           >
-            بازنشانی همه
+            {{ 'بازنشانی همه' | t }}
           </button>
         }
       </div>
@@ -52,7 +53,7 @@ type PaletteTarget = 'X' | 'O' | 'BOARD';
             class="h-3 w-3 shrink-0 rounded-full border border-white/40 shadow-xs"
             [style.background-color]="previewX()"
           ></span>
-          <span>مهره ۱</span>
+          <span>{{ 'مهره ۱' | t }}</span>
         </button>
 
         <button
@@ -71,7 +72,7 @@ type PaletteTarget = 'X' | 'O' | 'BOARD';
             class="h-3 w-3 shrink-0 rounded-full border border-white/40 shadow-xs"
             [style.background-color]="previewO()"
           ></span>
-          <span>مهره ۲</span>
+          <span>{{ 'مهره ۲' | t }}</span>
         </button>
 
         <button
@@ -90,7 +91,7 @@ type PaletteTarget = 'X' | 'O' | 'BOARD';
             class="h-3 w-3 shrink-0 rounded-sm border border-white/40 shadow-xs"
             [style.background-color]="previewBoard()"
           ></span>
-          <span>صفحه</span>
+          <span>{{ 'صفحه' | t }}</span>
         </button>
       </div>
 
@@ -98,18 +99,18 @@ type PaletteTarget = 'X' | 'O' | 'BOARD';
       <div class="flex items-center gap-2">
         <label
           class="relative flex h-8 flex-1 cursor-pointer items-center justify-center gap-1.5 overflow-hidden rounded-lg border border-slate-300 bg-white px-2.5 text-[11px] font-semibold text-slate-800 transition-colors hover:border-teal-500 dark:border-white/15 dark:bg-[#202020] dark:text-slate-100 dark:hover:border-teal-400"
-          title="انتخاب از طیف کامل رنگ‌های CSS"
+          [title]="'انتخاب از طیف کامل رنگ‌های CSS' | t"
         >
           <span
             class="h-4 w-4 shrink-0 rounded-full border border-black/20 shadow-xs"
             [style.background]="'conic-gradient(#f43f5e, #f59e0b, #10b981, #06b6d4, #6366f1, #ec4899, #f43f5e)'"
           ></span>
-          <span>طیف کامل رنگ</span>
+          <span>{{ 'طیف کامل رنگ' | t }}</span>
           <input
             type="color"
             [value]="activeColorHex()"
             (input)="onNativeColorInput($event)"
-            aria-label="انتخابگر رنگ CSS"
+            [attr.aria-label]="'انتخابگر رنگ CSS' | t"
             class="absolute inset-0 h-full w-full cursor-pointer opacity-0"
           />
         </label>
@@ -120,7 +121,7 @@ type PaletteTarget = 'X' | 'O' | 'BOARD';
           maxlength="7"
           [value]="activeColorHex()"
           (change)="onHexTextChange($event)"
-          aria-label="کد رنگ CSS هگز"
+          [attr.aria-label]="'کد رنگ CSS هگز' | t"
           placeholder="#0D9488"
           class="h-8 w-[84px] rounded-lg border border-slate-300 bg-white px-2 text-center font-mono text-[11px] font-semibold text-slate-900 uppercase outline-none focus:border-teal-500 dark:border-white/15 dark:bg-[#171717] dark:text-slate-100 dark:focus:border-teal-400"
         />
@@ -129,7 +130,7 @@ type PaletteTarget = 'X' | 'O' | 'BOARD';
           <button
             type="button"
             (click)="resetCurrentTarget()"
-            title="حذف رنگ سفارشی این بخش"
+            [title]="'حذف رنگ سفارشی این بخش' | t"
             class="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-slate-300 bg-white text-slate-600 transition-colors hover:border-amber-500 hover:text-amber-600 dark:border-white/15 dark:bg-[#202020] dark:text-slate-300 dark:hover:text-amber-300"
           >
             <mat-icon class="!h-[16px] !w-[16px] !text-[16px]">restart_alt</mat-icon>
@@ -143,8 +144,8 @@ type PaletteTarget = 'X' | 'O' | 'BOARD';
           <button
             type="button"
             (click)="applySwatch(swatch.hex)"
-            [title]="swatch.name + ' (' + swatch.hex + ')'"
-            [attr.aria-label]="swatch.name"
+            [title]="(swatch.name | t) + ' (' + swatch.hex + ')'"
+            [attr.aria-label]="(swatch.name | t)"
             class="h-6 w-full rounded-md border transition-transform hover:scale-110 focus-visible:outline-2 focus-visible:outline-amber-400"
             [style.background-color]="swatch.hex"
             [class.border-amber-400]="activeColorHex() === swatch.hex"

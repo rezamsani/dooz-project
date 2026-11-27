@@ -28,31 +28,36 @@
 
   @if (!isFullscreenPlay()) {
     <header class="mobile-header">
-      <button class="brand" type="button" (click)="goToTitleMenu(); homeTab.set('play')" aria-label="دوز، صفحهٔ اصلی">
-        <span class="brand-mark" aria-hidden="true">✕<i></i></span><span>دوز<span class="brand-caption">یک بازی، هزار فکر</span></span>
+      <button class="brand" type="button" (click)="goToTitleMenu(); homeTab.set('play')" [attr.aria-label]="'دوز، صفحهٔ اصلی' | t">
+        <span class="brand-mark" aria-hidden="true">✕<i></i></span><span>{{ 'دوز' | t }}<span class="brand-caption">{{ 'یک بازی، هزار فکر' | t }}</span></span>
       </button>
       <div class="header-tools">
+        <select class="language-picker" [attr.aria-label]="'زبان' | t" [value]="i18n.language()" (change)="i18n.setLanguage($any($event.target).value)">
+          <option value="fa" lang="fa">فارسی</option>
+          <option value="en" lang="en">English</option>
+          <option value="ar" lang="ar">العربية</option>
+        </select>
         @if (gameState() === 'TITLE_MENU') {
-          <button class="icon-button" type="button" (click)="homeTab.set('stats')" aria-label="پروفایل من"><app-player-avatar [avatar]="profile.avatar()" label="عکس پروفایل شما" /></button>
+          <button class="icon-button" type="button" (click)="homeTab.set('stats')" [attr.aria-label]="'پروفایل من' | t"><app-player-avatar [avatar]="profile.avatar()" [label]="'عکس پروفایل شما' | t" /></button>
         }
         @if (gameState() !== 'TITLE_MENU') {
-          <button class="icon-button" type="button" (click)="goToTitleMenu()" aria-label="بازگشت به منو"><mat-icon>arrow_forward</mat-icon></button>
+          <button class="icon-button" type="button" (click)="goToTitleMenu()" [attr.aria-label]="'بازگشت به منو' | t"><mat-icon class="ltr:rotate-180">arrow_forward</mat-icon></button>
         }
-        <button class="icon-button" type="button" (click)="toggleColorMode()" [attr.aria-label]="playerStats.colorMode() === 'dark' ? 'ظاهر روشن' : 'ظاهر تیره'"><mat-icon>{{ playerStats.colorMode() === 'dark' ? 'light_mode' : 'dark_mode' }}</mat-icon></button>
-        <button class="icon-button" type="button" (click)="openHelp()" aria-label="راهنمای بازی"><mat-icon>help_outline</mat-icon></button>
+        <button class="icon-button" type="button" (click)="toggleColorMode()" [attr.aria-label]="playerStats.colorMode() === 'dark' ? ('ظاهر روشن' | t) : ('ظاهر تیره' | t)"><mat-icon>{{ playerStats.colorMode() === 'dark' ? 'light_mode' : 'dark_mode' }}</mat-icon></button>
+        <button class="icon-button" type="button" (click)="openHelp()" [attr.aria-label]="'راهنمای بازی' | t"><mat-icon>help_outline</mat-icon></button>
       </div>
     </header>
   }
 
   @if (playerStats.storage.issue()==='load') {
-    <p role="alert" class="mx-auto max-w-lg px-5 py-3 text-sm text-amber-700 dark:text-amber-300">اطلاعات ذخیره‌شده خوانده نشد. برای محافظت از امتیازها، برنامه را ببندید و دوباره باز کنید.</p>
+    <p role="alert" class="mx-auto max-w-lg px-5 py-3 text-sm text-amber-700 dark:text-amber-300">{{ 'اطلاعات ذخیره‌شده خوانده نشد. برای محافظت از امتیازها، برنامه را ببندید و دوباره باز کنید.' | t }}</p>
   } @else if (playerStats.storage.issue()==='write' && (gameState() !== 'TITLE_MENU' || homeTab() !== 'stats')) {
-    <div role="alert" class="mx-auto max-w-lg px-5 py-3 text-sm text-amber-700 dark:text-amber-300">ذخیرهٔ آمار کامل نشد. <button type="button" class="min-h-11 underline" (click)="playerStats.storage.retry()">تلاش دوباره برای ذخیره</button></div>
+    <div role="alert" class="mx-auto max-w-lg px-5 py-3 text-sm text-amber-700 dark:text-amber-300">{{ 'ذخیرهٔ آمار کامل نشد.' | t }} <button type="button" class="min-h-11 underline" (click)="playerStats.storage.retry()">{{ 'تلاش دوباره برای ذخیره' | t }}</button></div>
   }
   @if (activeReaction(); as reaction) {
     <div role="status" class="pointer-events-none fixed right-4 bottom-[max(1rem,env(safe-area-inset-bottom))] left-4 z-30 mx-auto flex max-w-[300px] items-center gap-3 rounded-2xl border border-teal-500/30 bg-white p-3 shadow-xl dark:bg-[#1a2422]">
       <mat-icon aria-hidden="true" class="reaction-mark" [attr.data-reaction]="reaction.id">{{ reaction.icon }}</mat-icon>
-      <span class="min-w-0"><bdi class="block truncate text-[11px] opacity-75">{{ reaction.senderName }}</bdi><strong class="block text-sm leading-6">{{ reaction.label }}</strong></span>
+      <span class="min-w-0"><bdi class="block truncate text-[11px] opacity-75">{{ reaction.senderName }}</bdi><strong class="block text-sm leading-6">{{ (reaction.label | t) }}</strong></span>
     </div>
   }
   <!-- Main Workspace -->
@@ -66,52 +71,52 @@
     @if (gameState() === 'TITLE_MENU') {
 
       <div class="home-shell">
-        <nav class="home-navigation" aria-label="بخش‌های بازی">
-          <button type="button" [class.selected]="homeTab() === 'play'" [attr.aria-current]="homeTab() === 'play' ? 'page' : null" (click)="homeTab.set('play')"><mat-icon>sports_esports</mat-icon>بازی</button>
-          <button type="button" [class.selected]="homeTab() === 'appearance'" [attr.aria-current]="homeTab() === 'appearance' ? 'page' : null" (click)="homeTab.set('appearance')"><mat-icon>palette</mat-icon>ظاهر</button>
-          <button type="button" [class.selected]="homeTab() === 'stats'" [attr.aria-current]="homeTab() === 'stats' ? 'page' : null" (click)="homeTab.set('stats')"><mat-icon>person_outline</mat-icon>پروفایل</button>
+        <nav class="home-navigation" [attr.aria-label]="'بخش‌های بازی' | t">
+          <button type="button" [class.selected]="homeTab() === 'play'" [attr.aria-current]="homeTab() === 'play' ? 'page' : null" (click)="homeTab.set('play')"><mat-icon>sports_esports</mat-icon>{{ 'بازی' | t }}</button>
+          <button type="button" [class.selected]="homeTab() === 'appearance'" [attr.aria-current]="homeTab() === 'appearance' ? 'page' : null" (click)="homeTab.set('appearance')"><mat-icon>palette</mat-icon>{{ 'ظاهر' | t }}</button>
+          <button type="button" [class.selected]="homeTab() === 'stats'" [attr.aria-current]="homeTab() === 'stats' ? 'page' : null" (click)="homeTab.set('stats')"><mat-icon>person_outline</mat-icon>{{ 'پروفایل' | t }}</button>
         </nav>
         @if (homeTab() === 'play') {
-          <section class="home-play animate-panel-in" aria-label="آماده‌سازی بازی">
+          <section class="home-play animate-panel-in" [attr.aria-label]="'آماده‌سازی بازی' | t">
             <div class="welcome">
-              <div><span class="eyebrow">ساده شروع کن. هوشمندانه بازی کن.</span><h1>نوبتِ یک<br>فکر تازه‌ست.</h1><p>یک هم‌بازی انتخاب کن؛<br>بقیه‌اش روی صفحه معلوم می‌شه.</p></div>
+              <div><span class="eyebrow">{{ 'ساده شروع کن. هوشمندانه بازی کن.' | t }}</span><h1>{{ 'نوبتِ یک' | t }}<br>{{ 'فکر تازه‌ست.' | t }}</h1><p>{{ 'یک هم‌بازی انتخاب کن؛' | t }}<br>{{ 'بقیه‌اش روی صفحه معلوم می‌شه.' | t }}</p></div>
               <svg class="welcome-board" viewBox="0 0 160 170" aria-hidden="true"><g transform="translate(12 16) rotate(-9 68 68)"><rect x="0" y="0" width="136" height="136" rx="25" fill="currentColor" opacity=".05"/><path d="M47 15v106M89 15v106M15 47h106M15 89h106" fill="none" stroke="currentColor" stroke-opacity=".16" stroke-width="2"/><g stroke="#63c9b2" stroke-width="7" stroke-linecap="round"><path d="m22 22 15 15m0-15L22 37m42 27 15 15m0-15L64 79m42 27 15 15m0-15-15 15"/></g><g fill="none" stroke="#e9b77b" stroke-width="7"><circle cx="111" cy="29" r="11"/><circle cx="29" cy="111" r="11"/></g></g></svg>
             </div>
-            <button type="button" class="mb-5 flex min-h-16 w-full items-center justify-between gap-3 rounded-2xl border border-teal-500/25 bg-teal-500/10 p-4 text-right" (click)="homeTab.set('daily')"><span><strong class="block text-sm">معمای امروز؛ برد در دو حرکت</strong><small class="text-xs opacity-70">یک فکر کوتاه، یک نتیجه برای اشتراک‌گذاری</small></span><mat-icon>extension</mat-icon></button>
+            <button type="button" class="mb-5 flex min-h-16 w-full items-center justify-between gap-3 rounded-2xl border border-teal-500/25 bg-teal-500/10 p-4 text-start" (click)="homeTab.set('daily')"><span><strong class="block text-sm">{{ 'معمای امروز؛ برد در دو حرکت' | t }}</strong><small class="text-xs opacity-70">{{ 'یک فکر کوتاه، یک نتیجه برای اشتراک‌گذاری' | t }}</small></span><mat-icon>extension</mat-icon></button>
             <div class="setup-section">
-              <div class="section-label"><h2>با کی بازی می‌کنی؟</h2><span>۰۱</span></div>
-              <div class="mode-options" role="group" aria-label="هم‌بازی">
-                <button type="button" (click)="setGameMode('AI')" [class.chosen]="gameMode() === 'AI'" [attr.aria-pressed]="gameMode() === 'AI'"><mat-icon>smart_toy</mat-icon><strong>با ربات</strong><small>تمرین و چالش</small></button>
-                <button type="button" (click)="setGameMode('LOCAL_2P')" [class.chosen]="gameMode() === 'LOCAL_2P'" [attr.aria-pressed]="gameMode() === 'LOCAL_2P'"><mat-icon>people_outline</mat-icon><strong>کنار هم</strong><small>روی یک گوشی</small></button>
-                <button type="button" (click)="setGameMode('ONLINE')" [class.chosen]="gameMode() === 'ONLINE'" [attr.aria-pressed]="gameMode() === 'ONLINE'"><mat-icon>public</mat-icon><strong>از راه دور</strong><small>با کد دعوت</small></button>
+              <div class="section-label"><h2>{{ 'با کی بازی می‌کنی؟' | t }}</h2><span>{{ '۰۱' | t }}</span></div>
+              <div class="mode-options" role="group" [attr.aria-label]="'هم‌بازی' | t">
+                <button type="button" (click)="setGameMode('AI')" [class.chosen]="gameMode() === 'AI'" [attr.aria-pressed]="gameMode() === 'AI'"><mat-icon>smart_toy</mat-icon><strong>{{ 'با ربات' | t }}</strong><small>{{ 'تمرین و چالش' | t }}</small></button>
+                <button type="button" (click)="setGameMode('LOCAL_2P')" [class.chosen]="gameMode() === 'LOCAL_2P'" [attr.aria-pressed]="gameMode() === 'LOCAL_2P'"><mat-icon>people_outline</mat-icon><strong>{{ 'کنار هم' | t }}</strong><small>{{ 'روی یک گوشی' | t }}</small></button>
+                <button type="button" (click)="setGameMode('ONLINE')" [class.chosen]="gameMode() === 'ONLINE'" [attr.aria-pressed]="gameMode() === 'ONLINE'"><mat-icon>public</mat-icon><strong>{{ 'از راه دور' | t }}</strong><small>{{ 'با کد دعوت' | t }}</small></button>
               </div>
             </div>
             <div class="setup-section">
-              <div class="section-label"><h2>کدوم دوز؟</h2><span>۰۲</span></div>
-              <div class="variant-options" role="group" aria-label="نوع بازی">
-                <button type="button" (click)="setGameVariant('THREE')" [class.chosen]="gameVariant() === 'THREE'" [attr.aria-pressed]="gameVariant() === 'THREE'"><b>۳</b><span>کلاسیک</span></button>
-                <button type="button" (click)="setGameVariant('NINE')" [class.chosen]="gameVariant() === 'NINE'" [attr.aria-pressed]="gameVariant() === 'NINE'"><b>۹</b><span>استراتژیک</span></button>
-                <button type="button" (click)="setGameVariant('TWELVE')" [class.chosen]="gameVariant() === 'TWELVE'" [attr.aria-pressed]="gameVariant() === 'TWELVE'"><b>۱۲</b><span>حرفه‌ای</span></button>
+              <div class="section-label"><h2>{{ 'کدوم دوز؟' | t }}</h2><span>{{ '۰۲' | t }}</span></div>
+              <div class="variant-options" role="group" [attr.aria-label]="'نوع بازی' | t">
+                <button type="button" (click)="setGameVariant('THREE')" [class.chosen]="gameVariant() === 'THREE'" [attr.aria-pressed]="gameVariant() === 'THREE'"><b>{{ '۳' | t }}</b><span>{{ 'کلاسیک' | t }}</span></button>
+                <button type="button" (click)="setGameVariant('NINE')" [class.chosen]="gameVariant() === 'NINE'" [attr.aria-pressed]="gameVariant() === 'NINE'"><b>{{ '۹' | t }}</b><span>{{ 'استراتژیک' | t }}</span></button>
+                <button type="button" (click)="setGameVariant('TWELVE')" [class.chosen]="gameVariant() === 'TWELVE'" [attr.aria-pressed]="gameVariant() === 'TWELVE'"><b>{{ '۱۲' | t }}</b><span>{{ 'حرفه‌ای' | t }}</span></button>
               </div>
             </div>
             @if(gameMode()==='AI'){<app-bot-roster (selected)="selectBot($event)" />}
                         <!-- Online Room Lobby Panel -->
             @if (gameMode() === 'ONLINE') {
               <div class="space-y-4 border-t border-slate-900/10 pt-4 dark:border-white/10">
-                <label class="block text-xs font-semibold">نوع اتاق<select class="mt-2 min-h-11 w-full rounded-xl border border-teal-500/30 bg-transparent px-3" [value]="targetWins()" (change)="targetWins.set($any($event.target).value==='3'?3:0)"><option value="0">بازی آزاد با دوست</option><option value="3">رقابت خصوصی؛ هر کس زودتر سه برد</option></select></label>
+                <label class="block text-xs font-semibold">{{ 'نوع اتاق' | t }}<select class="mt-2 min-h-11 w-full rounded-xl border border-teal-500/30 bg-transparent px-3" [value]="targetWins()" (change)="targetWins.set($any($event.target).value==='3'?3:0)"><option value="0">{{ 'بازی آزاد با دوست' | t }}</option><option value="3">{{ 'رقابت خصوصی؛ هر کس زودتر سه برد' | t }}</option></select></label>
                 <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <label class="block space-y-1.5">
-                    <span class="text-xs font-semibold text-slate-700 dark:text-slate-300">نام نمایشی شما</span>
+                    <span class="text-xs font-semibold text-slate-700 dark:text-slate-300">{{ 'نام نمایشی شما' | t }}</span>
                     <input
                       type="text"
                       [formControl]="playerNameControl"
                       maxlength="18"
-                      placeholder="مثلاً: رضا"
+                      [placeholder]="'مثلاً: رضا' | t"
                       class="min-h-[44px] w-full rounded-xl border border-slate-300 bg-white px-3.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-teal-500 focus:outline-none dark:border-white/15 dark:bg-[#0E0E0E] dark:text-white dark:placeholder:text-slate-500 dark:focus:border-teal-400"
                     />
                   </label>
                   <label class="block space-y-1.5">
-                    <span class="text-xs font-semibold text-slate-700 dark:text-slate-300">ورود با کد اتاق ۵ رقمی</span>
+                    <span class="text-xs font-semibold text-slate-700 dark:text-slate-300">{{ 'ورود با کد اتاق ۵ رقمی' | t }}</span>
                     <div class="flex gap-2">
                       <input
                         type="text"
@@ -127,7 +132,7 @@
                         class="inline-flex min-h-[44px] shrink-0 items-center gap-1.5 whitespace-nowrap rounded-xl border border-teal-600/40 bg-teal-600/10 px-4 text-sm font-bold text-teal-800 transition-colors hover:bg-teal-600/20 dark:border-teal-400/50 dark:bg-teal-500/15 dark:text-teal-200 dark:hover:bg-teal-500/25"
                       >
                         <mat-icon class="!h-[18px] !w-[18px] !text-[18px]">login</mat-icon>
-                        <span>ورود</span>
+                        <span>{{ 'ورود' | t }}</span>
                       </button>
                     </div>
                   </label>
@@ -135,7 +140,7 @@
 
                 @if (onlineClient.errorMessage(); as roomErr) {
                   <p role="alert" class="text-xs font-medium text-rose-600 dark:text-rose-300">
-                    {{ roomErr }}
+                    {{ (roomErr | t) }}
                   </p>
                 }
               </div>
@@ -143,15 +148,15 @@
 
 
                         <details class="advanced-settings">
-              <summary><span>تنظیمات بیشتر بازی</span><mat-icon aria-hidden="true">expand_more</mat-icon></summary>
+              <summary><span>{{ 'تنظیمات بیشتر بازی' | t }}</span><mat-icon aria-hidden="true">expand_more</mat-icon></summary>
               <div class="advanced-content space-y-5">
             <!-- Variant-specific rule toggle -->
             @if (gameVariant() === 'THREE') {
               <div class="space-y-2.5">
                 <div class="flex items-baseline justify-between gap-4">
-                  <span class="text-sm font-semibold text-slate-800 dark:text-slate-200">نوع دوز ۳ تایی</span>
+                  <span class="text-sm font-semibold text-slate-800 dark:text-slate-200">{{ 'نوع دوز ۳ تایی' | t }}</span>
                   <span class="text-xs text-slate-500 dark:text-slate-400">
-                    {{ boardRule() === 'CLASSIC' ? 'کلاسیک ۳×۳ با امکان مساوی' : 'حداکثر ۳ مهره — بدون مساوی' }}
+                    {{ boardRule() === 'CLASSIC' ? ('کلاسیک ۳×۳ با امکان مساوی' | t) : ('حداکثر ۳ مهره — بدون مساوی' | t) }}
                   </span>
                 </div>
                 <div class="grid grid-cols-2 gap-2 rounded-xl bg-slate-100 p-1.5 dark:bg-[#0E0E0E]">
@@ -167,7 +172,7 @@
                     [class.text-slate-500]="boardRule() !== 'CLASSIC'"
                     [class.dark:text-slate-400]="boardRule() !== 'CLASSIC'"
                   >
-                    <span>کلاسیک (۳×۳)</span>
+                    <span>{{ 'کلاسیک (۳×۳)' | t }}</span>
                   </button>
                   <button
                     type="button"
@@ -181,16 +186,16 @@
                     [class.text-slate-500]="boardRule() !== 'INFINITE'"
                     [class.dark:text-slate-400]="boardRule() !== 'INFINITE'"
                   >
-                    <span>بی‌نهایت (۳ مهره)</span>
+                    <span>{{ 'بی‌نهایت (۳ مهره)' | t }}</span>
                   </button>
                 </div>
               </div>
             } @else {
               <div class="space-y-2.5">
                 <div class="flex items-baseline justify-between gap-4">
-                  <span class="text-sm font-semibold text-slate-800 dark:text-slate-200">قانون پرش آزاد (با ۳ مهره)</span>
+                  <span class="text-sm font-semibold text-slate-800 dark:text-slate-200">{{ 'قانون پرش آزاد (با ۳ مهره)' | t }}</span>
                   <span class="text-xs text-slate-500 dark:text-slate-400">
-                    {{ allowFlying() ? 'با رسیدن به ۳ مهره، پرش به هر نقطه آزاد است' : 'قانون سخت‌گیرانه بدون پرش' }}
+                    {{ allowFlying() ? ('با رسیدن به ۳ مهره، پرش به هر نقطه آزاد است' | t) : ('قانون سخت‌گیرانه بدون پرش' | t) }}
                   </span>
                 </div>
                 <div class="grid grid-cols-2 gap-2 rounded-xl bg-slate-100 p-1.5 dark:bg-[#0E0E0E]">
@@ -206,7 +211,7 @@
                     [class.text-slate-500]="!allowFlying()"
                     [class.dark:text-slate-400]="!allowFlying()"
                   >
-                    فعال (استاندارد)
+                    {{ 'فعال (استاندارد)' | t }}
                   </button>
                   <button
                     type="button"
@@ -220,7 +225,7 @@
                     [class.text-slate-500]="allowFlying()"
                     [class.dark:text-slate-400]="allowFlying()"
                   >
-                    غیرفعال
+                    {{ 'غیرفعال' | t }}
                   </button>
                 </div>
               </div>
@@ -230,7 +235,7 @@
             <div class="grid grid-cols-1 gap-5 sm:grid-cols-2">
               <!-- Turn Timer -->
               <div class="space-y-2.5">
-                <div class="text-sm font-semibold text-slate-800 dark:text-slate-200">زمان هر نوبت</div>
+                <div class="text-sm font-semibold text-slate-800 dark:text-slate-200">{{ 'زمان هر نوبت' | t }}</div>
                 <div class="grid grid-cols-4 gap-1 rounded-xl bg-slate-100 p-1.5 dark:bg-[#0E0E0E]">
                   <button
                     type="button"
@@ -244,7 +249,7 @@
                     [class.text-slate-500]="turnTimeLimit() !== 0"
                     [class.dark:text-slate-400]="turnTimeLimit() !== 0"
                   >
-                    آزاد
+                    {{ 'آزاد' | t }}
                   </button>
                   <button
                     type="button"
@@ -258,7 +263,7 @@
                     [class.text-slate-500]="turnTimeLimit() !== 15"
                     [class.dark:text-slate-400]="turnTimeLimit() !== 15"
                   >
-                    ۱۵ ث
+                    {{ '۱۵ ث' | t }}
                   </button>
                   <button
                     type="button"
@@ -272,7 +277,7 @@
                     [class.text-slate-500]="turnTimeLimit() !== 30"
                     [class.dark:text-slate-400]="turnTimeLimit() !== 30"
                   >
-                    ۳۰ ث
+                    {{ '۳۰ ث' | t }}
                   </button>
                   <button
                     type="button"
@@ -286,14 +291,14 @@
                     [class.text-slate-500]="turnTimeLimit() !== 60"
                     [class.dark:text-slate-400]="turnTimeLimit() !== 60"
                   >
-                    ۶۰ ث
+                    {{ '۶۰ ث' | t }}
                   </button>
                 </div>
               </div>
 
               <!-- Light / Dark Mode Switcher -->
               <div class="space-y-2.5">
-                <div class="text-sm font-semibold text-slate-800 dark:text-slate-200">روشنایی ظاهر</div>
+                <div class="text-sm font-semibold text-slate-800 dark:text-slate-200">{{ 'روشنایی ظاهر' | t }}</div>
                 <div class="grid grid-cols-2 gap-1.5 rounded-xl bg-slate-100 p-1.5 dark:bg-[#0E0E0E]">
                   <button
                     type="button"
@@ -306,7 +311,7 @@
                     [class.dark:text-slate-400]="playerStats.colorMode() !== 'light'"
                   >
                     <mat-icon class="!h-[16px] !w-[16px] !text-[16px]">light_mode</mat-icon>
-                    <span>تم روشن</span>
+                    <span>{{ 'تم روشن' | t }}</span>
                   </button>
                   <button
                     type="button"
@@ -319,7 +324,7 @@
                     [class.dark:text-slate-400]="playerStats.colorMode() !== 'dark'"
                   >
                     <mat-icon class="!h-[16px] !w-[16px] !text-[16px]">dark_mode</mat-icon>
-                    <span>تم تاریک</span>
+                    <span>{{ 'تم تاریک' | t }}</span>
                   </button>
                 </div>
               </div>
@@ -329,7 +334,7 @@
             @if (gameMode() === 'AI') {
               <div class="grid grid-cols-1 gap-5 sm:grid-cols-2">
                 <div class="space-y-2.5">
-                  <div class="text-sm font-semibold text-slate-800 dark:text-slate-200">مهره شما</div>
+                  <div class="text-sm font-semibold text-slate-800 dark:text-slate-200">{{ 'مهره شما' | t }}</div>
                   <div class="grid grid-cols-2 gap-1.5 rounded-xl bg-slate-100 p-1.5 dark:bg-[#0E0E0E]">
                     <button
                       type="button"
@@ -343,7 +348,7 @@
                       [class.text-slate-500]="humanSymbol() !== 'X'"
                       [class.dark:text-slate-400]="humanSymbol() !== 'X'"
                     >
-                      مهره X
+                      {{ 'مهره X' | t }}
                     </button>
                     <button
                       type="button"
@@ -357,7 +362,7 @@
                       [class.text-slate-500]="humanSymbol() !== 'O'"
                       [class.dark:text-slate-400]="humanSymbol() !== 'O'"
                     >
-                      مهره O
+                      {{ 'مهره O' | t }}
                     </button>
                   </div>
                 </div>
@@ -368,18 +373,18 @@
             </details>
 
             <div class="launch-area">
-              <button class="launch-button" type="button" (click)="startGame()"><span>{{ isOnlineMode() ? 'ساخت اتاق و دعوت دوست' : 'بزن بریم' }}</span><mat-icon>arrow_back</mat-icon></button>
-              <p>{{ isOnlineMode() ? 'برای بازی آنلاین به اینترنت نیاز داری' : 'بدون اینترنت هم می‌تونی بازی کنی' }}</p>
+              <button class="launch-button" type="button" (click)="startGame()"><span>{{ isOnlineMode() ? ('ساخت اتاق و دعوت دوست' | t) : ('بزن بریم' | t) }}</span><mat-icon>arrow_back</mat-icon></button>
+              <p>{{ isOnlineMode() ? ('برای بازی آنلاین به اینترنت نیاز داری' | t) : ('بدون اینترنت هم می‌تونی بازی کنی' | t) }}</p>
             </div>
           </section>
         } @else if (homeTab() === 'daily') {
           <app-daily-challenge (back)="homeTab.set('play')" />
         } @else if (homeTab() === 'appearance') {
-          <section class="home-appearance animate-panel-in" aria-label="تنظیمات ظاهر"><div class="page-heading"><span class="eyebrow">به سلیقهٔ خودت</span><h1>میز بازی تو</h1><p>محیط، صفحه و مهره‌ها رو انتخاب کن.</p></div>
+          <section class="home-appearance animate-panel-in" [attr.aria-label]="'تنظیمات ظاهر' | t"><div class="page-heading"><span class="eyebrow">{{ 'به سلیقهٔ خودت' | t }}</span><h1>{{ 'میز بازی تو' | t }}</h1><p>{{ 'محیط، صفحه و مهره‌ها رو انتخاب کن.' | t }}</p></div>
                     <details open class="appearance-panel lg:col-span-5">
-          <summary><span>شخصی‌سازی صفحه و مهره‌ها</span><mat-icon aria-hidden="true">expand_more</mat-icon></summary>
+          <summary><span>{{ 'شخصی‌سازی صفحه و مهره‌ها' | t }}</span><mat-icon aria-hidden="true">expand_more</mat-icon></summary>
           <div class="appearance-content space-y-5">
-            <label class="block text-sm font-semibold">صدای مهره‌ها<select class="mt-2 min-h-11 w-full rounded-xl border border-teal-500/30 bg-transparent px-3" [value]="soundFx.style()" (change)="soundFx.setStyle($any($event.target).value)"><option value="wood">چوبی</option><option value="soft">آرام</option><option value="santur">طنین سنتور</option></select></label>
+            <label class="block text-sm font-semibold">{{ 'صدای مهره‌ها' | t }}<select class="mt-2 min-h-11 w-full rounded-xl border border-teal-500/30 bg-transparent px-3" [value]="soundFx.style()" (change)="soundFx.setStyle($any($event.target).value)"><option value="wood">{{ 'چوبی' | t }}</option><option value="soft">{{ 'آرام' | t }}</option><option value="santur">{{ 'طنین سنتور' | t }}</option></select></label>
           <!-- Interactive Live Board Preview -->
           <div class="mx-auto max-w-[340px]">
             @if (gameVariant() === 'THREE') {
@@ -426,10 +431,10 @@
             <div class="flex items-center justify-between gap-2">
               <div class="flex items-center gap-2">
                 <mat-icon class="!h-[20px] !w-[20px] !text-[20px] text-teal-600 dark:text-teal-300">palette</mat-icon>
-                <h2 class="text-sm font-bold text-slate-950 dark:text-white">محیط بازی و طرح مهره‌ها</h2>
+                <h2 class="text-sm font-bold text-slate-950 dark:text-white">{{ 'محیط بازی و طرح مهره‌ها' | t }}</h2>
               </div>
               <span class="text-xs font-medium text-slate-500 dark:text-slate-400">
-                {{ playerStats.activeEnvironmentOption().label }}
+                {{ playerStats.activeEnvironmentOption().label | t }}
               </span>
             </div>
 
@@ -439,8 +444,8 @@
                 <button
                   type="button"
                   (click)="setEnvironment(env.id)"
-                  [attr.aria-label]="'انتخاب محیط ' + env.label"
-                  class="group relative flex flex-col overflow-hidden rounded-xl border-2 text-right transition-all focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-400"
+                  [attr.aria-label]="('انتخاب محیط {0}' | t: [(env.label | t)])"
+                  class="group relative flex flex-col overflow-hidden rounded-xl border-2 text-start transition-all focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-400"
                   [class.border-teal-600]="playerStats.environment() === env.id"
                   [class.dark:border-teal-400]="playerStats.environment() === env.id"
                   [class.shadow-md]="playerStats.environment() === env.id"
@@ -455,7 +460,7 @@
                     @if (env.imagePath) {
                       <img
                         [src]="env.imagePath"
-                        [alt]="env.label"
+                        [alt]="(env.label | t)"
                         referrerpolicy="no-referrer"
                         class="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
                       />
@@ -472,7 +477,7 @@
                     [class.text-slate-700]="playerStats.environment() !== env.id"
                     [class.dark:text-slate-300]="playerStats.environment() !== env.id"
                   >
-                    {{ env.label }}
+                    {{ (env.label | t) }}
                   </span>
                 </button>
               }
@@ -480,13 +485,13 @@
 
             <!-- 4 Piece Style Options -->
             <div class="space-y-2">
-              <div class="text-xs font-semibold text-slate-600 dark:text-slate-300">طرح مهره‌ها</div>
+              <div class="text-xs font-semibold text-slate-600 dark:text-slate-300">{{ 'طرح مهره‌ها' | t }}</div>
               <div class="grid grid-cols-2 gap-1.5">
                 @for (piece of pieceStyles; track piece.id) {
                   <button
                     type="button"
                     (click)="setPieceStyle(piece.id)"
-                    class="flex items-center justify-between gap-2 rounded-xl border px-3 py-2 text-right transition-colors"
+                    class="flex items-center justify-between gap-2 rounded-xl border px-3 py-2 text-start transition-colors"
                     [class.border-teal-600]="playerStats.pieceStyle() === piece.id"
                     [class.dark:border-teal-400]="playerStats.pieceStyle() === piece.id"
                     [class.bg-teal-50]="playerStats.pieceStyle() === piece.id"
@@ -504,10 +509,10 @@
                         [class.text-slate-800]="playerStats.pieceStyle() !== piece.id"
                         [class.dark:text-slate-200]="playerStats.pieceStyle() !== piece.id"
                       >
-                        {{ piece.label }}
+                        {{ piece.label | t }}
                       </div>
                       <div class="truncate text-[10px] text-slate-500 dark:text-slate-400">
-                        {{ piece.subtitle }}
+                        {{ piece.subtitle | t }}
                       </div>
                     </div>
                     <!-- Miniature dual token dot indicator -->
@@ -532,7 +537,7 @@
 
             <!-- 5 Board Material Finishes -->
             <div class="space-y-2">
-              <div class="text-xs font-semibold text-slate-600 dark:text-slate-300">جنس صفحه بازی</div>
+              <div class="text-xs font-semibold text-slate-600 dark:text-slate-300">{{ 'جنس صفحه بازی' | t }}</div>
               <div class="grid grid-cols-5 gap-1 rounded-xl bg-slate-100 p-1 dark:bg-[#0E0E0E]">
                 <button
                   type="button"
@@ -546,7 +551,7 @@
                   [class.text-slate-500]="playerStats.boardTheme() !== 'navy'"
                   [class.dark:text-slate-400]="playerStats.boardTheme() !== 'navy'"
                 >
-                  ساده
+                  {{ 'ساده' | t }}
                 </button>
                 <button
                   type="button"
@@ -557,7 +562,7 @@
                   [class.text-slate-500]="playerStats.boardTheme() !== 'walnut'"
                   [class.dark:text-slate-400]="playerStats.boardTheme() !== 'walnut'"
                 >
-                  چوب گردو
+                  {{ 'چوب گردو' | t }}
                 </button>
                 <button
                   type="button"
@@ -568,7 +573,7 @@
                   [class.text-slate-500]="playerStats.boardTheme() !== 'felt'"
                   [class.dark:text-slate-400]="playerStats.boardTheme() !== 'felt'"
                 >
-                  نمد سبز
+                  {{ 'نمد سبز' | t }}
                 </button>
                 <button
                   type="button"
@@ -579,7 +584,7 @@
                   [class.text-slate-500]="playerStats.boardTheme() !== 'tile'"
                   [class.dark:text-slate-400]="playerStats.boardTheme() !== 'tile'"
                 >
-                  کاشی فیروزه
+                  {{ 'کاشی فیروزه' | t }}
                 </button>
                 <button
                   type="button"
@@ -593,7 +598,7 @@
                   [class.text-slate-500]="playerStats.boardTheme() !== 'glass'"
                   [class.dark:text-slate-400]="playerStats.boardTheme() !== 'glass'"
                 >
-                  شیشه‌ای
+                  {{ 'شیشه‌ای' | t }}
                 </button>
               </div>
             </div>
@@ -606,11 +611,11 @@
 
           </section>
         } @else {
-          <section class="home-stats animate-panel-in" aria-label="پروفایل و آمار بازیکن"><div class="page-heading"><span class="eyebrow">هر دست، یک تجربه</span><h1>پروفایل تو</h1><p>هر مسابقه، یک قدم در مسیر بهتر شدن.</p></div>
+          <section class="home-stats animate-panel-in" [attr.aria-label]="'پروفایل و آمار بازیکن' | t"><div class="page-heading"><span class="eyebrow">{{ 'هر دست، یک تجربه' | t }}</span><h1>{{ 'پروفایل تو' | t }}</h1><p>{{ 'هر مسابقه، یک قدم در مسیر بهتر شدن.' | t }}</p></div>
             <app-player-dashboard />
             <app-journey-panel />
-            <details class="advanced-settings mb-6"><summary>ویرایش نام و عکس پروفایل<mat-icon aria-hidden="true">expand_more</mat-icon></summary><app-profile-panel /></details>
-            <button type="button" class="launch-button" (click)="homeTab.set('play')">برگشت به بازی<mat-icon>arrow_back</mat-icon></button>
+            <details class="advanced-settings mb-6"><summary>{{ 'ویرایش نام و عکس پروفایل' | t }}<mat-icon aria-hidden="true">expand_more</mat-icon></summary><app-profile-panel /></details>
+            <button type="button" class="launch-button" (click)="homeTab.set('play')">{{ 'برگشت به بازی' | t }}<mat-icon>arrow_back</mat-icon></button>
           </section>
         }
       </div>
@@ -645,8 +650,8 @@
                     type="button"
                     [disabled]="!canRequestHint()"
                     (click)="requestSmartHint()"
-                    title="پیشنهاد حرکت (H)"
-                    aria-label="پیشنهاد حرکت"
+                    [title]="'پیشنهاد حرکت (H)' | t"
+                    [attr.aria-label]="'پیشنهاد حرکت' | t"
                     class="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-sky-500/35 bg-sky-50 text-sky-700 transition-colors hover:bg-sky-100 disabled:opacity-40 dark:border-sky-400/30 dark:bg-sky-500/15 dark:text-sky-200 dark:hover:bg-sky-500/25"
                   >
                     <mat-icon class="!h-[18px] !w-[18px] !text-[18px]">lightbulb</mat-icon>
@@ -655,8 +660,8 @@
                     type="button"
                     [disabled]="!canUndo()"
                     (click)="undoLastMove()"
-                    title="بازگشت حرکت (Z)"
-                    aria-label="بازگشت حرکت"
+                    [title]="'بازگشت حرکت (Z)' | t"
+                    [attr.aria-label]="'بازگشت حرکت' | t"
                     class="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-slate-300 bg-slate-100 text-slate-800 transition-colors hover:bg-slate-200 disabled:opacity-40 dark:border-white/10 dark:bg-[#202020] dark:text-slate-100 dark:hover:bg-[#2E2E2E]"
                   >
                     <mat-icon class="!h-[18px] !w-[18px] !text-[18px]">undo</mat-icon>
@@ -664,8 +669,8 @@
                   <button
                     type="button"
                     (click)="restartCurrentRound()"
-                    title="شروع مجدد (R)"
-                    aria-label="شروع مجدد"
+                    [title]="'شروع مجدد (R)' | t"
+                    [attr.aria-label]="'شروع مجدد' | t"
                     class="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-slate-300 bg-slate-100 text-slate-800 transition-colors hover:bg-slate-200 dark:border-white/10 dark:bg-[#202020] dark:text-slate-100 dark:hover:bg-[#2E2E2E]"
                   >
                     <mat-icon class="!h-[18px] !w-[18px] !text-[18px]">refresh</mat-icon>
@@ -674,7 +679,7 @@
                 <button
                   type="button"
                   (click)="soundFx.toggleMute()"
-                  [attr.aria-label]="soundFx.muted() ? 'روشن کردن صدا' : 'خاموش کردن صدا'"
+                  [attr.aria-label]="soundFx.muted() ? ('روشن کردن صدا' | t) : ('خاموش کردن صدا' | t)"
                   class="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-slate-300 bg-slate-100 text-slate-800 transition-colors hover:bg-slate-200 dark:border-white/10 dark:bg-[#202020] dark:text-slate-100 dark:hover:bg-[#2E2E2E]"
                 >
                   <mat-icon class="!h-[18px] !w-[18px] !text-[18px]">
@@ -684,7 +689,7 @@
                 <button
                   type="button"
                   (click)="toggleColorMode()"
-                  [attr.aria-label]="playerStats.colorMode() === 'dark' ? 'تم روشن' : 'تم تاریک'"
+                  [attr.aria-label]="playerStats.colorMode() === 'dark' ? ('تم روشن' | t) : ('تم تاریک' | t)"
                   class="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-slate-300 bg-slate-100 text-slate-800 transition-colors hover:bg-slate-200 dark:border-white/10 dark:bg-[#202020] dark:text-slate-100 dark:hover:bg-[#2E2E2E]"
                 >
                   <mat-icon class="!h-[18px] !w-[18px] !text-[18px]">
@@ -697,17 +702,17 @@
                   class="inline-flex h-9 items-center gap-1.5 whitespace-nowrap rounded-xl bg-teal-600 px-3 text-xs font-bold text-white transition-colors hover:bg-teal-500 dark:bg-teal-400 dark:text-slate-950 dark:hover:bg-teal-300"
                 >
                   <mat-icon class="!h-[17px] !w-[17px] !text-[17px]">fullscreen_exit</mat-icon>
-                  <span>خروج از تمام‌صفحه</span>
+                  <span>{{ 'خروج از تمام‌صفحه' | t }}</span>
                 </button>
               </div>
             </div>
           }
 
           @if (!isFullscreenPlay()) {
-            <div class="match-players" aria-label="امتیاز و نوبت بازیکن‌ها">
-              <div [class.current]="activeTurn() === 'X' && gameState() === 'PLAYING'"><app-player-avatar [avatar]="avatarForPlayer('X')" [robot]="robotForPlayer('X')" [label]="playerXLabel()" /><span><strong>{{ playerXLabel() }}</strong><small>{{ formatNumber(displayScores().X) }} برد @if (isMorrisVariant()) { · {{ formatNumber(trayXInHand()) }} در دست }</small></span></div>
-              <span class="match-versus">{{ formatNumber(displayScores().draws) }} مساوی</span>
-              <div [class.current]="activeTurn() === 'O' && gameState() === 'PLAYING'"><app-player-avatar [avatar]="avatarForPlayer('O')" [robot]="robotForPlayer('O')" [label]="playerOLabel()" /><span><strong>{{ playerOLabel() }}</strong><small>{{ formatNumber(displayScores().O) }} برد @if (isMorrisVariant()) { · {{ formatNumber(trayOInHand()) }} در دست }</small></span></div>
+            <div class="match-players" [attr.aria-label]="'امتیاز و نوبت بازیکن‌ها' | t">
+              <div [class.current]="activeTurn() === 'X' && gameState() === 'PLAYING'"><app-player-avatar [avatar]="avatarForPlayer('X')" [robot]="robotForPlayer('X')" [label]="playerXLabel()" /><span><strong>{{ playerXLabel() }}</strong><small>{{ '{0} برد' | t: [formatNumber(displayScores().X)] }} @if (isMorrisVariant()) { {{ '· {0} در دست' | t: [formatNumber(trayXInHand())] }} }</small></span></div>
+              <span class="match-versus">{{ '{0} مساوی' | t: [formatNumber(displayScores().draws)] }}</span>
+              <div [class.current]="activeTurn() === 'O' && gameState() === 'PLAYING'"><app-player-avatar [avatar]="avatarForPlayer('O')" [robot]="robotForPlayer('O')" [label]="playerOLabel()" /><span><strong>{{ playerOLabel() }}</strong><small>{{ '{0} برد' | t: [formatNumber(displayScores().O)] }} @if (isMorrisVariant()) { {{ '· {0} در دست' | t: [formatNumber(trayOInHand())] }} }</small></span></div>
             </div>
           }
           <!-- Turn / Result Status Header + Turn Clock + Quick Fullscreen Trigger -->
@@ -743,15 +748,15 @@
                 <span aria-hidden="true">·</span>
                 <span>
                   @if (isOnlineMode()) {
-                    اتاق آنلاین {{ onlineRoom()?.code }}
+                    {{ 'اتاق آنلاین {0}' | t: [onlineRoom()?.code] }}
                   } @else if (gameMode() === 'AI') {
-                    بازی با ربات ({{ difficultyLabel() }})
+                    {{ 'بازی با ربات ({0})' | t: [difficultyLabel()] }}
                   } @else {
-                    دو نفره محلی
+                    {{ 'دو نفره محلی' | t }}
                   }
                 </span>
                 <span aria-hidden="true">·</span>
-                <span class="tabular-nums">حرکت {{ formatNumber(activeMoveCount()) }}</span>
+                <span class="tabular-nums">{{ 'حرکت {0}' | t: [formatNumber(activeMoveCount())] }}</span>
               </div>
             </div>
 
@@ -770,7 +775,7 @@
                   [class.dark:bg-[#0E0E0E]]="remainingSeconds() > 7"
                   [class.text-slate-900]="remainingSeconds() > 7"
                   [class.dark:text-slate-100]="remainingSeconds() > 7"
-                  aria-label="زمان باقی‌مانده این نوبت"
+                  [attr.aria-label]="'زمان باقی‌مانده این نوبت' | t"
                 >
                   <mat-icon class="!h-[18px] !w-[18px] !text-[18px]">timer</mat-icon>
                   <span dir="ltr">{{ formattedTimer() }}</span>
@@ -781,12 +786,12 @@
               <button
                 type="button"
                 (click)="toggleViewMode()"
-                [title]="is3DView() ? 'تغییر به نمای دوبعدی' : 'تغییر به نمای سه‌بعدی'"
-                [attr.aria-label]="is3DView() ? 'تغییر به نمای دوبعدی' : 'تغییر به نمای سه‌بعدی'"
+                [title]="is3DView() ? ('تغییر به نمای دوبعدی' | t) : ('تغییر به نمای سه‌بعدی' | t)"
+                [attr.aria-label]="is3DView() ? ('تغییر به نمای دوبعدی' | t) : ('تغییر به نمای سه‌بعدی' | t)"
                 class="inline-flex h-10 items-center gap-1.5 rounded-xl border border-slate-300 bg-slate-100 px-3 text-xs font-bold text-slate-700 transition-colors hover:border-teal-500 hover:text-teal-700 dark:border-white/15 dark:bg-[#0E0E0E] dark:text-slate-200 dark:hover:border-teal-400 dark:hover:text-teal-300"
               >
                 <mat-icon class="!h-[18px] !w-[18px] !text-[18px]">{{ is3DView() ? 'view_in_ar' : 'grid_view' }}</mat-icon>
-                <span>{{ is3DView() ? 'سه‌بعدی' : 'دوبعدی' }}</span>
+                <span>{{ is3DView() ? ('سه‌بعدی' | t) : ('دوبعدی' | t) }}</span>
               </button>
 
               <!-- 1-Click Fullscreen Toggle beside Board Status -->
@@ -794,9 +799,9 @@
                 <button
                   type="button"
                   (click)="toggleFullscreen()"
-                  title="بازی در حالت تمام‌صفحه (کلید F)"
-                  aria-label="بازی در حالت تمام‌صفحه"
-                  class="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-300 bg-slate-100 text-slate-700 transition-colors hover:border-teal-500 hover:text-teal-700 dark:border-white/15 dark:bg-[#0E0E0E] dark:text-slate-200 dark:hover:border-teal-400 dark:hover:text-teal-300"
+                  [title]="'بازی در حالت تمام‌صفحه (کلید F)' | t"
+                  [attr.aria-label]="'بازی در حالت تمام‌صفحه' | t"
+                  class="fullscreen-control inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-300 bg-slate-100 text-slate-700 transition-colors hover:border-teal-500 hover:text-teal-700 dark:border-white/15 dark:bg-[#0E0E0E] dark:text-slate-200 dark:hover:border-teal-400 dark:hover:text-teal-300"
                 >
                   <mat-icon class="!h-[20px] !w-[20px] !text-[20px]">fullscreen</mat-icon>
                 </button>
@@ -809,8 +814,8 @@
             <div class="animate-panel-in w-full max-w-[440px] space-y-4 rounded-2xl border border-teal-500/40 bg-white/92 p-5 shadow-sm backdrop-blur-md dark:border-teal-400/30 dark:bg-[#171717]/92">
               <div class="flex items-center justify-between gap-3">
                 <div class="space-y-0.5">
-                  <div class="text-sm font-bold text-slate-950 dark:text-white">کد دعوت اتاق آماده است</div>
-                  <div class="text-xs text-slate-600 dark:text-slate-400">کد یا لینک زیر را برای دوست خود بفرستید تا بازی شروع شود.</div>
+                  <div class="text-sm font-bold text-slate-950 dark:text-white">{{ 'کد دعوت اتاق آماده است' | t }}</div>
+                  <div class="text-xs text-slate-600 dark:text-slate-400">{{ 'کد یا لینک زیر را برای دوست خود بفرستید تا بازی شروع شود.' | t }}</div>
                 </div>
                 <span
                   dir="ltr"
@@ -826,7 +831,7 @@
                   class="inline-flex min-h-[42px] flex-1 items-center justify-center gap-1.5 whitespace-nowrap rounded-xl bg-teal-600 px-3.5 py-2 text-xs font-bold text-white transition-colors hover:bg-teal-500 dark:bg-teal-400 dark:text-slate-950 dark:hover:bg-teal-300"
                 >
                   <mat-icon class="!h-[17px] !w-[17px] !text-[17px]">content_copy</mat-icon>
-                  <span>کپی کد اتاق</span>
+                  <span>{{ 'کپی کد اتاق' | t }}</span>
                 </button>
                 <button
                   type="button"
@@ -834,11 +839,11 @@
                   class="inline-flex min-h-[42px] flex-1 items-center justify-center gap-1.5 whitespace-nowrap rounded-xl border border-slate-300 bg-slate-100 px-3.5 py-2 text-xs font-bold text-slate-800 transition-colors hover:bg-slate-200 dark:border-white/15 dark:bg-[#202020] dark:text-slate-100 dark:hover:bg-[#2E2E2E]"
                 >
                   <mat-icon class="!h-[17px] !w-[17px] !text-[17px]">link</mat-icon>
-                  <span>کپی لینک دعوت</span>
+                  <span>{{ 'کپی لینک دعوت' | t }}</span>
                 </button>
               </div>
               @if (copiedToast(); as toast) {
-                <div class="text-center text-xs font-semibold text-teal-700 dark:text-teal-300">{{ toast }}</div>
+                <div class="text-center text-xs font-semibold text-teal-700 dark:text-teal-300">{{ (toast | t) }}</div>
               }
             </div>
           }
@@ -846,21 +851,21 @@
           <!-- Incoming Draw Offer Bar (Online) -->
           @if (opponentOfferedDraw()) {
             <div class="animate-panel-in flex w-full max-w-[440px] flex-wrap items-center justify-between gap-3 rounded-xl border border-amber-500/45 bg-amber-50/95 px-4 py-3 text-xs dark:border-amber-400/40 dark:bg-amber-950/75">
-              <span class="font-semibold text-amber-900 dark:text-amber-200">حریف پیشنهاد مساوی داده است.</span>
+              <span class="font-semibold text-amber-900 dark:text-amber-200">{{ 'حریف پیشنهاد مساوی داده است.' | t }}</span>
               <div class="flex items-center gap-2">
                 <button
                   type="button"
                   (click)="respondOnlineDraw(true)"
                   class="min-h-[36px] rounded-lg bg-amber-500 px-3 font-bold text-white transition-colors hover:bg-amber-600 dark:bg-amber-400 dark:text-slate-950 dark:hover:bg-amber-300"
                 >
-                  قبول مساوی
+                  {{ 'قبول مساوی' | t }}
                 </button>
                 <button
                   type="button"
                   (click)="respondOnlineDraw(false)"
                   class="min-h-[36px] rounded-lg border border-slate-300 px-3 font-semibold text-slate-700 hover:bg-slate-100 dark:border-white/15 dark:text-slate-200 dark:hover:bg-white/10"
                 >
-                  رد
+                  {{ 'رد' | t }}
                 </button>
               </div>
             </div>
@@ -935,14 +940,14 @@
               />
 
               <!-- Camera Preset Controls -->
-              <div class="camera-picker absolute inset-x-2 bottom-2 mx-auto flex w-max max-w-[calc(100%-1rem)] items-center gap-1 rounded-2xl border border-white/15 bg-[#152421] p-1 text-xs text-slate-100" role="group" aria-label="زاویهٔ دوربین">
+              <div class="camera-picker absolute inset-x-2 bottom-2 mx-auto flex w-max max-w-[calc(100%-1rem)] items-center gap-1 rounded-2xl border border-white/15 bg-[#152421] p-1 text-xs text-slate-100" role="group" [attr.aria-label]="'زاویهٔ دوربین' | t">
                 <button
                   type="button"
                   (click)="setCameraPreset('TABLE')"
                   class="min-h-11 min-w-11 rounded-xl px-3 font-semibold transition-colors hover:bg-white/10"
                   [attr.aria-pressed]="cameraPreset() === 'TABLE'"
                 >
-                  زاویه میز
+                  {{ 'زاویه میز' | t }}
                 </button>
                 <button
                   type="button"
@@ -950,7 +955,7 @@
                   class="min-h-11 min-w-11 rounded-xl px-3 font-semibold transition-colors hover:bg-white/10"
                   [attr.aria-pressed]="cameraPreset() === 'TOP'"
                 >
-                  از بالا
+                  {{ 'از بالا' | t }}
                 </button>
                 <button
                   type="button"
@@ -958,7 +963,7 @@
                   class="min-h-11 min-w-11 rounded-xl px-3 font-semibold transition-colors hover:bg-white/10"
                   [attr.aria-pressed]="cameraPreset() === 'CINEMA'"
                 >
-                  سینمایی
+                  {{ 'سینمایی' | t }}
                 </button>
               </div>
             </div>
@@ -1048,22 +1053,22 @@
           }
 
           @if (!isFullscreenPlay()) {
-            <div class="match-toolbar" aria-label="ابزار بازی">
+            <div class="match-toolbar" [attr.aria-label]="'ابزار بازی' | t">
               @if (!isOnlineMode()) {
-                <button type="button" (click)="undoLastMove()" [disabled]="!canUndo()"><mat-icon>undo</mat-icon><span>برگشت</span></button>
-                <button type="button" (click)="requestSmartHint()" [disabled]="!canRequestHint()"><mat-icon>lightbulb_outline</mat-icon><span>راهنمایی</span></button>
+                <button type="button" (click)="undoLastMove()" [disabled]="!canUndo()"><mat-icon>undo</mat-icon><span>{{ 'برگشت' | t }}</span></button>
+                <button type="button" (click)="requestSmartHint()" [disabled]="!canRequestHint()"><mat-icon>lightbulb_outline</mat-icon><span>{{ 'راهنمایی' | t }}</span></button>
               }
-              <button type="button" (click)="soundFx.toggleMute()" [attr.aria-pressed]="soundFx.muted()"><mat-icon>{{ soundFx.muted() ? 'volume_off' : 'volume_up' }}</mat-icon><span>{{ soundFx.muted() ? 'صدا خاموش' : 'صدا روشن' }}</span></button>
-              <button type="button" (click)="openHelp()"><mat-icon>help_outline</mat-icon><span>قوانین</span></button>
+              <button type="button" (click)="soundFx.toggleMute()" [attr.aria-pressed]="soundFx.muted()"><mat-icon>{{ soundFx.muted() ? 'volume_off' : 'volume_up' }}</mat-icon><span>{{ soundFx.muted() ? ('صدا خاموش' | t) : ('صدا روشن' | t) }}</span></button>
+              <button type="button" (click)="openHelp()"><mat-icon>help_outline</mat-icon><span>{{ 'قوانین' | t }}</span></button>
             </div>
           }
           <!-- Step-by-Step Replay Controls -->
           @if (replayActive()) {
             <div class="animate-panel-in flex w-full max-w-[440px] flex-col gap-3 rounded-2xl border border-sky-500/40 bg-white/92 p-4 shadow-sm backdrop-blur-md dark:border-sky-400/35 dark:bg-[#171717]/92">
               <div class="flex items-center justify-between text-xs text-slate-600 dark:text-slate-300">
-                <span class="font-bold text-sky-700 dark:text-sky-300">کنترل بازپخش حرکت‌ها</span>
+                <span class="font-bold text-sky-700 dark:text-sky-300">{{ 'کنترل بازپخش حرکت‌ها' | t }}</span>
                 <span class="tabular-nums">
-                  مرحله {{ formatNumber(replayStep()) }} از {{ formatNumber(replayTotalSteps()) }}
+                  {{ 'مرحله {0} از {1}' | t: [formatNumber(replayStep()), formatNumber(replayTotalSteps())] }}
                 </span>
               </div>
               <div class="flex flex-wrap items-center justify-between gap-2">
@@ -1072,7 +1077,7 @@
                     type="button"
                     [disabled]="replayStep() === 0"
                     (click)="replayStepTo(0)"
-                    aria-label="اول بازی"
+                    [attr.aria-label]="'اول بازی' | t"
                     class="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-300 bg-slate-100 text-slate-800 hover:bg-slate-200 disabled:opacity-40 dark:border-white/10 dark:bg-[#202020] dark:text-slate-100 dark:hover:bg-[#2E2E2E]"
                   >
                     <mat-icon class="!h-[18px] !w-[18px] !text-[18px]">last_page</mat-icon>
@@ -1081,7 +1086,7 @@
                     type="button"
                     [disabled]="replayStep() === 0"
                     (click)="replayStepTo(replayStep() - 1)"
-                    aria-label="حرکت قبلی"
+                    [attr.aria-label]="'حرکت قبلی' | t"
                     class="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-300 bg-slate-100 text-slate-800 hover:bg-slate-200 disabled:opacity-40 dark:border-white/10 dark:bg-[#202020] dark:text-slate-100 dark:hover:bg-[#2E2E2E]"
                   >
                     <mat-icon class="!h-[18px] !w-[18px] !text-[18px]">chevron_right</mat-icon>
@@ -1094,13 +1099,13 @@
                     <mat-icon class="!h-[18px] !w-[18px] !text-[18px]">
                       {{ replayAutoPlaying() ? 'pause' : 'play_arrow' }}
                     </mat-icon>
-                    <span>{{ replayAutoPlaying() ? 'توقف' : 'پخش خودکار' }}</span>
+                    <span>{{ replayAutoPlaying() ? ('توقف' | t) : ('پخش خودکار' | t) }}</span>
                   </button>
                   <button
                     type="button"
                     [disabled]="replayStep() >= replayTotalSteps()"
                     (click)="replayStepTo(replayStep() + 1)"
-                    aria-label="حرکت بعدی"
+                    [attr.aria-label]="'حرکت بعدی' | t"
                     class="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-300 bg-slate-100 text-slate-800 hover:bg-slate-200 disabled:opacity-40 dark:border-white/10 dark:bg-[#202020] dark:text-slate-100 dark:hover:bg-[#2E2E2E]"
                   >
                     <mat-icon class="!h-[18px] !w-[18px] !text-[18px]">chevron_left</mat-icon>
@@ -1109,7 +1114,7 @@
                     type="button"
                     [disabled]="replayStep() >= replayTotalSteps()"
                     (click)="replayStepTo(replayTotalSteps())"
-                    aria-label="پایان بازی"
+                    [attr.aria-label]="'پایان بازی' | t"
                     class="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-300 bg-slate-100 text-slate-800 hover:bg-slate-200 disabled:opacity-40 dark:border-white/10 dark:bg-[#202020] dark:text-slate-100 dark:hover:bg-[#2E2E2E]"
                   >
                     <mat-icon class="!h-[18px] !w-[18px] !text-[18px]">first_page</mat-icon>
@@ -1122,7 +1127,7 @@
                   class="inline-flex h-10 items-center gap-1 rounded-xl border border-slate-300 px-3 text-xs font-semibold text-slate-700 hover:bg-slate-100 dark:border-white/15 dark:text-slate-200 dark:hover:bg-white/5"
                 >
                   <mat-icon class="!h-[16px] !w-[16px] !text-[16px]">close</mat-icon>
-                  <span>بستن</span>
+                  <span>{{ 'بستن' | t }}</span>
                 </button>
               </div>
             </div>
@@ -1141,7 +1146,7 @@
                     [class.text-rose-700]="(playerStats.lastEloDelta() ?? 0) < 0"
                     [class.dark:text-rose-300]="(playerStats.lastEloDelta() ?? 0) < 0"
                   >
-                    تغییر ELO: {{ delta }}
+                    {{ 'تغییر ELO: {0}' | t: [delta] }}
                   </span>
                 }
               </div>
@@ -1156,9 +1161,9 @@
                   <mat-icon class="!h-[18px] !w-[18px] !text-[18px]">replay</mat-icon>
                   <span>
                     @if (isOnlineMode()) {
-                      {{ onlineRoom()?.series?.winner ? 'رقابت به پایان رسید' : hasVotedRematch() ? 'در انتظار تایید حریف...' : 'درخواست بازی مجدد' }}
+                      {{ onlineRoom()?.series?.winner ? ('رقابت به پایان رسید' | t) : hasVotedRematch() ? ('در انتظار تایید حریف...' | t) : ('درخواست بازی مجدد' | t) }}
                     } @else {
-                      دست بعدی
+                      {{ 'دست بعدی' | t }}
                     }
                   </span>
                 </button>
@@ -1170,7 +1175,7 @@
                     class="inline-flex min-h-[42px] items-center gap-1.5 whitespace-nowrap rounded-xl border border-sky-500/40 bg-sky-50 px-3.5 py-2 text-sm font-semibold text-sky-800 transition-colors hover:bg-sky-100 dark:border-sky-400/35 dark:bg-sky-500/10 dark:text-sky-200 dark:hover:bg-sky-500/20"
                   >
                     <mat-icon class="!h-[18px] !w-[18px] !text-[18px]">history</mat-icon>
-                    <span>بازپخش بازی</span>
+                    <span>{{ 'بازپخش بازی' | t }}</span>
                   </button>
                 }
 
@@ -1180,17 +1185,17 @@
                   class="inline-flex min-h-[42px] items-center gap-1.5 whitespace-nowrap rounded-xl border border-slate-300 px-3.5 py-2 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-100 dark:border-white/15 dark:text-slate-200 dark:hover:bg-white/5"
                 >
                   <mat-icon class="!h-[18px] !w-[18px] !text-[18px]">tune</mat-icon>
-                  <span>تنظیمات</span>
+                  <span>{{ 'تنظیمات' | t }}</span>
                 </button>
               </div>
             </div>
-            @for(badge of badgeCatalog;track badge.id){@if(freshBadges().includes(badge.id)){<p class="text-sm text-teal-700 dark:text-teal-300" role="status">نشان تازه: {{ badge.name }}</p>}}
+            @for(badge of badgeCatalog;track badge.id){@if(freshBadges().includes(badge.id)){<p class="text-sm text-teal-700 dark:text-teal-300" role="status">{{ 'نشان تازه: {0}' | t: [(badge.name | t)] }}</p>}}
             @if(gameMode()==='AI' && !isDraw() && (timeoutWinner() ?? winResult()?.winner ?? morrisState().winner)!==humanSymbol()) {<app-coach-review [three]="threeLesson()" [morris]="morrisLesson()" />}
           } @else if (!isMorrisVariant() && boardRule() === 'INFINITE') {
             <div class="flex w-full max-w-[440px] items-center justify-between gap-3 rounded-xl border border-slate-900/10 bg-white/85 px-3.5 py-2 text-xs text-slate-600 backdrop-blur-md dark:border-white/10 dark:bg-[#171717]/85 dark:text-slate-300">
-              <span>حالت بی‌نهایت: حداکثر ۳ مهره هم‌زمان روی صفحه</span>
+              <span>{{ 'حالت بی‌نهایت: حداکثر ۳ مهره هم‌زمان روی صفحه' | t }}</span>
               <span class="font-semibold text-slate-900 tabular-nums dark:text-slate-200">
-                X: {{ formatNumber(isOnlineMode() ? (onlineRoom()?.threeXQueue?.length ?? 0) : xQueue().length) }}/۳ · O: {{ formatNumber(isOnlineMode() ? (onlineRoom()?.threeOQueue?.length ?? 0) : oQueue().length) }}/۳
+                {{ 'X: {0}/۳ · O: {1}/۳' | t: [formatNumber(isOnlineMode() ? (onlineRoom()?.threeXQueue?.length ?? 0) : xQueue().length), formatNumber(isOnlineMode() ? (onlineRoom()?.threeOQueue?.length ?? 0) : oQueue().length)] }}
               </span>
             </div>
           }
@@ -1204,13 +1209,13 @@
             [class.lg:col-span-4]="is3DView()"
             [class.lg:col-span-5]="!is3DView()"
           >
-          <details class="match-extras"><summary>تنظیمات و جزئیات مسابقه<mat-icon aria-hidden="true">expand_more</mat-icon></summary><div class="space-y-5 pt-4">
+          <details class="match-extras"><summary>{{ 'تنظیمات و جزئیات مسابقه' | t }}<mat-icon aria-hidden="true">expand_more</mat-icon></summary><div class="space-y-5 pt-4">
           <!-- Scoreboard -->
           <div class="rounded-2xl border border-slate-900/10 bg-white/90 p-5 shadow-sm backdrop-blur-md dark:border-white/10 dark:bg-[#171717]/88">
             <div class="mb-4 flex items-baseline justify-between gap-4">
-              <h2 class="text-base font-bold text-slate-950 dark:text-white">جدول امتیازها</h2>
+              <h2 class="text-base font-bold text-slate-950 dark:text-white">{{ 'جدول امتیازها' | t }}</h2>
               <span class="text-xs text-slate-500 tabular-nums dark:text-slate-400">
-                مجموع {{ formatNumber(totalRounds()) }} دست
+                {{ 'مجموع {0} دست' | t: [formatNumber(totalRounds())] }}
               </span>
             </div>
 
@@ -1226,17 +1231,17 @@
                   {{ formatNumber(displayScores().X) }}
                 </span>
                 <span class="h-4 text-[11px] font-medium text-rose-600 dark:text-rose-300/90">
-                  {{ gameState() === 'PLAYING' && !isWaitingForOnlineOpponent() && activeTurn() === 'X' ? 'نوبت فعلی' : '' }}
+                  {{ gameState() === 'PLAYING' && !isWaitingForOnlineOpponent() && activeTurn() === 'X' ? ('نوبت فعلی' | t) : '' }}
                 </span>
               </div>
 
               <div class="flex flex-col items-center gap-1 border-b-2 border-transparent px-2 pb-3">
-                <span class="text-xs font-semibold text-slate-500 dark:text-slate-400">مساوی</span>
+                <span class="text-xs font-semibold text-slate-500 dark:text-slate-400">{{ 'مساوی' | t }}</span>
                 <span class="text-3xl font-extrabold text-slate-700 tabular-nums dark:text-slate-200">
                   {{ formatNumber(displayScores().draws) }}
                 </span>
                 <span class="h-4 text-[11px] text-slate-400 dark:text-slate-500">
-                  {{ !isMorrisVariant() && boardRule() === 'INFINITE' ? 'بدون مساوی' : '' }}
+                  {{ !isMorrisVariant() && boardRule() === 'INFINITE' ? ('بدون مساوی' | t) : '' }}
                 </span>
               </div>
 
@@ -1251,7 +1256,7 @@
                   {{ formatNumber(displayScores().O) }}
                 </span>
                 <span class="h-4 text-[11px] font-medium text-teal-600 dark:text-teal-300/90">
-                  {{ gameState() === 'PLAYING' && !isWaitingForOnlineOpponent() && activeTurn() === 'O' ? 'نوبت فعلی' : '' }}
+                  {{ gameState() === 'PLAYING' && !isWaitingForOnlineOpponent() && activeTurn() === 'O' ? ('نوبت فعلی' | t) : '' }}
                 </span>
               </div>
             </div>
@@ -1261,14 +1266,14 @@
           @if (isOnlineMode() && onlineRoom(); as room) {
             <div class="space-y-4 rounded-2xl border border-slate-900/10 bg-white/90 p-5 shadow-sm backdrop-blur-md dark:border-white/10 dark:bg-[#171717]/88">
               <div class="flex items-center justify-between gap-2">
-                <h2 class="text-base font-bold text-slate-950 dark:text-white">اتاق آنلاین ({{ room.code }})</h2>
+                <h2 class="text-base font-bold text-slate-950 dark:text-white">{{ 'اتاق آنلاین ({0})' | t: [room.code] }}</h2>
                 <span class="text-xs text-slate-500 dark:text-slate-400">
-                  {{ room.players.O?.connected && room.players.X?.connected ? 'هر دو بازیکن متصل' : 'در انتظار اتصال' }}
+                  {{ room.players.O?.connected && room.players.X?.connected ? ('هر دو بازیکن متصل' | t) : ('در انتظار اتصال' | t) }}
                 </span>
               </div>
 
               <div class="space-y-2">
-                <div class="text-xs font-medium text-slate-500 dark:text-slate-400">واکنش‌های سریع</div>
+                <div class="text-xs font-medium text-slate-500 dark:text-slate-400">{{ 'واکنش‌های سریع' | t }}</div>
                 <div class="flex flex-wrap gap-1.5">
                   @for (em of quickEmotes; track em.id) {
                     <button
@@ -1277,7 +1282,7 @@
                       class="reaction-button inline-flex min-h-11 items-center gap-2 rounded-xl border px-2 py-1 text-xs font-semibold"
                     >
                       <mat-icon aria-hidden="true" class="reaction-mark" [attr.data-reaction]="em.id">{{ em.icon }}</mat-icon>
-                      <span>{{ em.label }}</span>
+                      <span>{{ (em.label | t) }}</span>
                     </button>
                   }
                 </div>
@@ -1292,7 +1297,7 @@
                     class="inline-flex min-h-[42px] items-center justify-center gap-1.5 whitespace-nowrap rounded-xl border border-slate-300 bg-slate-100 px-3 text-xs font-semibold text-slate-800 hover:bg-slate-200 disabled:opacity-50 dark:border-white/10 dark:bg-[#202020] dark:text-slate-100 dark:hover:bg-[#2E2E2E]"
                   >
                     <mat-icon class="!h-[17px] !w-[17px] !text-[17px]">handshake</mat-icon>
-                    <span>{{ youOfferedDraw() ? 'پیشنهاد ارسال شد' : 'پیشنهاد مساوی' }}</span>
+                    <span>{{ youOfferedDraw() ? ('پیشنهاد ارسال شد' | t) : ('پیشنهاد مساوی' | t) }}</span>
                   </button>
                   <button
                     type="button"
@@ -1300,7 +1305,7 @@
                     class="inline-flex min-h-[42px] items-center justify-center gap-1.5 whitespace-nowrap rounded-xl border border-rose-500/35 bg-rose-50 px-3 text-xs font-semibold text-rose-700 hover:bg-rose-100 dark:border-rose-400/25 dark:bg-rose-500/10 dark:text-rose-200 dark:hover:bg-rose-500/20"
                   >
                     <mat-icon class="!h-[17px] !w-[17px] !text-[17px]">flag</mat-icon>
-                    <span>تسلیم شدن</span>
+                    <span>{{ 'تسلیم شدن' | t }}</span>
                   </button>
                 </div>
               }
@@ -1310,7 +1315,7 @@
           <!-- Tabletop Action Controls + Live Theme & Piece Switcher -->
           <div class="rounded-2xl border border-slate-900/10 bg-white/90 p-5 shadow-sm backdrop-blur-md dark:border-white/10 dark:bg-[#171717]/88">
             <div class="mb-4 flex items-center justify-between gap-2">
-              <h2 class="text-base font-bold text-slate-950 dark:text-white">کنترل‌های بازی</h2>
+              <h2 class="text-base font-bold text-slate-950 dark:text-white">{{ 'کنترل‌های بازی' | t }}</h2>
               <button
                 type="button"
                 (click)="toggleColorMode()"
@@ -1319,7 +1324,7 @@
                 <mat-icon class="!h-[16px] !w-[16px] !text-[16px]">
                   {{ playerStats.colorMode() === 'dark' ? 'light_mode' : 'dark_mode' }}
                 </mat-icon>
-                <span>{{ playerStats.colorMode() === 'dark' ? 'تم روشن' : 'تم تاریک' }}</span>
+                <span>{{ playerStats.colorMode() === 'dark' ? ('تم روشن' | t) : ('تم تاریک' | t) }}</span>
               </button>
             </div>
 
@@ -1332,7 +1337,7 @@
                   class="inline-flex min-h-[44px] items-center justify-center gap-2 whitespace-nowrap rounded-xl border border-sky-500/35 bg-sky-50 px-3 py-2 text-sm font-semibold text-sky-800 transition-colors hover:bg-sky-100 disabled:opacity-40 dark:border-sky-400/30 dark:bg-sky-500/10 dark:text-sky-200 dark:hover:bg-sky-500/20"
                 >
                   <mat-icon class="!h-[18px] !w-[18px] !text-[18px]">lightbulb</mat-icon>
-                  <span>پیشنهاد حرکت</span>
+                  <span>{{ 'پیشنهاد حرکت' | t }}</span>
                 </button>
 
                 <button
@@ -1342,7 +1347,7 @@
                   class="inline-flex min-h-[44px] items-center justify-center gap-2 whitespace-nowrap rounded-xl border border-slate-300 bg-slate-100 px-3 py-2 text-sm font-semibold text-slate-800 transition-colors hover:bg-slate-200 disabled:opacity-40 dark:border-white/10 dark:bg-[#202020] dark:text-slate-100 dark:hover:bg-[#2E2E2E]"
                 >
                   <mat-icon class="!h-[18px] !w-[18px] !text-[18px]">undo</mat-icon>
-                  <span>بازگشت حرکت</span>
+                  <span>{{ 'بازگشت حرکت' | t }}</span>
                 </button>
 
                 <button
@@ -1351,7 +1356,7 @@
                   class="inline-flex min-h-[44px] items-center justify-center gap-2 whitespace-nowrap rounded-xl border border-slate-300 bg-slate-100 px-3 py-2 text-sm font-semibold text-slate-800 transition-colors hover:bg-slate-200 dark:border-white/10 dark:bg-[#202020] dark:text-slate-100 dark:hover:bg-[#2E2E2E]"
                 >
                   <mat-icon class="!h-[18px] !w-[18px] !text-[18px]">refresh</mat-icon>
-                  <span>شروع مجدد</span>
+                  <span>{{ 'شروع مجدد' | t }}</span>
                 </button>
               }
 
@@ -1363,7 +1368,7 @@
                 <mat-icon class="!h-[18px] !w-[18px] !text-[18px]">
                   {{ soundFx.muted() ? 'volume_off' : 'volume_up' }}
                 </mat-icon>
-                <span>{{ soundFx.muted() ? 'صدا خاموش' : 'صدا روشن' }}</span>
+                <span>{{ soundFx.muted() ? ('صدا خاموش' | t) : ('صدا روشن' | t) }}</span>
               </button>
 
               <button
@@ -1374,7 +1379,7 @@
                 <mat-icon class="!h-[18px] !w-[18px] !text-[18px]">
                   {{ isFullscreen() ? 'fullscreen_exit' : 'fullscreen' }}
                 </mat-icon>
-                <span>{{ isFullscreen() ? 'خروج تمام‌صفحه' : 'تمام‌صفحه' }}</span>
+                <span>{{ isFullscreen() ? ('خروج تمام‌صفحه' | t) : ('تمام‌صفحه' | t) }}</span>
               </button>
 
               @if (isOnlineMode()) {
@@ -1384,7 +1389,7 @@
                   class="inline-flex min-h-[44px] items-center justify-center gap-2 whitespace-nowrap rounded-xl border border-slate-300 bg-slate-100 px-3 py-2 text-sm font-semibold text-slate-800 transition-colors hover:bg-slate-200 dark:border-white/10 dark:bg-[#202020] dark:text-slate-100 dark:hover:bg-[#2E2E2E]"
                 >
                   <mat-icon class="!h-[18px] !w-[18px] !text-[18px]">logout</mat-icon>
-                  <span>خروج از اتاق</span>
+                  <span>{{ 'خروج از اتاق' | t }}</span>
                 </button>
               }
             </div>
@@ -1392,14 +1397,14 @@
             <!-- Live Environment & Piece Switcher inside Gameplay -->
             <div class="mt-4 space-y-3 border-t border-slate-900/10 pt-4 dark:border-white/10">
               <div>
-                <div class="mb-2 text-xs font-semibold text-slate-600 dark:text-slate-400">محیط بازی</div>
+                <div class="mb-2 text-xs font-semibold text-slate-600 dark:text-slate-400">{{ 'محیط بازی' | t }}</div>
                 <div class="grid grid-cols-5 gap-1.5">
                   @for (env of environmentThemes; track env.id) {
                     <button
                       type="button"
                       (click)="setEnvironment(env.id)"
-                      [attr.title]="env.label"
-                      [attr.aria-label]="'تغییر محیط به ' + env.label"
+                      [attr.title]="(env.label | t)"
+                      [attr.aria-label]="('تغییر محیط به {0}' | t: [(env.label | t)])"
                       class="relative h-10 overflow-hidden rounded-lg border-2 transition-all"
                       [class.border-teal-600]="playerStats.environment() === env.id"
                       [class.dark:border-teal-400]="playerStats.environment() === env.id"
@@ -1410,7 +1415,7 @@
                       @if (env.imagePath) {
                         <img
                           [src]="env.imagePath"
-                          [alt]="env.label"
+                          [alt]="(env.label | t)"
                           referrerpolicy="no-referrer"
                           class="h-full w-full object-cover"
                         />
@@ -1425,7 +1430,7 @@
               </div>
 
               <div>
-                <div class="mb-1.5 text-xs font-semibold text-slate-600 dark:text-slate-400">طرح مهره</div>
+                <div class="mb-1.5 text-xs font-semibold text-slate-600 dark:text-slate-400">{{ 'طرح مهره' | t }}</div>
                 <div class="grid grid-cols-4 gap-1 rounded-xl bg-slate-100 p-1 dark:bg-[#0E0E0E]">
                   @for (piece of pieceStyles; track piece.id) {
                     <button
@@ -1440,14 +1445,14 @@
                       [class.text-slate-500]="playerStats.pieceStyle() !== piece.id"
                       [class.dark:text-slate-400]="playerStats.pieceStyle() !== piece.id"
                     >
-                      {{ piece.label }}
+                      {{ piece.label | t }}
                     </button>
                   }
                 </div>
               </div>
 
               <div>
-                <div class="mb-1.5 text-xs font-semibold text-slate-600 dark:text-slate-400">جنس صفحه</div>
+                <div class="mb-1.5 text-xs font-semibold text-slate-600 dark:text-slate-400">{{ 'جنس صفحه' | t }}</div>
                 <div class="grid grid-cols-5 gap-1 rounded-xl bg-slate-100 p-1 dark:bg-[#0E0E0E]">
                   <button
                     type="button"
@@ -1461,7 +1466,7 @@
                     [class.text-slate-500]="playerStats.boardTheme() !== 'navy'"
                     [class.dark:text-slate-400]="playerStats.boardTheme() !== 'navy'"
                   >
-                    ساده
+                    {{ 'ساده' | t }}
                   </button>
                   <button
                     type="button"
@@ -1472,7 +1477,7 @@
                     [class.text-slate-500]="playerStats.boardTheme() !== 'walnut'"
                     [class.dark:text-slate-400]="playerStats.boardTheme() !== 'walnut'"
                   >
-                    گردویی
+                    {{ 'گردویی' | t }}
                   </button>
                   <button
                     type="button"
@@ -1483,7 +1488,7 @@
                     [class.text-slate-500]="playerStats.boardTheme() !== 'felt'"
                     [class.dark:text-slate-400]="playerStats.boardTheme() !== 'felt'"
                   >
-                    نمد سبز
+                    {{ 'نمد سبز' | t }}
                   </button>
                   <button
                     type="button"
@@ -1494,7 +1499,7 @@
                     [class.text-slate-500]="playerStats.boardTheme() !== 'tile'"
                     [class.dark:text-slate-400]="playerStats.boardTheme() !== 'tile'"
                   >
-                    کاشی
+                    {{ 'کاشی' | t }}
                   </button>
                   <button
                     type="button"
@@ -1508,7 +1513,7 @@
                     [class.text-slate-500]="playerStats.boardTheme() !== 'glass'"
                     [class.dark:text-slate-400]="playerStats.boardTheme() !== 'glass'"
                   >
-                    شیشه‌ای
+                    {{ 'شیشه‌ای' | t }}
                   </button>
                 </div>
               </div>
@@ -1520,24 +1525,24 @@
           <!-- Player Rating & Stats Card -->
           <div class="rounded-2xl border border-slate-900/10 bg-white/90 p-5 shadow-sm backdrop-blur-md dark:border-white/10 dark:bg-[#171717]/88">
             <div class="mb-3 flex items-baseline justify-between gap-2">
-              <h2 class="text-base font-bold text-slate-950 dark:text-white">آمار و رتبه شما</h2>
-              <span class="text-xs font-semibold text-amber-700 dark:text-amber-300">{{ playerStats.rankTitle() }}</span>
+              <h2 class="text-base font-bold text-slate-950 dark:text-white">{{ 'آمار و رتبه شما' | t }}</h2>
+              <span class="text-xs font-semibold text-amber-700 dark:text-amber-300">{{ (playerStats.rankTitle() | t) }}</span>
             </div>
             <div class="grid grid-cols-3 divide-x divide-x-reverse divide-slate-900/10 text-center text-xs dark:divide-white/10">
               <div class="flex flex-col gap-1 px-2">
-                <span class="text-slate-500 dark:text-slate-400">امتیاز ELO</span>
+                <span class="text-slate-500 dark:text-slate-400">{{ 'امتیاز ELO' | t }}</span>
                 <span class="text-lg font-extrabold text-slate-950 tabular-nums dark:text-white">
                   {{ formatNumber(playerStats.stats().elo) }}
                 </span>
               </div>
               <div class="flex flex-col gap-1 px-2">
-                <span class="text-slate-500 dark:text-slate-400">برد پیاپی</span>
+                <span class="text-slate-500 dark:text-slate-400">{{ 'برد پیاپی' | t }}</span>
                 <span class="text-lg font-extrabold text-teal-700 tabular-nums dark:text-teal-300">
                   {{ formatNumber(playerStats.stats().currentStreak) }}
                 </span>
               </div>
               <div class="flex flex-col gap-1 px-2">
-                <span class="text-slate-500 dark:text-slate-400">بهترین رکورد</span>
+                <span class="text-slate-500 dark:text-slate-400">{{ 'بهترین رکورد' | t }}</span>
                 <span class="text-lg font-extrabold text-amber-700 tabular-nums dark:text-amber-300">
                   {{ formatNumber(playerStats.stats().bestStreak) }}
                 </span>
@@ -1549,7 +1554,7 @@
           @if (!isOnlineMode()) {
             <div class="rounded-2xl border border-slate-900/10 bg-white/90 p-5 shadow-sm backdrop-blur-md dark:border-white/10 dark:bg-[#171717]/88">
               <div class="mb-3 flex items-center justify-between gap-3">
-                <h2 class="text-base font-bold text-slate-950 dark:text-white">دست‌های اخیر</h2>
+                <h2 class="text-base font-bold text-slate-950 dark:text-white">{{ 'دست‌های اخیر' | t }}</h2>
                 @if (totalRounds() > 0) {
                   <button
                     type="button"
@@ -1557,14 +1562,14 @@
                     class="inline-flex items-center gap-1 whitespace-nowrap text-xs font-medium text-slate-500 transition-colors hover:text-rose-600 dark:text-slate-400 dark:hover:text-rose-300"
                   >
                     <mat-icon class="!h-[16px] !w-[16px] !text-[16px]">delete_outline</mat-icon>
-                    <span>پاک کردن</span>
+                    <span>{{ 'پاک کردن' | t }}</span>
                   </button>
                 }
               </div>
 
               @if (recentRounds().length === 0) {
                 <p class="py-2 text-sm text-slate-600 dark:text-slate-400">
-                  هنوز هیچ دستی به پایان نرسیده است. اولین حرکت را روی صفحه انجام دهید.
+                  {{ 'هنوز هیچ دستی به پایان نرسیده است. اولین حرکت را روی صفحه انجام دهید.' | t }}
                 </p>
               } @else {
                 <ul class="divide-y divide-slate-900/10 text-sm dark:divide-white/10">
@@ -1572,7 +1577,7 @@
                     <li class="flex items-center justify-between gap-3 py-2.5">
                       <div class="flex items-center gap-2">
                         <span class="text-xs text-slate-500 tabular-nums">
-                          دست {{ formatNumber(round.id) }}
+                          {{ 'دست {0}' | t: [formatNumber(round.id)] }}
                         </span>
                         <span aria-hidden="true" class="text-slate-400 dark:text-slate-600">·</span>
                         <span
@@ -1615,7 +1620,7 @@
     >
       <button
         type="button"
-        aria-label="بستن پنجره راهنما"
+        [attr.aria-label]="'بستن پنجره راهنما' | t"
         (click)="closeHelp()"
         class="absolute inset-0 bg-black/65 backdrop-blur-xs"
       ></button>
@@ -1624,11 +1629,11 @@
       >
         <div class="mb-4 flex items-center justify-between gap-4">
           <h2 id="help-dialog-title" class="text-xl font-extrabold text-slate-950 dark:text-white">
-            راهنمای بازی دوز
+            {{ 'راهنمای بازی دوز' | t }}
           </h2>
           <button
             type="button"
-            aria-label="بستن راهنما"
+            [attr.aria-label]="'بستن راهنما' | t"
             (click)="closeHelp()"
             class="inline-flex h-10 w-10 items-center justify-center rounded-xl text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-white/10 dark:hover:text-white"
           >
@@ -1638,27 +1643,27 @@
 
         <div class="divide-y divide-slate-200 text-sm leading-relaxed text-slate-700 dark:divide-white/10 dark:text-slate-300">
           <div class="py-3.5">
-            <h3 class="mb-1 font-bold text-slate-950 dark:text-white">۰۱. فضاها، تم تاریک/روشن و مهره‌ها</h3>
+            <h3 class="mb-1 font-bold text-slate-950 dark:text-white">{{ '۰۱. فضاها، تم تاریک/روشن و مهره‌ها' | t }}</h3>
             <p>
-              می‌توانید از میان ۵ فضای بازی (ساده، روی فرش ایرانی، روی چمن باغ، کنار آبشار و مبل و میز چوبی)، ۴ طرح مهره (یاقوت و فیروزه، خاتم و عاج، گل و سنگ یشم، کلاسیک)، ۴ جنس صفحه و حالت تاریک یا روشن، ظاهر دلخواه خود را حتی در میانه بازی انتخاب کنید.
+              {{ 'می‌توانید از میان ۵ فضای بازی (ساده، روی فرش ایرانی، روی چمن باغ، کنار آبشار و مبل و میز چوبی)، ۴ طرح مهره (یاقوت و فیروزه، خاتم و عاج، گل و سنگ یشم، کلاسیک)، ۴ جنس صفحه و حالت تاریک یا روشن، ظاهر دلخواه خود را حتی در میانه بازی انتخاب کنید.' | t }}
             </p>
           </div>
           <div class="py-3.5">
-            <h3 class="mb-1 font-bold text-slate-950 dark:text-white">۰۲. دوز ۳ تایی، ۹ تایی و ۱۲ تایی</h3>
+            <h3 class="mb-1 font-bold text-slate-950 dark:text-white">{{ '۰۲. دوز ۳ تایی، ۹ تایی و ۱۲ تایی' | t }}</h3>
             <p>
-              در دوز ۹ تایی (بدون خط مورب) و ۱۲ تایی (با خطوط مورب گوشه‌ها)، ابتدا تمام مهره‌ها را به نوبت می‌چینید و با هر دوز یک مهره آزاد حریف را حذف می‌کنید. سپس مهره‌های حلقه‌دار خود را به خانه‌های مجاور جابه‌جا می‌کنید. با فعال بودن «پرش آزاد»، وقتی ۳ مهره برایتان بماند می‌توانید به هر نقطه خالی بپرید.
+              {{ 'در دوز ۹ تایی (بدون خط مورب) و ۱۲ تایی (با خطوط مورب گوشه‌ها)، ابتدا تمام مهره‌ها را به نوبت می‌چینید و با هر دوز یک مهره آزاد حریف را حذف می‌کنید. سپس مهره‌های حلقه‌دار خود را به خانه‌های مجاور جابه‌جا می‌کنید. با فعال بودن «پرش آزاد»، وقتی ۳ مهره برایتان بماند می‌توانید به هر نقطه خالی بپرید.' | t }}
             </p>
           </div>
           <div class="py-3.5">
-            <h3 class="mb-1 font-bold text-slate-950 dark:text-white">۰۳. بازی آنلاین و امکانات حرفه‌ای</h3>
+            <h3 class="mb-1 font-bold text-slate-950 dark:text-white">{{ '۰۳. بازی آنلاین و امکانات حرفه‌ای' | t }}</h3>
             <p>
-              حالت «آنلاین با دوست» کد ۵ رقمی و لینک دعوت می‌سازد. ساعت نوبت (۱۵، ۳۰ یا ۶۰ ثانیه)، امتیاز ELO، دکمه «پیشنهاد حرکت» (کلید H) و بازپخش حرکت‌به‌حرکت در پایان دست فعال هستند.
+              {{ 'حالت «آنلاین با دوست» کد ۵ رقمی و لینک دعوت می‌سازد. ساعت نوبت (۱۵، ۳۰ یا ۶۰ ثانیه)، امتیاز ELO، دکمه «پیشنهاد حرکت» (کلید H) و بازپخش حرکت‌به‌حرکت در پایان دست فعال هستند.' | t }}
             </p>
           </div>
           <div class="py-3.5">
-            <h3 class="mb-1 font-bold text-slate-950 dark:text-white">۰۴. میان‌برهای صفحه‌کلید</h3>
+            <h3 class="mb-1 font-bold text-slate-950 dark:text-white">{{ '۰۴. میان‌برهای صفحه‌کلید' | t }}</h3>
             <p>
-              در دوز ۳ تایی کلیدهای <strong class="text-slate-950 dark:text-white">۱ تا ۹</strong> برای انتخاب خانه‌ها، کلید <strong class="text-slate-950 dark:text-white">F</strong> برای حالت تمام‌صفحه، کلید <strong class="text-slate-950 dark:text-white">Esc</strong> برای خروج، کلید <strong class="text-slate-950 dark:text-white">H</strong> برای پیشنهاد حرکت، کلید <strong class="text-slate-950 dark:text-white">Z</strong> برای بازگشت و کلید <strong class="text-slate-950 dark:text-white">R</strong> برای شروع مجدد کار می‌کنند.
+              {{ 'در دوز ۳ تایی کلیدهای' | t }} <strong class="text-slate-950 dark:text-white">{{ '۱ تا ۹' | t }}</strong> {{ 'برای انتخاب خانه‌ها، کلید' | t }} <strong class="text-slate-950 dark:text-white">F</strong> {{ 'برای حالت تمام‌صفحه، کلید' | t }} <strong class="text-slate-950 dark:text-white">Esc</strong> {{ 'برای خروج، کلید' | t }} <strong class="text-slate-950 dark:text-white">H</strong> {{ 'برای پیشنهاد حرکت، کلید' | t }} <strong class="text-slate-950 dark:text-white">Z</strong> {{ 'برای بازگشت و کلید' | t }} <strong class="text-slate-950 dark:text-white">R</strong> {{ 'برای شروع مجدد کار می‌کنند.' | t }}
             </p>
           </div>
         </div>
@@ -1670,7 +1675,7 @@
             class="inline-flex min-h-[42px] items-center gap-2 rounded-xl bg-teal-600 px-5 py-2 text-sm font-bold text-white transition-colors hover:bg-teal-500 dark:bg-teal-400 dark:text-slate-950 dark:hover:bg-teal-300"
           >
             <mat-icon class="!h-[18px] !w-[18px] !text-[18px]">check</mat-icon>
-            <span>متوجه شدم</span>
+            <span>{{ 'متوجه شدم' | t }}</span>
           </button>
         </div>
       </div>

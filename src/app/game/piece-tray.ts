@@ -1,13 +1,13 @@
-import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
+import { I18n, TranslatePipe } from '../i18n';
+import { inject, ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
 import { BoardColorTokens, resolveBoardColorTokens } from './color-palette';
-import { toPersianDigits } from './dooz-engine';
 import { DoozPieceSvg } from './dooz-piece-svg';
 import { BoardTheme, ColorMode, PieceStyle, Player } from './dooz.types';
 
 @Component({
   selector: 'app-piece-tray',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [DoozPieceSvg],
+  imports: [TranslatePipe, DoozPieceSvg],
   template: `
     <div
       class="flex w-full flex-row items-stretch justify-between gap-2.5 rounded-2xl border p-2.5 shadow-sm backdrop-blur-md transition-all duration-200 md:flex-col md:justify-start"
@@ -43,7 +43,7 @@ import { BoardTheme, ColorMode, PieceStyle, Player } from './dooz.types';
           [class.text-slate-500]="isLightNeutral() && !customBoardColor()"
           [class.text-slate-300/80]="!isLightNeutral() || customBoardColor() !== null"
         >
-          صفحه: {{ formatDigit(onBoardCount()) }}
+          {{ 'صفحه: {0}' | t: [formatDigit(onBoardCount())] }}
         </span>
       </div>
 
@@ -55,7 +55,7 @@ import { BoardTheme, ColorMode, PieceStyle, Player } from './dooz.types';
             [class.text-slate-600]="isLightNeutral() && !customBoardColor()"
             [class.text-slate-300]="!isLightNeutral() || customBoardColor() !== null"
           >
-            <span>در دست</span>
+            <span>{{ 'در دست' | t }}</span>
             <span class="font-extrabold tabular-nums">({{ formatDigit(inHandCount()) }})</span>
           </div>
 
@@ -84,7 +84,7 @@ import { BoardTheme, ColorMode, PieceStyle, Player } from './dooz.types';
                 [class.text-slate-400]="isLightNeutral()"
                 [class.text-slate-400/70]="!isLightNeutral()"
               >
-                تمام شد
+                {{ 'تمام شد' | t }}
               </span>
             }
           </div>
@@ -100,7 +100,7 @@ import { BoardTheme, ColorMode, PieceStyle, Player } from './dooz.types';
           [class.text-slate-500]="isLightNeutral() && outCount() === 0"
           [class.text-slate-400]="!isLightNeutral() && outCount() === 0"
         >
-          <span>خارج‌شده</span>
+          <span>{{ 'خارج‌شده' | t }}</span>
           <span class="tabular-nums">({{ formatDigit(outCount()) }})</span>
         </div>
 
@@ -147,6 +147,7 @@ import { BoardTheme, ColorMode, PieceStyle, Player } from './dooz.types';
   `,
 })
 export class PieceTray {
+  readonly i18n = inject(I18n);
   readonly player = input.required<Player>();
   readonly label = input.required<string>();
   readonly inHandCount = input<number>(0);
@@ -184,10 +185,10 @@ export class PieceTray {
   readonly overflowOutCount = computed<number>(() => Math.max(0, this.outCount() - 12));
 
   readonly trayAriaLabel = computed<string>(() => {
-    return `${this.label()}، در دست: ${toPersianDigits(this.inHandCount())}، روی صفحه: ${toPersianDigits(this.onBoardCount())}، خارج‌شده از بازی: ${toPersianDigits(this.outCount())}`;
+    return this.i18n.text("{0}، در دست: {1}، روی صفحه: {2}، خارج‌شده از بازی: {3}", [this.label(), this.i18n.digits(this.inHandCount()), this.i18n.digits(this.onBoardCount()), this.i18n.digits(this.outCount())]);
   });
 
   formatDigit(n: number): string {
-    return toPersianDigits(n);
+    return this.i18n.digits(n);
   }
 }

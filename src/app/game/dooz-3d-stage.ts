@@ -1,3 +1,4 @@
+import { TranslatePipe } from '../i18n';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -103,7 +104,7 @@ const STAGE_ENV_CONFIG: Record<EnvironmentTheme, StageEnvironmentConfig> = {
 @Component({
   selector: 'app-dooz-3d-stage',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [DoozBoard, MorrisBoard, PieceTray],
+  imports: [TranslatePipe, DoozBoard, MorrisBoard, PieceTray],
   styleUrl: './dooz-3d-stage.css',
   template: `
     <div
@@ -119,7 +120,7 @@ const STAGE_ENV_CONFIG: Record<EnvironmentTheme, StageEnvironmentConfig> = {
       (pointercancel)="onStagePointerUp($event)"
       (lostpointercapture)="onStagePointerUp($event)"
       role="region"
-      aria-label="محیط سه‌بعدی بازی دوز"
+      [attr.aria-label]="'محیط سه‌بعدی بازی دوز' | t"
     >
       @if (activeEnvOption().imagePath; as imgSrc) {
         <img
@@ -267,7 +268,7 @@ const STAGE_ENV_CONFIG: Record<EnvironmentTheme, StageEnvironmentConfig> = {
           (click)="resetOrbit(); $event.stopPropagation()"
           class="absolute top-3 left-3 z-10 inline-flex min-h-11 items-center gap-1.5 rounded-xl border border-white/20 bg-slate-950/85 px-3 text-xs font-semibold text-slate-100 transition-colors hover:bg-slate-900"
         >
-          بازنشانی زاویه
+          {{ 'بازنشانی زاویه' | t }}
         </button>
       }
     </div>

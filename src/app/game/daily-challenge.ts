@@ -1,3 +1,4 @@
+import { I18n, TranslatePipe } from '../i18n';
 import { ChangeDetectionStrategy, Component, DestroyRef, computed, inject, output, signal } from '@angular/core';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { DoozBoard } from './dooz-board';
@@ -5,28 +6,29 @@ import { PlayerJourney } from './player-journey';
 import { PlayerStats } from './player-stats';
 import { SoundFx } from './sound-fx';
 import { bestClassicMoves, canForceWin, dailyPuzzle, tehranDay } from './learning-engine';
-import { checkWinner, toPersianDigits } from './dooz-engine';
+import { checkWinner } from './dooz-engine';
 import { CellValue } from './dooz.types';
 import { ShareCard, challengeCode } from './share-card';
 @Component({
-  selector:'app-daily-challenge',imports:[DoozBoard,ReactiveFormsModule],changeDetection:ChangeDetectionStrategy.OnPush,
+  selector:'app-daily-challenge',imports: [TranslatePipe, DoozBoard,ReactiveFormsModule],changeDetection:ChangeDetectionStrategy.OnPush,
   template:`
-    <section class="challenge"><button class="back" type="button" (click)="back.emit()">← برگشت به بازی</button>
-      <span class="eyebrow">دو حرکت، یک فکر تازه</span><h1>معمای {{ date()===today() ? 'امروز' : 'دوستت' }}</h1>
-      <p>تو X هستی. حتی با بهترین دفاع حریف، با حداکثر دو حرکت خودت ببر.</p>
-      <div class="meta"><span>{{ code() }}</span><span>{{ n(journey.streak()) }} روز پیاپی</span></div>
+    <section class="challenge"><button class="back" type="button" (click)="back.emit()">{{ '← برگشت به بازی' | t }}</button>
+      <span class="eyebrow">{{ 'دو حرکت، یک فکر تازه' | t }}</span><h1>{{ (date() === today() ? 'معمای امروز' : 'معمای دوستت') | t }}</h1>
+      <p>{{ 'تو X هستی. حتی با بهترین دفاع حریف، با حداکثر دو حرکت خودت ببر.' | t }}</p>
+      <div class="meta"><span>{{ code() }}</span><span>{{ '{0} روز پیاپی' | t: [n(journey.streak())] }}</span></div>
       <app-dooz-board [board]="board()" currentTurn="X" [theme]="stats.boardTheme()" [pieceStyle]="stats.pieceStyle()" [colorMode]="stats.colorMode()" [disabled]="status()!=='PLAYING'" [showCellNumbers]="false" [winResult]="win()" (cellSelected)="play($event)" />
-      <p class="message" role="status">{{ message() }}</p>
-      <div class="actions">@if(status()==='SOLVED'){<button type="button" class="primary" [disabled]="sharing()" (click)="share()">{{ sharing()?'آماده‌سازی کارت…':'کارت نتیجه و دعوت دوست' }}</button>}@else if(status()==='FAILED'){<button type="button" class="primary" (click)="reset()">یک بار دیگه امتحان کن</button>}</div>
-      <details><summary>کد چالش دوستت را داری؟</summary><form (submit)="$event.preventDefault(); openCode()"><input aria-label="کد چالش" dir="ltr" placeholder="DOOZ-20261126" [formControl]="codeControl" maxlength="20"/><button type="submit">باز کردن</button></form></details>
-      <p class="note">روز معما بر اساس ساعت ایران عوض می‌شود. این تمرین امتیاز مهارت مسابقه را تغییر نمی‌دهد.</p>
+      <p class="message" role="status">{{ (message() | t) }}</p>
+      <div class="actions">@if(status()==='SOLVED'){<button type="button" class="primary" [disabled]="sharing()" (click)="share()">{{ sharing()?('آماده‌سازی کارت…' | t):('کارت نتیجه و دعوت دوست' | t) }}</button>}@else if(status()==='FAILED'){<button type="button" class="primary" (click)="reset()">{{ 'یک بار دیگه امتحان کن' | t }}</button>}</div>
+      <details><summary>{{ 'کد چالش دوستت را داری؟' | t }}</summary><form (submit)="$event.preventDefault(); openCode()"><input [attr.aria-label]="'کد چالش' | t" dir="ltr" placeholder="DOOZ-20261126" [formControl]="codeControl" maxlength="20"/><button type="submit">{{ 'باز کردن' | t }}</button></form></details>
+      <p class="note">{{ 'روز معما بر اساس ساعت ایران عوض می‌شود. این تمرین امتیاز مهارت مسابقه را تغییر نمی‌دهد.' | t }}</p>
     </section>
   `,
   styles:`:host{display:block}.back{display:block;min-height:44px;color:var(--muted);font-size:12px;margin-bottom:20px}.eyebrow{font-size:11px;color:var(--accent)}h1{font-size:30px;font-weight:900;margin-block:10px}p{font-size:13px;line-height:2;color:var(--muted)}.meta{display:flex;justify-content:space-between;gap:10px;margin-block:20px;font-size:11px;color:var(--accent)}.meta span:first-child{direction:ltr}.message{min-height:64px;margin-block:16px}.actions{display:flex;gap:10px}button{min-height:48px;border-radius:14px;padding:10px 16px;background:var(--soft);color:var(--accent);font-weight:700;font-size:12px}.primary{width:100%;background:var(--accent);color:var(--canvas)}details{margin-top:20px;border-top:1px solid var(--line)}summary{min-height:48px;align-content:center;font-size:12px;cursor:pointer}form{display:flex;gap:8px}input{width:100%;min-width:0;padding:10px;border:1px solid var(--line);border-radius:12px;background:var(--surface);font-size:12px}.note{font-size:10px;margin-top:20px}button:disabled{opacity:.5}`,
 })
 export class DailyChallenge{
+  readonly i18n = inject(I18n);
   readonly back=output<void>();readonly journey=inject(PlayerJourney);readonly stats=inject(PlayerStats);private readonly sound=inject(SoundFx);private readonly cards=inject(ShareCard);
-  readonly today=signal(tehranDay());readonly date=signal(this.today());readonly board=signal<CellValue[]>(dailyPuzzle(this.today()));readonly status=signal<'PLAYING'|'FAILED'|'SOLVED'>('PLAYING');readonly moves=signal(0);readonly message=signal('یک موقعیت کوچک؛ یک برد هوشمندانه.');readonly sharing=signal(false);readonly codeControl=new FormControl('',{nonNullable:true});readonly n=toPersianDigits;
+  readonly today=signal(tehranDay());readonly date=signal(this.today());readonly board=signal<CellValue[]>(dailyPuzzle(this.today()));readonly status=signal<'PLAYING'|'FAILED'|'SOLVED'>('PLAYING');readonly moves=signal(0);readonly message=signal('یک موقعیت کوچک؛ یک برد هوشمندانه.');readonly sharing=signal(false);readonly codeControl=new FormControl('',{nonNullable:true});readonly n=this.i18n.digits;
   readonly code=computed(()=>challengeCode(this.date()));readonly win=computed(()=>checkWinner(this.board()));
   private started=false;
   constructor(){
