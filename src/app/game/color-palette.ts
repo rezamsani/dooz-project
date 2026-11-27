@@ -97,17 +97,24 @@ export function relativeLuminance(hex: string): number {
 }
 
 export function getDefaultPieceHex(player: Player, style: PieceStyle): string {
-  if (style === 'wood') {
-    return player === 'X' ? '#7C2D12' : '#EFE2C6';
+  switch (style) {
+    case 'wood':
+      return player === 'X' ? '#7C2D12' : '#EFE2C6';
+    case 'crown':
+      return player === 'X' ? '#1E1B18' : '#F3E9D2';
+    case 'marble':
+      return player === 'X' ? '#27272A' : '#F8FAFC';
+    case 'brass':
+      return player === 'X' ? '#B45309' : '#CBD5E1';
+    case 'nature':
+      return player === 'X' ? '#FB7185' : '#059669';
+    case 'neon':
+      return player === 'X' ? '#EC4899' : '#06B6D4';
+    case 'classic':
+      return player === 'X' ? '#E11D48' : '#0D9488';
+    default:
+      return player === 'X' ? '#E11D48' : '#0D9488';
   }
-  if (style === 'nature') {
-    return player === 'X' ? '#FB7185' : '#059669';
-  }
-  if (style === 'classic') {
-    return player === 'X' ? '#E11D48' : '#0D9488';
-  }
-  // gemstone
-  return player === 'X' ? '#E11D48' : '#0D9488';
 }
 
 export function resolvePieceShades(
@@ -118,17 +125,23 @@ export function resolvePieceShades(
   const base = normalizeHex(customHex) ?? getDefaultPieceHex(player, style);
   const isLightBase = relativeLuminance(base) > 0.56;
 
-  const highlight = mixHex(base, '#FFFFFF', isLightBase ? 0.65 : 0.52);
+  const highlight = mixHex(base, '#FFFFFF', isLightBase ? 0.68 : 0.54);
   const mid = base;
-  const shadow = mixHex(base, '#05080F', isLightBase ? 0.34 : 0.52);
+  const shadow = mixHex(base, '#05080F', isLightBase ? 0.34 : 0.54);
   const emblem = isLightBase ? mixHex(base, '#1E140B', 0.78) : '#FFFDF7';
   const innerRing = isLightBase ? 'rgba(30,20,10,0.22)' : 'rgba(255,255,255,0.34)';
 
   let stroke = '#FDE68A';
-  if (style === 'wood') {
+  if (style === 'wood' || style === 'crown') {
     stroke = isLightBase ? '#92400E' : '#F59E0B';
+  } else if (style === 'marble') {
+    stroke = isLightBase ? '#CBD5E1' : '#52525B';
+  } else if (style === 'brass') {
+    stroke = isLightBase ? '#64748B' : '#FCD34D';
   } else if (style === 'nature') {
     stroke = isLightBase ? mixHex(base, '#166534', 0.45) : mixHex(base, '#FFFFFF', 0.68);
+  } else if (style === 'neon') {
+    stroke = mixHex(base, '#FFFFFF', 0.75);
   } else if (style === 'classic') {
     stroke = isLightBase ? mixHex(base, '#0F172A', 0.55) : mixHex(base, '#FFFFFF', 0.72);
   }

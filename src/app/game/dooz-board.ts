@@ -63,11 +63,11 @@ import { DoozPieceSvg } from './dooz-piece-svg';
             @if (cell !== null) {
               <svg
                 appPieceSvg
+                [threeD]="tabletop()"
                 [player]="cell"
                 [style]="pieceStyle()"
                 [customColor]="cell === 'X' ? customXColor() : customOColor()"
-                class="absolute inset-[12%] h-[76%] w-[76%] transition-opacity duration-150"
-                [class.drop-shadow-[2px_4px_2px_rgba(0,0,0,0.5)]]="tabletop()"
+                class="absolute inset-[10%] h-[80%] w-[80%] transition-opacity duration-150"
                 [class.opacity-45]="isExpiringCell($index)"
               ></svg>
             }

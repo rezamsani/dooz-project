@@ -89,14 +89,14 @@ const STAGE_ENV_CONFIG: Record<EnvironmentTheme, StageEnvironmentConfig> = {
     shadowTint: 'rgba(4, 18, 22, 0.78)',
   },
   simple: {
-    pitchDeg: 30,
+    pitchDeg: 32,
     rollDeg: 0,
     offsetX: 0,
-    offsetY: 2,
-    tableScale: 0.85,
+    offsetY: -2,
+    tableScale: 0.9,
     lightTint:
-      'radial-gradient(circle at 50% 42%, rgba(45, 212, 191, 0.14), transparent 62%)',
-    shadowTint: 'rgba(4, 10, 20, 0.65)',
+      'radial-gradient(circle at 46% 36%, rgba(255, 224, 178, 0.14), transparent 62%)',
+    shadowTint: 'rgba(6, 4, 2, 0.72)',
   },
 };
 
@@ -144,7 +144,7 @@ const STAGE_ENV_CONFIG: Record<EnvironmentTheme, StageEnvironmentConfig> = {
 
       <!-- 3D Perspective Viewport -->
       <div
-        class="scene-camera relative flex h-full w-full items-center justify-center px-3 pb-[76px] pt-4 sm:px-6"
+        class="scene-camera relative flex h-full w-full items-center justify-center px-3 pb-10 pt-3 sm:px-6"
       >
         <div
           class="scene-table relative flex w-full max-w-[660px] flex-col items-center justify-center"

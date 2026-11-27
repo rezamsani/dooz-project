@@ -1,9 +1,13 @@
 .scene { touch-action: pan-y pinch-zoom; container-type: size; }
 .scene.studio {
-  background: radial-gradient(ellipse at 32% 24%, #436056 0%, #233632 43%, #101b19 82%) !important;
+  background:
+    repeating-linear-gradient(90deg, rgba(255, 220, 175, 0.025) 0 2px, transparent 2px 46px),
+    radial-gradient(ellipse at 42% 32%, #4a3525 0%, #261b13 52%, #110d0a 90%) !important;
 }
 .scene.studio-light {
-  background: radial-gradient(ellipse at 32% 24%, #eaf2e7 0%, #bbcfc2 48%, #718d82 100%) !important;
+  background:
+    repeating-linear-gradient(90deg, rgba(120, 80, 40, 0.03) 0 2px, transparent 2px 46px),
+    radial-gradient(ellipse at 42% 32%, #f4ede2 0%, #d4c4ae 52%, #9a856e 100%) !important;
 }
 .scene-backdrop { opacity: .83; }
 .scene-vignette {

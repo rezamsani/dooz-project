@@ -566,4 +566,12 @@ export const MESSAGES: Readonly<Record<string, readonly [string, string]>> = {
   "۳ مهره · سریع، کلاسیک و حالت بی‌نهایت": ["3 pieces · fast, classic & infinite mode", "٣ قطع · سريع، كلاسيكي ووضع لا نهائي"],
   "۹ مهره · ۲۴ خانه بدون قطر با مرحله حذف و حرکت": ["9 pieces · 24 points without diagonals, capture & slide", "٩ قطع · ٢٤ نقطة دون أقطار مع الإزالة والتحريك"],
   "۱۲ مهره · خطوط مورب گوشه‌ها و پرش آزاد": ["12 pieces · corner diagonals & flying rule", "١٢ قطعة · أقطار الزوايا وقاعدة القفز"],
+  "تاج شاهی": ["Royal Crown", "التاج الملكي"],
+  "ایستاده شطرنجی": ["Upright Staunton finials", "قطع شطرنجية قائمة"],
+  "مرمر و ابسیدین": ["Marble & Obsidian", "الرخام والأوبسيديان"],
+  "سنگ صیقلی": ["Polished stone counters", "أحجار مصقولة"],
+  "برنز و نقره": ["Bronze & Silver", "البرونز والفضة"],
+  "قلم‌زنی اصیل": ["Engraved metal coins", "عملات معدنية منقوشة"],
+  "کریستال نئون": ["Neon Crystal", "الكريستال النيوني"],
+  "منشور درخشان": ["Luminous prism tokens", "منشورات مضيئة"],
 };

@@ -1,43 +1,52 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
   <defs>
-    <linearGradient id="bgGrad" x1="6" y1="4" x2="58" y2="60" gradientUnits="userSpaceOnUse">
-      <stop offset="0%" stop-color="#0F172A" />
-      <stop offset="55%" stop-color="#0D3B3E" />
-      <stop offset="100%" stop-color="#0B1623" />
+    <linearGradient id="bg" x1="8" y1="4" x2="56" y2="60" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#134E4A" />
+      <stop offset="55%" stop-color="#0A2829" />
+      <stop offset="100%" stop-color="#061217" />
     </linearGradient>
-    <linearGradient id="winGrad" x1="16" y1="16" x2="48" y2="48" gradientUnits="userSpaceOnUse">
-      <stop offset="0%" stop-color="#FDE68A" />
-      <stop offset="100%" stop-color="#F59E0B" />
+    <linearGradient id="gold" x1="10" y1="8" x2="54" y2="56" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#FEF3C7" />
+      <stop offset="45%" stop-color="#F59E0B" />
+      <stop offset="100%" stop-color="#D97706" />
     </linearGradient>
-    <radialGradient id="tealGem" cx="35%" cy="30%" r="65%">
-      <stop offset="0%" stop-color="#CCFBF1" />
-      <stop offset="45%" stop-color="#2DD4BF" />
+    <radialGradient id="turq" cx="35%" cy="28%" r="70%">
+      <stop offset="0%" stop-color="#ECFEFF" />
+      <stop offset="42%" stop-color="#2DD4BF" />
       <stop offset="100%" stop-color="#0F766E" />
     </radialGradient>
-    <radialGradient id="rubyGem" cx="35%" cy="30%" r="65%">
+    <radialGradient id="ruby" cx="35%" cy="28%" r="70%">
       <stop offset="0%" stop-color="#FFE4E6" />
       <stop offset="45%" stop-color="#FB7185" />
       <stop offset="100%" stop-color="#BE123C" />
     </radialGradient>
   </defs>
 
-  <!-- Outer rounded badge -->
-  <rect x="2" y="2" width="60" height="60" rx="15" fill="url(#bgGrad)" stroke="#2DD4BF" stroke-opacity="0.45" stroke-width="2" />
+  <!-- Full-bleed rounded tile for maximum crispness at 16x16 & 32x32 -->
+  <rect x="0" y="0" width="64" height="64" rx="16" fill="url(#bg)" />
+  <rect x="1.5" y="1.5" width="61" height="61" rx="14.5" stroke="url(#gold)" stroke-opacity="0.72" stroke-width="3" />
 
-  <!-- Subtle Dooz/Morris board grid -->
-  <rect x="14" y="14" width="36" height="36" rx="4" stroke="#5EEAD4" stroke-opacity="0.35" stroke-width="2.5" />
-  <line x1="32" y1="14" x2="32" y2="50" stroke="#5EEAD4" stroke-opacity="0.28" stroke-width="2.2" />
-  <line x1="14" y1="32" x2="50" y2="32" stroke="#5EEAD4" stroke-opacity="0.28" stroke-width="2.2" />
+  <!-- Clean bold 2x2 inner board cross -->
+  <line x1="32" y1="10" x2="32" y2="54" stroke="#5EEAD4" stroke-opacity="0.22" stroke-width="4" stroke-linecap="round" />
+  <line x1="10" y1="32" x2="54" y2="32" stroke="#5EEAD4" stroke-opacity="0.22" stroke-width="4" stroke-linecap="round" />
 
-  <!-- Winning diagonal line -->
-  <line x1="17" y1="17" x2="47" y2="47" stroke="url(#winGrad)" stroke-width="3.5" stroke-linecap="round" />
+  <!-- Bold golden Dooz winning beam -->
+  <line x1="15" y1="15" x2="49" y2="49" stroke="url(#gold)" stroke-width="6.5" stroke-linecap="round" />
 
-  <!-- Opponent ruby pieces -->
-  <circle cx="47" cy="17" r="5.5" fill="url(#rubyGem)" stroke="#0B1623" stroke-width="1.5" />
-  <circle cx="17" cy="47" r="5.5" fill="url(#rubyGem)" stroke="#0B1623" stroke-width="1.5" />
+  <!-- Contrasting Ruby X & Ring accents -->
+  <g stroke="url(#ruby)" stroke-width="5.5" stroke-linecap="round">
+    <line x1="43" y1="12" x2="52" y2="21" />
+    <line x1="52" y1="12" x2="43" y2="21" />
+  </g>
+  <circle cx="16.5" cy="47.5" r="6.5" fill="url(#ruby)" stroke="#061217" stroke-width="2" />
 
-  <!-- Winning turquoise pieces -->
-  <circle cx="17" cy="17" r="6" fill="url(#tealGem)" stroke="#FEF3C7" stroke-width="1.5" />
-  <circle cx="32" cy="32" r="6.5" fill="url(#tealGem)" stroke="#FEF3C7" stroke-width="1.5" />
-  <circle cx="47" cy="47" r="6" fill="url(#tealGem)" stroke="#FEF3C7" stroke-width="1.5" />
+  <!-- Three luminous Turquoise Dooz gems -->
+  <circle cx="15" cy="15" r="8" fill="url(#turq)" stroke="#FEF3C7" stroke-width="2" />
+  <circle cx="32" cy="32" r="8.5" fill="url(#turq)" stroke="#FEF3C7" stroke-width="2" />
+  <circle cx="49" cy="49" r="8" fill="url(#turq)" stroke="#FEF3C7" stroke-width="2" />
+
+  <!-- Crisp catchlight glints -->
+  <circle cx="12.5" cy="12.5" r="2.2" fill="#FFFFFF" fill-opacity="0.85" />
+  <circle cx="29.2" cy="29.2" r="2.4" fill="#FFFFFF" fill-opacity="0.85" />
+  <circle cx="46.5" cy="46.5" r="2.2" fill="#FFFFFF" fill-opacity="0.85" />
 </svg>

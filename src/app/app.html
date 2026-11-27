@@ -533,14 +533,22 @@
                       <span
                         class="h-3.5 w-3.5 rounded-full border border-white/80 shadow-xs"
                         [class.bg-rose-600]="piece.id === 'gemstone' || piece.id === 'classic'"
+                        [class.bg-[#1E1B18]]="piece.id === 'crown'"
                         [class.bg-amber-800]="piece.id === 'wood'"
+                        [class.bg-zinc-800]="piece.id === 'marble'"
+                        [class.bg-amber-600]="piece.id === 'brass'"
                         [class.bg-rose-400]="piece.id === 'nature'"
+                        [class.bg-pink-500]="piece.id === 'neon'"
                       ></span>
                       <span
                         class="h-3.5 w-3.5 rounded-full border border-white/80 shadow-xs"
                         [class.bg-teal-500]="piece.id === 'gemstone' || piece.id === 'classic'"
+                        [class.bg-[#F3E9D2]]="piece.id === 'crown'"
                         [class.bg-amber-100]="piece.id === 'wood'"
+                        [class.bg-slate-100]="piece.id === 'marble'"
+                        [class.bg-slate-300]="piece.id === 'brass'"
                         [class.bg-emerald-600]="piece.id === 'nature'"
+                        [class.bg-cyan-400]="piece.id === 'neon'"
                       ></span>
                     </span>
                   </button>
@@ -950,12 +958,12 @@
                 (morrisNodeSelected)="onMorrisNodeSelected($event)"
               />
 
-              <!-- Camera Preset Controls -->
-              <div class="camera-picker absolute inset-x-2 bottom-2 mx-auto flex w-max max-w-[calc(100%-1rem)] items-center gap-1 rounded-2xl border border-white/15 bg-[#152421] p-1 text-xs text-slate-100" role="group" [attr.aria-label]="'زاویهٔ دوربین' | t">
+              <!-- Compact Corner Camera Preset Controls (kept clear of board surface) -->
+              <div class="camera-picker absolute bottom-2.5 left-2.5 flex items-center gap-0.5 rounded-xl border border-white/15 bg-black/55 p-1 text-[11px] text-slate-100 backdrop-blur-md" role="group" [attr.aria-label]="'زاویهٔ دوربین' | t">
                 <button
                   type="button"
                   (click)="setCameraPreset('TABLE')"
-                  class="min-h-11 min-w-11 rounded-xl px-3 font-semibold transition-colors hover:bg-white/10"
+                  class="min-h-8 rounded-lg px-2.5 font-semibold transition-colors hover:bg-white/15"
                   [attr.aria-pressed]="cameraPreset() === 'TABLE'"
                 >
                   {{ 'زاویه میز' | t }}
@@ -963,7 +971,7 @@
                 <button
                   type="button"
                   (click)="setCameraPreset('TOP')"
-                  class="min-h-11 min-w-11 rounded-xl px-3 font-semibold transition-colors hover:bg-white/10"
+                  class="min-h-8 rounded-lg px-2.5 font-semibold transition-colors hover:bg-white/15"
                   [attr.aria-pressed]="cameraPreset() === 'TOP'"
                 >
                   {{ 'از بالا' | t }}
@@ -971,7 +979,7 @@
                 <button
                   type="button"
                   (click)="setCameraPreset('CINEMA')"
-                  class="min-h-11 min-w-11 rounded-xl px-3 font-semibold transition-colors hover:bg-white/10"
+                  class="min-h-8 rounded-lg px-2.5 font-semibold transition-colors hover:bg-white/15"
                   [attr.aria-pressed]="cameraPreset() === 'CINEMA'"
                 >
                   {{ 'سینمایی' | t }}
@@ -1434,7 +1442,7 @@
 
               <div>
                 <div class="mb-1.5 text-xs font-semibold text-slate-600 dark:text-slate-400">{{ 'طرح مهره' | t }}</div>
-                <div class="grid grid-cols-4 gap-1 rounded-xl bg-slate-100 p-1 dark:bg-[#0E0E0E]">
+                <div class="grid grid-cols-2 gap-1 rounded-xl bg-slate-100 p-1 sm:grid-cols-4 dark:bg-[#0E0E0E]">
                   @for (piece of pieceStyles; track piece.id) {
                     <button
                       type="button"

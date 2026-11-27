@@ -257,8 +257,12 @@ export class PlayerStats {
       const rawPiece = this.storage.getItem(PIECE_STYLE_KEY);
       if (
         rawPiece === 'gemstone' ||
+        rawPiece === 'crown' ||
         rawPiece === 'wood' ||
+        rawPiece === 'marble' ||
+        rawPiece === 'brass' ||
         rawPiece === 'nature' ||
+        rawPiece === 'neon' ||
         rawPiece === 'classic'
       ) {
         this.pieceStyle.set(rawPiece);

@@ -11,7 +11,15 @@ export type BoardRule = 'CLASSIC' | 'INFINITE';
 export type BoardTheme = 'navy' | 'walnut' | 'felt' | 'tile' | 'glass';
 export type ColorMode = 'dark' | 'light';
 export type EnvironmentTheme = 'simple' | 'carpet' | 'meadow' | 'waterfall' | 'lounge' | 'courtyard' | 'khatam';
-export type PieceStyle = 'gemstone' | 'wood' | 'nature' | 'classic';
+export type PieceStyle =
+  | 'gemstone'
+  | 'crown'
+  | 'wood'
+  | 'marble'
+  | 'brass'
+  | 'nature'
+  | 'neon'
+  | 'classic';
 export type ViewMode = '3d' | '2d';
 export type TurnTimeLimit = 0 | 15 | 30 | 60;
 
@@ -83,8 +91,12 @@ export interface PieceStyleOption {
 
 export const PIECE_STYLES: readonly PieceStyleOption[] = [
   { id: 'gemstone', label: 'یاقوت و فیروزه', subtitle: 'جواهر سنتی' },
+  { id: 'crown', label: 'تاج شاهی', subtitle: 'ایستاده شطرنجی' },
   { id: 'wood', label: 'خاتم و عاج', subtitle: 'چوب منبت‌کاری' },
+  { id: 'marble', label: 'مرمر و ابسیدین', subtitle: 'سنگ صیقلی' },
+  { id: 'brass', label: 'برنز و نقره', subtitle: 'قلم‌زنی اصیل' },
   { id: 'nature', label: 'گل و سنگ یشم', subtitle: 'طبیعی و شاداب' },
+  { id: 'neon', label: 'کریستال نئون', subtitle: 'منشور درخشان' },
   { id: 'classic', label: 'کلاسیک مدرن', subtitle: 'ساده و خطی' },
 ];
 

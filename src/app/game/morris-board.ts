@@ -106,12 +106,12 @@ let nextMorrisBoardUid = 1;
           rx="12"
           fill="none"
           [attr.stroke]="trackStroke()"
-          stroke-width="1.2"
-          opacity="0.34"
+          stroke-width="1"
+          opacity="0.22"
         />
 
         <!-- Delicate Persian Shamseh centerpiece rosette -->
-        <g transform="translate(200, 200)" opacity="0.16" aria-hidden="true">
+        <g transform="translate(200, 200)" opacity="0.08" aria-hidden="true">
           <circle cx="0" cy="0" r="30" fill="none" [attr.stroke]="trackStroke()" stroke-width="1.2" />
           <polygon
             points="0,-24 6,-6 24,0 6,6 0,24 -6,6 -24,0 -6,-6"
@@ -157,7 +157,7 @@ let nextMorrisBoardUid = 1;
             [attr.x2]="nodes[edge.to].x"
             [attr.y2]="nodes[edge.to].y"
             [attr.stroke]="edge.diagonal ? diagonalStroke() : trackStroke()"
-            [attr.stroke-width]="edge.diagonal ? 3 : 3.8"
+            [attr.stroke-width]="edge.diagonal ? 2.8 : 3.4"
             stroke-linecap="round"
           />
           <!-- Layer 3: Subtle top bevel highlight -->
@@ -166,8 +166,8 @@ let nextMorrisBoardUid = 1;
             [attr.y1]="nodes[edge.from].y - 0.6"
             [attr.x2]="nodes[edge.to].x"
             [attr.y2]="nodes[edge.to].y - 0.6"
-            stroke="rgba(255,255,255,0.2)"
-            [attr.stroke-width]="edge.diagonal ? 0.9 : 1.1"
+            stroke="rgba(255,255,255,0.14)"
+            [attr.stroke-width]="edge.diagonal ? 0.8 : 1"
             stroke-linecap="round"
           />
         }
@@ -354,15 +354,15 @@ let nextMorrisBoardUid = 1;
                   stroke-dasharray="5 3"
                 />
               } @else if (isMovable && !disabled()) {
+                <!-- Calm hover-only indicator so board remains uncluttered like a real tabletop -->
                 <circle
                   [attr.cx]="node.x"
                   [attr.cy]="node.y"
-                  r="21"
-                  [attr.fill]="isLightNeutral() ? 'rgba(15, 23, 42, 0.08)' : 'rgba(248, 250, 252, 0.1)'"
+                  r="20.5"
+                  fill="none"
                   [attr.stroke]="isLightNeutral() ? '#334155' : '#E2E8F0'"
                   stroke-width="2"
-                  stroke-dasharray="4 3"
-                  opacity="0.88"
+                  class="opacity-0 transition-opacity duration-150 group-hover:opacity-75"
                 />
               } @else if (isMillNode) {
                 <circle
@@ -376,27 +376,19 @@ let nextMorrisBoardUid = 1;
                 />
               }
 
-              <!-- Sculpted Piece Body (gently lifted with deeper shadow when selected) -->
+              <!-- Sculpted Piece Body (3D upright extrusion + directional cast shadow in tabletop mode) -->
               <g
                 [attr.opacity]="isBlockedOwn ? 0.58 : 1"
-                [attr.transform]="isSelected ? 'translate(0, -3)' : null"
+                [attr.transform]="isSelected ? 'translate(0, -4) scale(1.06)' : null"
+                style="transform-box: fill-box; transform-origin: center;"
               >
-                @if (isSelected) {
-                  <ellipse
-                    [attr.cx]="node.x"
-                    [attr.cy]="node.y + 6.5"
-                    rx="15.5"
-                    ry="13"
-                    fill="rgba(0,0,0,0.42)"
-                  />
-                }
                 <svg
                   appPieceSvg
-                  [class.drop-shadow-[2px_4px_2px_rgba(0,0,0,0.5)]]="tabletop()"
-                  [attr.x]="node.x - 19"
-                  [attr.y]="node.y - 19"
-                  width="38"
-                  height="38"
+                  [threeD]="tabletop()"
+                  [attr.x]="tabletop() ? node.x - 21 : node.x - 19"
+                  [attr.y]="tabletop() ? node.y - 24 : node.y - 19"
+                  [attr.width]="tabletop() ? 42 : 38"
+                  [attr.height]="tabletop() ? 44 : 38"
                   [player]="owner"
                   [style]="pieceStyle()"
                   [customColor]="owner === 'X' ? customXColor() : customOColor()"
