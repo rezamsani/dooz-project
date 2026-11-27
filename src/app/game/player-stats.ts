@@ -4,6 +4,7 @@ import { normalizeHex } from './color-palette';
 import { DeviceStorage } from './device-storage';
 import { COINS_PER_ROUND, PlayerRecord, MatchOutcome, emptyRecord, restoreRecord } from './player-score';
 import {
+  AiStarterMode,
   BoardTheme,
   ColorMode,
   ENVIRONMENT_THEMES,
@@ -24,6 +25,7 @@ const VIEW_MODE_KEY = 'dooz_view_mode_v1';
 const CUSTOM_X_COLOR_KEY = 'dooz_custom_x_color_v1';
 const CUSTOM_O_COLOR_KEY = 'dooz_custom_o_color_v1';
 const CUSTOM_BOARD_COLOR_KEY = 'dooz_custom_board_color_v1';
+const AI_STARTER_KEY = 'dooz_ai_starter_v1';
 
 @Injectable({ providedIn: 'root' })
 export class PlayerStats {
@@ -36,6 +38,7 @@ export class PlayerStats {
   readonly environment = signal<EnvironmentTheme>('simple');
   readonly pieceStyle = signal<PieceStyle>('classic');
   readonly viewMode = signal<ViewMode>('2d');
+  readonly aiStarterMode = signal<AiStarterMode>('HUMAN');
   readonly customXColor = signal<string | null>(null);
   readonly customOColor = signal<string | null>(null);
   readonly customBoardColor = signal<string | null>(null);
@@ -104,6 +107,11 @@ export class PlayerStats {
   setViewMode(mode: ViewMode): void {
     this.viewMode.set(mode);
     this.writeStorage(VIEW_MODE_KEY, mode);
+  }
+
+  setAiStarterMode(mode: AiStarterMode): void {
+    this.aiStarterMode.set(mode);
+    this.writeStorage(AI_STARTER_KEY, mode);
   }
 
   toggleViewMode(): void {
@@ -266,6 +274,11 @@ export class PlayerStats {
       const rawView = this.storage.getItem(VIEW_MODE_KEY);
       if (rawView === '3d' || rawView === '2d') {
         this.viewMode.set(rawView);
+      }
+
+      const rawAiStarter = this.storage.getItem(AI_STARTER_KEY);
+      if (rawAiStarter === 'HUMAN' || rawAiStarter === 'AI' || rawAiStarter === 'ALTERNATE') {
+        this.aiStarterMode.set(rawAiStarter);
       }
 
       this.customXColor.set(normalizeHex(this.storage.getItem(CUSTOM_X_COLOR_KEY)));

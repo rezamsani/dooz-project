@@ -10,6 +10,7 @@ describe('App', () => {
     localStorage.removeItem('dooz_language_v1');
     localStorage.removeItem('dooz_player_stats_v1');
     localStorage.removeItem('dooz_journey_v1');
+    localStorage.removeItem('dooz_ai_starter_v1');
     await TestBed.configureTestingModule({
       imports: [App],
     }).compileComponents();
@@ -193,5 +194,57 @@ describe('App', () => {
       ? {coins:1,wins:0}
       : {coins:1,wins:1});
     expect(app.roundCoins()).toBe(1);
+  });
+
+  it('supports starting with the human, the bot, or alternating after each round in AI mode', () => {
+    vi.useFakeTimers();
+    try {
+      const fixture = TestBed.createComponent(App);
+      const app = fixture.componentInstance;
+      app.setGameMode('AI');
+
+      // Bot moves first when AI starter is selected
+      app.setAiStarterMode('AI');
+      app.startGame();
+      expect(app.startingPlayer()).toBe('O');
+      expect(app.currentTurn()).toBe('O');
+      vi.advanceTimersByTime(1000);
+      expect(app.moveCount()).toBe(1);
+      expect(app.currentTurn()).toBe('X');
+
+      // Human moves first even when choosing O
+      app.setAiStarterMode('HUMAN');
+      app.setHumanSymbol('O');
+      app.startGame();
+      expect(app.startingPlayer()).toBe('O');
+      expect(app.currentTurn()).toBe('O');
+      app.nextRound();
+      expect(app.startingPlayer()).toBe('O');
+
+      // Alternates starter after each round
+      app.setHumanSymbol('X');
+      app.setAiStarterMode('ALTERNATE');
+      app.startGame();
+      expect(app.startingPlayer()).toBe('X');
+      app.nextRound();
+      expect(app.startingPlayer()).toBe('O');
+      vi.advanceTimersByTime(1000);
+      expect(app.moveCount()).toBe(1);
+      app.nextRound();
+      expect(app.startingPlayer()).toBe('X');
+      expect(localStorage.getItem('dooz_ai_starter_v1')).toBe('ALTERNATE');
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('shows the step-by-step Wi-Fi guide in LAN mode', () => {
+    const fixture = TestBed.createComponent(App);
+    const app = fixture.componentInstance;
+    app.setGameMode('LAN');
+    fixture.detectChanges();
+    const guide: HTMLElement | null = fixture.nativeElement.querySelector('.wifi-guide');
+    expect(guide).toBeTruthy();
+    expect(guide?.querySelectorAll('li')).toHaveLength(4);
   });
 });

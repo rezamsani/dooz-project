@@ -28,6 +28,7 @@ import {
   isBoardFull,
 } from './game/dooz-engine';
 import {
+  AiStarterMode,
   BoardRule,
   BoardTheme,
   CellValue,
@@ -50,6 +51,7 @@ import {
   ViewMode,
   WinResult,
 } from './game/dooz.types';
+import { LanSettingsTarget, parseLanInvite } from './game/lan-session';
 import { MorrisBoard } from './game/morris-board';
 import {
   MorrisAiDecision,
@@ -202,6 +204,7 @@ export class App {
   readonly allowFlying = signal<boolean>(true);
   readonly turnTimeLimit = signal<TurnTimeLimit>(0);
   readonly humanSymbol = signal<Player>('X');
+  readonly aiStarterMode = this.playerStats.aiStarterMode;
 
   // Active 3-piece board state
   readonly board = signal<CellValue[]>(createEmptyBoard());
@@ -705,15 +708,18 @@ export class App {
 
   constructor() {
     if (this.runtimeConfig.isNative && isPlatformBrowser(this.platformId)) {
-      void NativeApp.addListener('backButton', () => {
-        this.zone.run(() => this.onNativeBack());
-      }).then((listener) => {
-        if (this.destroyRef.destroyed) {
-          void listener.remove();
-        } else {
-          this.destroyRef.onDestroy(() => { void listener.remove(); });
-        }
-      });
+      this.registerNativeListener(
+        NativeApp.addListener('backButton', () => {
+          this.zone.run(() => this.onNativeBack());
+        }),
+      );
+      this.registerNativeListener(
+        NativeApp.addListener('appStateChange', ({ isActive }) => {
+          if (isActive && this.isLanMode()) {
+            this.zone.run(() => { void this.onlineClient.refreshLocalStatus(); });
+          }
+        }),
+      );
     }
     this.onlineClient.onRoomState((room, role) => {
       this.syncFromOnlineRoom(room, role);
@@ -781,6 +787,9 @@ export class App {
       this.onlineClient.leaveRoom();
     }
     this.gameMode.set(mode);
+    if (mode === 'LAN') {
+      void this.onlineClient.refreshLocalStatus();
+    }
   }
 
   openBotRoster(): void {
@@ -859,6 +868,21 @@ export class App {
   setHumanSymbol(symbol: Player): void {
     this.soundFx.playClick();
     this.humanSymbol.set(symbol);
+  }
+
+  setAiStarterMode(mode: AiStarterMode): void {
+    this.soundFx.playClick();
+    this.playerStats.setAiStarterMode(mode);
+  }
+
+  private registerNativeListener(pending: Promise<{ remove: () => Promise<void> }>): void {
+    void pending.then((listener) => {
+      if (this.destroyRef.destroyed) {
+        void listener.remove();
+      } else {
+        this.destroyRef.onDestroy(() => { void listener.remove(); });
+      }
+    });
   }
 
   goToTitleMenu(): void {
@@ -1003,6 +1027,33 @@ export class App {
     this.joinWifiRoom();
   }
 
+  openWifiDeviceSettings(target: LanSettingsTarget): void {
+    this.soundFx.playClick();
+    void this.onlineClient.openLocalSettings(target);
+  }
+
+  refreshWifiStatus(): void {
+    this.soundFx.playClick();
+    void this.onlineClient.refreshLocalStatus();
+  }
+
+  async pasteAndJoinWifiRoom(): Promise<void> {
+    if (!isPlatformBrowser(this.platformId)) return;
+    this.soundFx.playClick();
+    try {
+      const clip = (await navigator.clipboard?.readText?.()) ?? '';
+      const invite = parseLanInvite(clip);
+      if (!invite) {
+        this.onlineClient.errorMessage.set('دعوت‌نامهٔ وای‌فای معتبری در کلیپ‌بورد نیست.');
+        return;
+      }
+      this.lanInviteControl.setValue(`${invite.address}:${invite.port}/${invite.code}`);
+      this.joinWifiRoom();
+    } catch {
+      this.onlineClient.errorMessage.set('دسترسی به کلیپ‌بورد ممکن نشد. دعوت‌نامه را دستی وارد کنید.');
+    }
+  }
+
   joinOnlineRoom(): void {
     if (!this.playerStats.storage.canReadStats()) return;
     this.soundFx.playClick();
@@ -1116,8 +1167,10 @@ export class App {
       return;
     }
     this.soundFx.playClick();
-    this.startingPlayer.set('X');
-    this.resetRoundState('X');
+    const starter: Player =
+      this.gameMode() === 'AI' ? this.resolveAiStarter(false) : 'X';
+    this.startingPlayer.set(starter);
+    this.resetRoundState(starter);
   }
 
   nextRound(): void {
@@ -1127,9 +1180,20 @@ export class App {
     }
     this.soundFx.playClick();
     const nextStarter: Player =
-      this.gameMode() === 'LOCAL_2P' ? getOpponent(this.startingPlayer()) : 'X';
+      this.gameMode() === 'LOCAL_2P'
+        ? getOpponent(this.startingPlayer())
+        : this.gameMode() === 'AI'
+          ? this.resolveAiStarter(true)
+          : 'X';
     this.startingPlayer.set(nextStarter);
     this.resetRoundState(nextStarter);
+  }
+
+  private resolveAiStarter(nextRound: boolean): Player {
+    const mode = this.playerStats.aiStarterMode();
+    if (mode === 'AI') return this.aiSymbol();
+    if (mode === 'ALTERNATE' && nextRound) return getOpponent(this.startingPlayer());
+    return this.humanSymbol();
   }
 
   restartCurrentRound(): void {

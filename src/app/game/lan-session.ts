@@ -5,6 +5,13 @@ import { GuestIdentity, RoomCoordinator, RoomPeer, randomHex } from './room-coor
 interface LocalEndpoint { address: string; port: number; }
 interface LocalInvite extends LocalEndpoint { code: string; }
 interface PeerEvent { id: number; }
+export type LanSettingsTarget = 'wifi' | 'hotspot' | 'vpn';
+export interface LanNetworkStatus {
+  ready: boolean;
+  address?: string;
+  hotspot: boolean;
+  vpnActive: boolean;
+}
 
 export interface LanPlugin {
   host(): Promise<LocalEndpoint>;
@@ -12,6 +19,8 @@ export interface LanPlugin {
   send(packet: PeerEvent & { message: string }): Promise<void>;
   drop(peer: PeerEvent): Promise<void>;
   stop(): Promise<void>;
+  status?(): Promise<LanNetworkStatus>;
+  openSettings?(options: { target: LanSettingsTarget }): Promise<void>;
   addListener(event: 'packet', listener: (packet: PeerEvent & { message: string }) => void): Promise<PluginListenerHandle>;
   addListener(event: 'disconnected', listener: (peer: PeerEvent) => void): Promise<PluginListenerHandle>;
 }
@@ -20,6 +29,25 @@ const transport = registerPlugin<LanPlugin>('LanTransport');
 
 export function lanAvailable(): boolean {
   return Capacitor.getPlatform() === 'android' && Capacitor.isPluginAvailable('LanTransport');
+}
+
+export async function checkLanStatus(native: LanPlugin = transport): Promise<LanNetworkStatus | null> {
+  if (!lanAvailable() || typeof native.status !== 'function') return null;
+  try {
+    return await native.status();
+  } catch {
+    return null;
+  }
+}
+
+export async function openLanSettings(target: LanSettingsTarget, native: LanPlugin = transport): Promise<boolean> {
+  if (!lanAvailable() || typeof native.openSettings !== 'function') return false;
+  try {
+    await native.openSettings({ target });
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 export function parseLanInvite(value: string): LocalInvite | null {

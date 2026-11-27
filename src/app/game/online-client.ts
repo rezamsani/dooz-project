@@ -3,7 +3,7 @@ import { DestroyRef, Injectable, PLATFORM_ID, computed, inject, signal } from '@
 import { RuntimeConfig } from '../runtime-config';
 import { PlayerAvatar } from './avatar';
 import { DeviceStorage } from './device-storage';
-import { LanSession, lanAvailable, parseLanInvite } from './lan-session';
+import { LanNetworkStatus, LanSession, LanSettingsTarget, checkLanStatus, lanAvailable, openLanSettings, parseLanInvite } from './lan-session';
 import {
   Player,
   QuickEmoteId,
@@ -35,6 +35,7 @@ export class OnlineClient {
   private emoteTimerId: ReturnType<typeof setTimeout> | null = null;
   private stateListener: ((room: RoomSnapshotDto, role: Player) => void) | null = null;
   private localAttempt = 0;
+  private localStatusRequest = 0;
   private joinTimeout: ReturnType<typeof setTimeout> | null = null;
   private localEndpoint = signal('');
 
@@ -45,6 +46,7 @@ export class OnlineClient {
   readonly activeEmote = signal<EmoteBanner | null>(null);
   readonly localMode = signal(false);
   readonly localSupported = lanAvailable();
+  readonly localStatus = signal<LanNetworkStatus | null>(null);
   readonly localInvite = computed(() => {
     const code = this.room()?.code;
     return code && this.localEndpoint() ? `${this.localEndpoint()}/${code}` : '';
@@ -79,6 +81,18 @@ export class OnlineClient {
 
   onRoomState(listener: (room: RoomSnapshotDto, role: Player) => void): void {
     this.stateListener = listener;
+  }
+
+  async refreshLocalStatus(): Promise<void> {
+    if (!this.localSupported) return;
+    const req = ++this.localStatusRequest;
+    const status = await checkLanStatus();
+    if (req === this.localStatusRequest) this.localStatus.set(status);
+  }
+
+  async openLocalSettings(target: LanSettingsTarget): Promise<boolean> {
+    if (!this.localSupported) return false;
+    return openLanSettings(target);
   }
 
   private beginLocal(): number {

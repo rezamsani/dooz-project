@@ -22,6 +22,7 @@ export type PieceStyle =
   | 'classic';
 export type ViewMode = '3d' | '2d';
 export type TurnTimeLimit = 0 | 15 | 30 | 60;
+export type AiStarterMode = 'HUMAN' | 'AI' | 'ALTERNATE';
 
 export interface EnvironmentOption {
   id: EnvironmentTheme;

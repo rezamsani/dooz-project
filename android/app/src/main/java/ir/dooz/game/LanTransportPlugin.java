@@ -1,10 +1,16 @@
 package ir.dooz.game;
 
+import android.app.Activity;
+import android.content.ActivityNotFoundException;
+import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.net.ConnectivityManager;
 import android.net.LinkAddress;
 import android.net.LinkProperties;
 import android.net.Network;
 import android.net.NetworkCapabilities;
+import android.os.Build;
+import android.provider.Settings;
 import com.getcapacitor.JSObject;
 import com.getcapacitor.Plugin;
 import com.getcapacitor.PluginCall;
@@ -172,6 +178,42 @@ public class LanTransportPlugin extends Plugin {
         call.resolve();
     }
 
+    @PluginMethod
+    public void status(PluginCall call) {
+        readers.execute(() -> {
+            boolean vpnActive = isVpnActive();
+            try {
+                WifiLink link = findWifiLink(null);
+                JSObject result = new JSObject();
+                result.put("ready", link != null);
+                result.put("hotspot", link != null && link.priority == 3);
+                result.put("vpnActive", vpnActive);
+                if (link != null) {
+                    result.put("address", link.address.getHostAddress());
+                }
+                call.resolve(result);
+            } catch (IOException | SecurityException error) {
+                JSObject result = new JSObject();
+                result.put("ready", false);
+                result.put("hotspot", false);
+                result.put("vpnActive", vpnActive);
+                call.resolve(result);
+            }
+        });
+    }
+
+    @PluginMethod
+    public void openSettings(PluginCall call) {
+        String target = call.getString("target", "wifi");
+        for (Intent intent : settingsIntentsFor(target)) {
+            if (launchIntent(intent)) {
+                call.resolve();
+                return;
+            }
+        }
+        call.reject("Could not open device settings", "SETTINGS_UNAVAILABLE");
+    }
+
     private synchronized int attach(Socket socket, int attempt) throws IOException {
         if (attempt != generation || connection != null) return 0;
         socket.setTcpNoDelay(true);
@@ -223,6 +265,61 @@ public class LanTransportPlugin extends Plugin {
         connection = null;
         pendingConnection = null;
         return generation;
+    }
+
+    private boolean isVpnActive() {
+        ConnectivityManager connectivity = getContext().getSystemService(ConnectivityManager.class);
+        if (connectivity == null) return false;
+        for (Network network : connectivity.getAllNetworks()) {
+            NetworkCapabilities capabilities = connectivity.getNetworkCapabilities(network);
+            if (capabilities != null && capabilities.hasTransport(NetworkCapabilities.TRANSPORT_VPN)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private Intent[] settingsIntentsFor(String target) {
+        if ("hotspot".equals(target)) {
+            return new Intent[] {
+                new Intent().setClassName("com.android.settings", "com.android.settings.TetherSettings"),
+                new Intent().setClassName("com.android.settings", "com.android.settings.wifi.tether.WifiTetherSettings"),
+                new Intent(Settings.ACTION_WIRELESS_SETTINGS),
+                new Intent(Settings.ACTION_WIFI_SETTINGS),
+                new Intent(Settings.ACTION_SETTINGS),
+            };
+        }
+        if ("vpn".equals(target)) {
+            return new Intent[] {
+                new Intent(Settings.ACTION_VPN_SETTINGS),
+                new Intent(Settings.ACTION_WIRELESS_SETTINGS),
+                new Intent(Settings.ACTION_SETTINGS),
+            };
+        }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            return new Intent[] {
+                new Intent(Settings.Panel.ACTION_WIFI),
+                new Intent(Settings.ACTION_WIFI_SETTINGS),
+                new Intent(Settings.ACTION_SETTINGS),
+            };
+        }
+        return new Intent[] {
+            new Intent(Settings.ACTION_WIFI_SETTINGS),
+            new Intent(Settings.ACTION_SETTINGS),
+        };
+    }
+
+    private boolean launchIntent(Intent intent) {
+        Activity activity = getActivity();
+        if (activity == null) return false;
+        PackageManager pm = activity.getPackageManager();
+        if (pm == null || intent.resolveActivity(pm) == null) return false;
+        try {
+            activity.startActivity(intent);
+            return true;
+        } catch (ActivityNotFoundException | SecurityException ignored) {
+            return false;
+        }
     }
 
     private WifiLink findWifiLink(InetAddress host) throws IOException {

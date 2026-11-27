@@ -91,6 +91,16 @@ details[open] > summary app-dooz-icon { transform: rotate(180deg); }
 .wifi-lobby input { width: 100%; min-height: 44px; border: 1px solid var(--line); border-radius: 11px; padding-inline: 10px; }
 .wifi-join { margin-top: 8px; min-height: 44px; padding-inline: 12px; border-radius: 11px; background: var(--soft); color: var(--accent); font-size: 12px; font-weight: 750; }
 .wifi-join:disabled { opacity: .6; }
+.wifi-shortcuts { display: flex; flex-wrap: wrap; gap: 8px; }
+.wifi-shortcut { min-height: 36px; padding-inline: 11px; border: 1px solid var(--line); border-radius: 10px; background: var(--card); color: var(--ink); font-size: 11px; font-weight: 700; }
+.wifi-state { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; padding: 9px 11px; border-radius: 11px; font-size: 11px; font-weight: 650; border: 1px solid var(--line); }
+.wifi-state-ok { background: var(--soft); color: var(--accent); }
+.wifi-state-warn { background: #ab273e14; color: #ab273e; }
+:host-context(.dark) .wifi-state-warn { color: #ffafba; }
+.wifi-guide { border-top: 1px solid var(--line); padding-top: 10px; }
+.wifi-guide summary { display: flex; align-items: center; justify-content: space-between; gap: 8px; cursor: pointer; font-size: 12px; font-weight: 700; color: var(--ink); list-style: none; }
+.wifi-guide summary::-webkit-details-marker { display: none; }
+.wifi-guide ol { margin: 10px 0 0; padding-inline-start: 18px; display: grid; gap: 6px; font-size: 11.5px; line-height: 1.75; color: var(--muted); }
 .wifi-invite { padding: 10px; border-radius: 10px; background: var(--soft); color: var(--accent); font: 700 14px monospace; overflow-wrap: anywhere; user-select: all; }
 .wifi-lobby .wifi-error, .wifi-notice { color: #ab273e; }
 :host-context(.dark) .wifi-lobby .wifi-error, :host-context(.dark) .wifi-notice { color: #ffafba; }

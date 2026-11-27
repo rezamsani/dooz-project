@@ -123,10 +123,34 @@
               <section class="wifi-lobby" [attr.aria-label]="'با وای‌فای' | t">
                 <p>{{ 'هر دو گوشی را به یک وای‌فای وصل کنید یا یکی را به هات‌اسپات دیگری وصل کنید.' | t }}</p>
                 @if (onlineClient.localSupported) {
+                  @if (onlineClient.localStatus(); as net) {
+                    <div class="wifi-state" [class.wifi-state-warn]="net.vpnActive || !net.ready" [class.wifi-state-ok]="!net.vpnActive && net.ready">
+                      <span>
+                        @if (net.vpnActive) {
+                          {{ 'VPN روشن است؛ برای اتصال وای‌فای خاموشش کنید.' | t }}
+                        } @else if (net.ready) {
+                          {{ 'شبکه محلی آماده است ({0})' | t: [net.address ?? ''] }}
+                        } @else {
+                          {{ 'وای‌فای یا هات‌اسپات متصل نیست.' | t }}
+                        }
+                      </span>
+                      @if (net.vpnActive) {
+                        <button type="button" class="wifi-shortcut" (click)="openWifiDeviceSettings('vpn')">{{ 'تنظیمات VPN' | t }}</button>
+                      }
+                    </div>
+                  }
+                  <div class="wifi-shortcuts">
+                    <button type="button" class="wifi-shortcut" (click)="openWifiDeviceSettings('wifi')">{{ 'تنظیمات وای‌فای' | t }}</button>
+                    <button type="button" class="wifi-shortcut" (click)="openWifiDeviceSettings('hotspot')">{{ 'تنظیمات هات‌اسپات' | t }}</button>
+                    <button type="button" class="wifi-shortcut" (click)="refreshWifiStatus()">{{ 'بررسی مجدد' | t }}</button>
+                  </div>
                   <label>{{ 'نام نمایشی شما' | t }}<input [formControl]="playerNameControl" maxlength="18" autocomplete="nickname" /></label>
                   <form (submit)="$event.preventDefault(); joinWifiRoom()">
                     <label>{{ 'دعوت‌نامهٔ میزبان' | t }}<input dir="ltr" [formControl]="lanInviteControl" placeholder="192.168.1.10:45678/ABCDE" maxlength="28" autocapitalize="characters" autocomplete="off" spellcheck="false" /></label>
-                    <button type="submit" class="wifi-join" [disabled]="onlineClient.connectionStatus() === 'CONNECTING'">{{ 'پیوستن با دعوت‌نامه' | t }}</button>
+                    <div class="wifi-shortcuts">
+                      <button type="submit" class="wifi-join" [disabled]="onlineClient.connectionStatus() === 'CONNECTING'">{{ 'پیوستن با دعوت‌نامه' | t }}</button>
+                      <button type="button" class="wifi-join" [disabled]="onlineClient.connectionStatus() === 'CONNECTING'" (click)="pasteAndJoinWifiRoom()">{{ 'جای‌گذاری و پیوستن' | t }}</button>
+                    </div>
                   </form>
                   @if (onlineClient.connectionStatus() === 'CONNECTING') {
                     <p role="status">{{ 'در حال آماده‌سازی اتصال وای‌فای…' | t }}</p>
@@ -135,6 +159,15 @@
                   <p>{{ 'این حالت در برنامهٔ Android در دسترس است.' | t }}</p>
                 }
                 @if (onlineClient.errorMessage(); as error) { <p class="wifi-error" role="alert">{{ error | t }}</p> }
+                <details class="wifi-guide">
+                  <summary><span>{{ 'راهنمای گام‌به‌گام بازی با وای‌فای' | t }}</span><app-dooz-icon name="chevron" aria-hidden="true" /></summary>
+                  <ol>
+                    <li>{{ 'یکی از گوشی‌ها هات‌اسپات را روشن کند و گوشی دوم با وای‌فای وصل شود، یا هر دو به یک وای‌فای مشترک وصل شوند (بدون نیاز به اینترنت).' | t }}</li>
+                    <li>{{ 'روی هر دو گوشی VPN را خاموش کنید و اگر اندروید دربارهٔ نبود اینترنت پرسید، گزینهٔ ماندن روی شبکه را بزنید.' | t }}</li>
+                    <li>{{ 'گوشی میزبان تنظیمات را انتخاب کرده و «میزبانی با وای‌فای» را بزند تا دعوت‌نامهٔ IP:PORT/CODE ساخته شود.' | t }}</li>
+                    <li>{{ 'گوشی مهمان دعوت‌نامه را وارد کرده و «پیوستن با دعوت‌نامه» (یا «جای‌گذاری و پیوستن») را بزند؛ هنگام قطعی هم با «اتصال دوباره به میزبان» برگردد.' | t }}</li>
+                  </ol>
+                </details>
               </section>
             } @else if (gameMode() === 'ONLINE') {
               <div class="space-y-4 border-t border-slate-900/10 pt-4 dark:border-white/10">
@@ -398,6 +431,62 @@
                       [class.dark:text-slate-400]="humanSymbol() !== 'O'"
                     >
                       {{ 'مهره O' | t }}
+                    </button>
+                  </div>
+                </div>
+
+                <div class="space-y-2.5">
+                  <div class="flex items-baseline justify-between gap-2">
+                    <span class="text-sm font-semibold text-slate-800 dark:text-slate-200">{{ 'شروع‌کنندهٔ بازی' | t }}</span>
+                    <span class="text-[11px] text-slate-500 dark:text-slate-400">
+                      {{ aiStarterMode() === 'HUMAN' ? ('حرکت اول با شما' | t) : aiStarterMode() === 'AI' ? ('حرکت اول با ربات' | t) : ('جابه‌جایی بعد از هر دست' | t) }}
+                    </span>
+                  </div>
+                  <div class="grid grid-cols-3 gap-1 rounded-xl bg-slate-100 p-1.5 dark:bg-[#0E0E0E]" role="group" [attr.aria-label]="'شروع‌کنندهٔ بازی' | t">
+                    <button
+                      type="button"
+                      (click)="setAiStarterMode('HUMAN')"
+                      [attr.aria-pressed]="aiStarterMode() === 'HUMAN'"
+                      class="min-h-[40px] whitespace-nowrap rounded-lg px-2 py-1.5 text-xs font-semibold transition-colors"
+                      [class.bg-white]="aiStarterMode() === 'HUMAN'"
+                      [class.dark:bg-[#2A2A2A]]="aiStarterMode() === 'HUMAN'"
+                      [class.text-teal-700]="aiStarterMode() === 'HUMAN'"
+                      [class.dark:text-teal-300]="aiStarterMode() === 'HUMAN'"
+                      [class.shadow-xs]="aiStarterMode() === 'HUMAN'"
+                      [class.text-slate-500]="aiStarterMode() !== 'HUMAN'"
+                      [class.dark:text-slate-400]="aiStarterMode() !== 'HUMAN'"
+                    >
+                      {{ 'من' | t }}
+                    </button>
+                    <button
+                      type="button"
+                      (click)="setAiStarterMode('AI')"
+                      [attr.aria-pressed]="aiStarterMode() === 'AI'"
+                      class="min-h-[40px] whitespace-nowrap rounded-lg px-2 py-1.5 text-xs font-semibold transition-colors"
+                      [class.bg-white]="aiStarterMode() === 'AI'"
+                      [class.dark:bg-[#2A2A2A]]="aiStarterMode() === 'AI'"
+                      [class.text-amber-700]="aiStarterMode() === 'AI'"
+                      [class.dark:text-amber-300]="aiStarterMode() === 'AI'"
+                      [class.shadow-xs]="aiStarterMode() === 'AI'"
+                      [class.text-slate-500]="aiStarterMode() !== 'AI'"
+                      [class.dark:text-slate-400]="aiStarterMode() !== 'AI'"
+                    >
+                      {{ 'ربات' | t }}
+                    </button>
+                    <button
+                      type="button"
+                      (click)="setAiStarterMode('ALTERNATE')"
+                      [attr.aria-pressed]="aiStarterMode() === 'ALTERNATE'"
+                      class="min-h-[40px] whitespace-nowrap rounded-lg px-2 py-1.5 text-xs font-semibold transition-colors"
+                      [class.bg-white]="aiStarterMode() === 'ALTERNATE'"
+                      [class.dark:bg-[#2A2A2A]]="aiStarterMode() === 'ALTERNATE'"
+                      [class.text-slate-950]="aiStarterMode() === 'ALTERNATE'"
+                      [class.dark:text-white]="aiStarterMode() === 'ALTERNATE'"
+                      [class.shadow-xs]="aiStarterMode() === 'ALTERNATE'"
+                      [class.text-slate-500]="aiStarterMode() !== 'ALTERNATE'"
+                      [class.dark:text-slate-400]="aiStarterMode() !== 'ALTERNATE'"
+                    >
+                      {{ 'نوبتی' | t }}
                     </button>
                   </div>
                 </div>
@@ -1691,7 +1780,13 @@
             </p>
           </div>
           <div class="py-3.5">
-            <h3 class="mb-1 font-bold text-slate-950 dark:text-white">{{ '۰۴. میان‌برهای صفحه‌کلید' | t }}</h3>
+            <h3 class="mb-1 font-bold text-slate-950 dark:text-white">{{ '۰۴. بازی با وای‌فای (بدون اینترنت)' | t }}</h3>
+            <p>
+              {{ 'در نسخهٔ اندروید دو گوشی را به یک وای‌فای یا هات‌اسپات وصل کنید (VPN را ببندید)، یک گوشی «میزبانی با وای‌فای» را بزند و گوشی دوم دعوت‌نامهٔ IP:PORT/CODE را وارد کند.' | t }}
+            </p>
+          </div>
+          <div class="py-3.5">
+            <h3 class="mb-1 font-bold text-slate-950 dark:text-white">{{ '۰۵. میان‌برهای صفحه‌کلید' | t }}</h3>
             <p>
               {{ 'در دوز ۳ تایی کلیدهای' | t }} <strong class="text-slate-950 dark:text-white">{{ '۱ تا ۹' | t }}</strong> {{ 'برای انتخاب خانه‌ها، کلید' | t }} <strong class="text-slate-950 dark:text-white">F</strong> {{ 'برای حالت تمام‌صفحه، کلید' | t }} <strong class="text-slate-950 dark:text-white">Esc</strong> {{ 'برای خروج، کلید' | t }} <strong class="text-slate-950 dark:text-white">H</strong> {{ 'برای پیشنهاد حرکت، کلید' | t }} <strong class="text-slate-950 dark:text-white">Z</strong> {{ 'برای بازگشت و کلید' | t }} <strong class="text-slate-950 dark:text-white">R</strong> {{ 'برای شروع مجدد کار می‌کنند.' | t }}
             </p>
