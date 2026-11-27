@@ -1,41 +1,92 @@
 import { DoozIcon } from '../ui/dooz-icon';
 import { I18n, TranslatePipe } from '../i18n';
-import { ChangeDetectionStrategy, Component, inject, output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, ElementRef, computed, inject, output } from '@angular/core';
 import { BOTS, BotId } from './bot-personalities';
 import { PlayerJourney, BADGES } from './player-journey';
 import { PlayerAvatarComponent } from './player-avatar';
+import { PlayerStats } from './player-stats';
 @Component({
-  selector:'app-bot-roster',imports: [TranslatePipe, PlayerAvatarComponent, DoozIcon],changeDetection:ChangeDetectionStrategy.OnPush,
-  template:`<details><summary><app-player-avatar [robot]="journey.bot().difficulty" [label]="(journey.bot().name | t)"/><span><strong>{{ (journey.bot().name | t) }}</strong><small>{{ (journey.bot().style | t) }}</small></span><app-dooz-icon name="chevron" class="bot-chevron" /></summary>
-    <div class="bots">@for(bot of bots;track bot.id){<button type="button" [disabled]="!journey.isUnlocked(bot.id)" [class.selected]="journey.state().selected===bot.id" [attr.aria-pressed]="journey.state().selected===bot.id" (click)="choose(bot.id)"><app-player-avatar [robot]="bot.difficulty" [label]="(bot.name | t)"/><strong>{{ (bot.name | t) }}</strong><span>{{ (bot.style | t) }}</span><small>{{ journey.isUnlocked(bot.id) ? (bot.line | t) : ('با {0} سکه باز می‌شود' | t: [n(bot.requiredCoins)]) }}</small></button>}</div>
-  </details>`,
+  selector: 'app-bot-roster',
+  imports: [TranslatePipe, PlayerAvatarComponent, DoozIcon],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <fieldset class="roster">
+      <legend>{{ 'حریف رباتی‌ات را انتخاب کن' | t }}</legend>
+      <div class="roster-progress">
+        <span class="wallet"><app-dooz-icon name="coin" />{{ 'موجودی سکه' | t }} <b>{{ n(coins()) }}</b></span>
+        @if (nextBot(); as next) {
+          <span>{{ '{0} سکه تا باز شدن {1}' | t: [n(next.requiredCoins - coins()), (next.name | t)] }}</span>
+          <progress [value]="coins()" [max]="next.requiredCoins" [attr.aria-label]="'پیشرفت تا حریف بعدی' | t"></progress>
+        } @else {
+          <span><app-dooz-icon name="check" />{{ 'همهٔ حریف‌ها باز هستند' | t }}</span>
+        }
+      </div>
+      <div class="bots">
+        @for (bot of bots; track bot.id) {
+          @let selected = journey.bot().id === bot.id;
+          @let unlocked = journey.isUnlocked(bot.id);
+          <button type="button" class="bot-card" [class.selected]="selected" [disabled]="!unlocked"
+            [attr.aria-pressed]="selected" (click)="choose.emit(bot.id)">
+            <div class="card-top">
+              <app-player-avatar [robot]="bot.difficulty" aria-hidden="true" />
+              <span class="strength">{{ 'سختی {0} از {1}' | t: [n(bot.level), n(bots.length)] }}</span>
+            </div>
+            <strong>{{ bot.name | t }}</strong>
+            <span class="bot-style">{{ bot.style | t }}</span>
+            @if (selected) {
+              <span class="bot-state"><app-dooz-icon name="check" />{{ 'انتخاب فعلی' | t }}</span>
+            } @else if (!unlocked) {
+              <span class="bot-state"><app-dooz-icon name="lock" />{{ 'با {0} سکه باز می‌شود' | t: [n(bot.requiredCoins)] }}</span>
+            } @else {
+              <span class="bot-state">{{ 'انتخاب حریف' | t }}</span>
+            }
+          </button>
+        }
+      </div>
+    </fieldset>
+  `,
   styles: `
-    :host { display: block; margin-bottom: 20px; }
-    details { border: 1px solid var(--line); border-radius: 16px; padding: 6px 12px; background: var(--surface); }
-    summary { display: flex; align-items: center; gap: 12px; cursor: pointer; min-height: 52px; list-style: none; }
-    summary::-webkit-details-marker { display: none; }
-    summary::marker { content: ""; }
-    summary strong { display: block; font-size: 13px; }
-    summary small { display: block; font-size: 10px; color: var(--muted); margin-top: 4px; }
-    .bot-chevron { margin-inline-start: auto; color: var(--accent); font-size: 15px; }
-    details[open] .bot-chevron { transform: rotate(180deg); }
-    .bots { display: grid; gap: 10px; padding-block: 10px; }
-    .bots button {
-      display: grid; grid-template-columns: 46px minmax(0, 1fr); column-gap: 10px;
-      text-align: start; padding: 12px; min-height: 76px;
-      border: 1px solid var(--line); border-radius: 12px;
-    }
-    .bots app-player-avatar { grid-row: span 3; align-self: center; width: 46px; height: 46px; }
-    .bots strong { font-size: 13px; }
-    .bots span, .bots small { font-size: 10px; color: var(--muted); line-height: 1.8; }
-    .bots .selected { border-color: var(--accent); background: var(--soft); }
-    .bots button:disabled { border-style: dashed; color: var(--muted); }
+    :host { display: block; margin-bottom: 22px; }
+    .roster { min-inline-size: 0; }
+    legend { margin-bottom: 12px; font-size: 14px; font-weight: 800; }
+    .roster-progress { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between;
+      gap: 8px 14px; margin-bottom: 10px; padding: 10px 12px; border: 1px solid var(--line);
+      border-radius: 14px; background: var(--soft); color: var(--ink); font-size: 11px; }
+    .roster-progress span { display: inline-flex; align-items: center; gap: 5px; }
+    .wallet app-dooz-icon { color: var(--gold, #8c5a23); }
+    progress { display: block; width: 100%; height: 5px; accent-color: var(--accent); }
+    .bots { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+    .bot-card { display: flex; flex-direction: column; align-items: stretch; gap: 5px;
+      min-width: 0; padding: 10px; border: 1px solid var(--line); border-radius: 14px;
+      text-align: start; background: var(--surface); color: var(--ink); }
+    .card-top { display: flex; align-items: center; justify-content: space-between; gap: 5px; }
+    .card-top app-player-avatar { width: 30px; height: 30px; }
+    .strength { font-size: 10px; color: var(--ink); }
+    .bot-card strong { font-size: 13px; }
+    .bot-style { color: var(--muted); font-size: 11px; line-height: 1.5; }
+    .bot-state { display: flex; align-items: center; gap: 4px; margin-top: auto;
+      padding-top: 3px; color: var(--accent); font-size: 10px; font-weight: 700; }
+    .bot-card.selected { border-color: var(--accent); background: var(--soft); box-shadow: inset 0 0 0 1px var(--accent); }
+    .bot-card:disabled { border-style: dashed; cursor: default; }
+    .bot-card:disabled .bot-state { color: var(--muted); }
+    .bot-card:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   `,
 })
-export class BotRoster{
+export class BotRoster {
+  private readonly element: ElementRef<HTMLElement> = inject(ElementRef);
+  private readonly stats = inject(PlayerStats);
   readonly n = inject(I18n).digits;
-  readonly journey=inject(PlayerJourney);readonly bots=BOTS;readonly selected=output<BotId>();
-  choose(id:BotId):void{if(this.journey.selectBot(id))this.selected.emit(id);}
+  readonly journey = inject(PlayerJourney);
+  readonly bots = BOTS;
+  readonly choose = output<BotId>();
+  readonly coins = computed(() => this.stats.stats().coins);
+  readonly nextBot = computed(() => this.bots.find(bot => bot.requiredCoins > this.coins()));
+
+  focusSelection(): void {
+    const host = this.element.nativeElement;
+    host.scrollIntoView({ block: 'start' });
+    host.querySelector<HTMLButtonElement>('.bot-card.selected')?.focus({ preventScroll: true });
+  }
 }
 @Component({
   selector:'app-journey-panel',imports: [TranslatePipe, DoozIcon],changeDetection:ChangeDetectionStrategy.OnPush,

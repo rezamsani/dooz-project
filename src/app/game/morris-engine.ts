@@ -533,70 +533,105 @@ export function applyDecision(state: MorrisState, decision: MorrisAiDecision): M
   }
 }
 
-function alphabetaMorris(
+interface MorrisSearchLimits {
+  depth: number;
+  maxPositions: number;
+}
+
+interface MorrisSearchPosition {
+  decision: MorrisAiDecision;
+  state: MorrisState;
+  score: number;
+}
+
+function orderedMorrisPositions(state: MorrisState, aiPlayer: Player, decisions: MorrisAiDecision[]): MorrisSearchPosition[] {
+  const positions: MorrisSearchPosition[] = [];
+  for (const decision of decisions) {
+    const next = applyDecision(state, decision);
+    if (!next) continue;
+    let score = evaluateMorrisBoard(next, aiPlayer);
+    if (next.action === 'REMOVE') score += next.currentTurn === aiPlayer ? 65 : -65;
+    positions.push({ decision, state: next, score });
+  }
+  const direction = state.currentTurn === aiPlayer ? -1 : 1;
+  return positions.sort((a, b) => direction * (a.score - b.score));
+}
+
+function searchMorris(
   state: MorrisState,
   depth: number,
   alpha: number,
   beta: number,
   aiPlayer: Player,
-): number {
-  if (depth === 0 || state.winner !== null || state.isDraw) {
-    return evaluateMorrisBoard(state, aiPlayer);
-  }
+  budget: { remaining: number },
+): number | undefined {
+  if (state.winner) return state.winner === aiPlayer ? 10000 + depth : -10000 - depth;
+  if (depth === 0 || state.isDraw) return evaluateMorrisBoard(state, aiPlayer);
 
   const decisions = generateLegalDecisions(state);
-  if (decisions.length === 0) {
-    return evaluateMorrisBoard(state, aiPlayer);
-  }
+  if (decisions.length > budget.remaining) return undefined;
+  budget.remaining -= decisions.length;
+  const positions = orderedMorrisPositions(state, aiPlayer, decisions);
+  if (positions.length === 0) return evaluateMorrisBoard(state, aiPlayer);
 
-  const isMaximizing = state.currentTurn === aiPlayer;
-
-  // Cap branching factor slightly during flying/opening to keep search snappy (<15ms)
-  const limitedDecisions =
-    decisions.length > 26
-      ? decisions
-          .map((d) => {
-            const next = applyDecision(state, d);
-            return { d, next, quick: next ? evaluateMorrisBoard(next, aiPlayer) : 0 };
-          })
-          .sort((a, b) => (isMaximizing ? b.quick - a.quick : a.quick - b.quick))
-          .slice(0, 14)
-          .map((item) => item.d)
-      : decisions;
-
-  if (isMaximizing) {
-    let best = -Infinity;
-    for (const d of limitedDecisions) {
-      const next = applyDecision(state, d);
-      if (!next) continue;
-      // If same player gets REMOVE immediately, keep searching without penalizing depth twice
-      const nextDepth = next.currentTurn === state.currentTurn ? depth : depth - 1;
-      const val = alphabetaMorris(next, nextDepth, alpha, beta, aiPlayer);
-      if (val > best) best = val;
-      if (best > alpha) alpha = best;
-      if (beta <= alpha) break;
+  const maximizing = state.currentTurn === aiPlayer;
+  let best = maximizing ? -Infinity : Infinity;
+  for (const { state: next } of positions) {
+    // Forming a mill and removing a piece together consume one turn.
+    const nextDepth = next.currentTurn === state.currentTurn ? depth : depth - 1;
+    const score = searchMorris(next, nextDepth, alpha, beta, aiPlayer, budget);
+    if (score === undefined) return undefined;
+    if (maximizing) {
+      best = Math.max(best, score);
+      alpha = Math.max(alpha, best);
+    } else {
+      best = Math.min(best, score);
+      beta = Math.min(beta, best);
     }
-    return best;
-  } else {
-    let best = Infinity;
-    for (const d of limitedDecisions) {
-      const next = applyDecision(state, d);
-      if (!next) continue;
-      const nextDepth = next.currentTurn === state.currentTurn ? depth : depth - 1;
-      const val = alphabetaMorris(next, nextDepth, alpha, beta, aiPlayer);
-      if (val < best) best = val;
-      if (best < beta) beta = best;
-      if (beta <= alpha) break;
-    }
-    return best;
+    if (alpha >= beta) break;
   }
+  return best;
+}
+
+function chooseMorrisBySearch(
+  state: MorrisState,
+  aiPlayer: Player,
+  decisions: MorrisAiDecision[],
+  limits: MorrisSearchLimits,
+): MorrisAiDecision | null {
+  const positions = orderedMorrisPositions(state, aiPlayer, decisions);
+  if (positions.length === 0) return null;
+  const budget = { remaining: Math.max(0, limits.maxPositions - decisions.length) };
+  let best = positions[0];
+
+  // Keep the result of the last completed depth if a deeper search runs out of positions.
+  for (let depth = 1; depth <= limits.depth; depth++) {
+    let bestScore = -Infinity;
+    let candidate = best;
+    for (const position of positions) {
+      const nextDepth = position.state.currentTurn === state.currentTurn ? depth : depth - 1;
+      const score = searchMorris(position.state, nextDepth, bestScore, Infinity, aiPlayer, budget);
+      if (score === undefined) return best.decision;
+      if (score > bestScore) {
+        bestScore = score;
+        candidate = position;
+      }
+    }
+    best = candidate;
+    // Search the principal move first at the next depth to improve alpha-beta pruning.
+    positions.splice(positions.indexOf(best), 1);
+    positions.unshift(best);
+  }
+  return best.decision;
 }
 
 export function chooseMorrisAiDecision(
   state: MorrisState,
   aiPlayer: Player,
   difficulty: Difficulty,
+  limits: MorrisSearchLimits = { depth: 2, maxPositions: 3200 },
 ): MorrisAiDecision | null {
+  if (state.winner || state.isDraw || state.currentTurn !== aiPlayer) return null;
   const decisions = generateLegalDecisions(state);
   if (decisions.length === 0) return null;
 
@@ -633,22 +668,5 @@ export function chooseMorrisAiDecision(
     return topChoices[pickIndex]?.d ?? decisions[0];
   }
 
-  // HARD: 2-ply alpha-beta search (including full mill+remove follow-ups)
-  let bestScore = -Infinity;
-  let bestDecisions: MorrisAiDecision[] = [];
-
-  for (const d of decisions) {
-    const next = applyDecision(state, d);
-    if (!next) continue;
-    const nextDepth = next.currentTurn === aiPlayer ? 2 : 1;
-    const score = alphabetaMorris(next, nextDepth, -Infinity, Infinity, aiPlayer);
-    if (score > bestScore) {
-      bestScore = score;
-      bestDecisions = [d];
-    } else if (score === bestScore) {
-      bestDecisions.push(d);
-    }
-  }
-
-  return bestDecisions[Math.floor(Math.random() * bestDecisions.length)] ?? decisions[0];
+  return chooseMorrisBySearch(state, aiPlayer, decisions, limits);
 }

@@ -79,12 +79,13 @@
             <div class="setup-section">
               <div class="section-label"><h2>{{ 'با کی بازی می‌کنی؟' | t }}</h2></div>
               <div class="mode-options" role="group" [attr.aria-label]="'هم‌بازی' | t">
-                <button type="button" (click)="setGameMode('AI')" [class.chosen]="gameMode() === 'AI'" [attr.aria-pressed]="gameMode() === 'AI'"><app-dooz-icon name="bot" /><strong>{{ 'با ربات' | t }}</strong><small>{{ 'تمرین و چالش' | t }}</small></button>
+                <button type="button" (click)="openBotRoster()" [class.chosen]="gameMode() === 'AI'" [attr.aria-pressed]="gameMode() === 'AI'"><app-dooz-icon name="bot" /><strong>{{ 'با ربات' | t }}</strong><small>{{ 'انتخاب حریف و سختی' | t }}</small></button>
                 <button type="button" (click)="setGameMode('LOCAL_2P')" [class.chosen]="gameMode() === 'LOCAL_2P'" [attr.aria-pressed]="gameMode() === 'LOCAL_2P'"><app-dooz-icon name="friends" /><strong>{{ 'کنار هم' | t }}</strong><small>{{ 'روی یک گوشی' | t }}</small></button>
                 <button type="button" (click)="setGameMode('ONLINE')" [class.chosen]="gameMode() === 'ONLINE'" [attr.aria-pressed]="gameMode() === 'ONLINE'"><app-dooz-icon name="online" /><strong>{{ 'از راه دور' | t }}</strong><small>{{ 'با کد دعوت' | t }}</small></button>
                 <button type="button" (click)="setGameMode('LAN')" [class.chosen]="isLanMode()" [attr.aria-pressed]="isLanMode()"><app-dooz-icon name="wifi" /><strong>{{ 'با وای‌فای' | t }}</strong><small>{{ 'بدون اینترنت' | t }}</small></button>
               </div>
             </div>
+            @if (gameMode() === 'AI') { <app-bot-roster (choose)="selectBot($event)" /> }
             <div class="setup-section">
               <div class="section-label"><h2>{{ 'کدوم دوز؟' | t }}</h2></div>
               <div class="variant-options" role="group" [attr.aria-label]="'نوع بازی' | t">
@@ -93,7 +94,6 @@
                 <button type="button" (click)="setGameVariant('TWELVE')" [class.chosen]="gameVariant() === 'TWELVE'" [attr.aria-pressed]="gameVariant() === 'TWELVE'"><b>{{ '۱۲' | t }}</b><span>{{ 'حرفه‌ای' | t }}</span></button>
               </div>
             </div>
-            @if(gameMode()==='AI'){<app-bot-roster (selected)="selectBot($event)" />}
                         <!-- Online Room Lobby Panel -->
             @if (isLanMode()) {
               <section class="wifi-lobby" [attr.aria-label]="'با وای‌فای' | t">
@@ -384,7 +384,7 @@
             </details>
 
             <div class="launch-area">
-              <button class="launch-button" type="button" (click)="startGame()" [disabled]="isLanMode() && (!onlineClient.localSupported || onlineClient.connectionStatus() === 'CONNECTING')"><span>{{ isLanMode() ? ('میزبانی با وای‌فای' | t) : isOnlineMode() ? ('ساخت اتاق و دعوت دوست' | t) : ('بزن بریم' | t) }}</span><app-dooz-icon name="arrow" /></button>
+              <button class="launch-button" type="button" (click)="startGame()" [disabled]="isLanMode() && (!onlineClient.localSupported || onlineClient.connectionStatus() === 'CONNECTING')"><span>{{ isLanMode() ? ('میزبانی با وای‌فای' | t) : isOnlineMode() ? ('ساخت اتاق و دعوت دوست' | t) : gameMode() === 'AI' ? botMatchLabel() : ('بزن بریم' | t) }}</span><app-dooz-icon name="arrow" /></button>
               @if (!isLanMode()) { <p>{{ isOnlineMode() ? ('برای بازی آنلاین به اینترنت نیاز داری' | t) : ('بدون اینترنت هم می‌تونی بازی کنی' | t) }}</p> }
             </div>
           </section>
@@ -767,7 +767,7 @@
                   } @else if (isOnlineMode()) {
                     {{ 'اتاق آنلاین {0}' | t: [onlineRoom()?.code] }}
                   } @else if (gameMode() === 'AI') {
-                    {{ 'بازی با ربات ({0})' | t: [difficultyLabel()] }}
+                    {{ botMatchLabel() }}
                   } @else {
                     {{ 'دو نفره محلی' | t }}
                   }

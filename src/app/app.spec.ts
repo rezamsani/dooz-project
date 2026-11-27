@@ -19,6 +19,25 @@ describe('App', () => {
     expect(app).toBeTruthy();
   });
 
+  it('shows every robot and updates the selected opponent as coins unlock it', () => {
+    const fixture = TestBed.createComponent(App);
+    const app = fixture.componentInstance;
+    fixture.detectChanges();
+    const roster: HTMLElement = fixture.nativeElement.querySelector('app-bot-roster');
+    const cards = roster.querySelectorAll<HTMLButtonElement>('button');
+    expect(cards).toHaveLength(6);
+    expect(roster.querySelectorAll(':disabled')).toHaveLength(5);
+    expect(cards[5].textContent).toContain('سختی ۶ از ۶');
+    expect(cards[5].textContent).toContain('با ۱۵ سکه باز می‌شود');
+    app.playerStats.recordMatchOutcome('LOSS', 'unlock-simin');
+    fixture.detectChanges();
+    expect(cards[1].disabled).toBe(false);
+    cards[1].click();
+    fixture.detectChanges();
+    expect(cards[1].getAttribute('aria-pressed')).toBe('true');
+    expect(fixture.nativeElement.querySelector('.launch-button').textContent).toContain('سیمینِ سپردار');
+  });
+
   it('switches the language and board labels during a match without resetting it', async () => {
     const fixture = TestBed.createComponent(App);
     const app = fixture.componentInstance;

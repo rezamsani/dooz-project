@@ -3,6 +3,7 @@ import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 const ICON_PATHS = {
   play: 'M8 5.5v13l11-6.5L8 5.5Z',
   coin: 'M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z M12 7.5l3.5 4.5-3.5 4.5-3.5-4.5Z',
+  lock: 'M6 10h12v10H6zM8 10V7a4 4 0 1 1 8 0v3M12 14v2',
   style: 'M12 3a9 9 0 1 0 0 18h1a1.7 1.7 0 0 0 1.1-3c-.9-.8-.4-2.3.9-2.3H17a4 4 0 0 0 4-4C21 6.8 17 3 12 3Z M7 12h.1 M9 8h.1 M14 7.5h.1 M17.5 11h.1',
   profile: 'M16 8a4 4 0 1 1-8 0 4 4 0 0 1 8 0Z M4 21v-1.5a5 5 0 0 1 5-5h6a5 5 0 0 1 5 5V21',
   bot: 'M12 6V3 M10.5 3h3 M5 9a3 3 0 0 1 3-3h8a3 3 0 0 1 3 3v8a3 3 0 0 1-3 3H8a3 3 0 0 1-3-3V9Z M2 11v4 M22 11v4 M8.5 11h.1 M15.5 11h.1 M9 15h6',

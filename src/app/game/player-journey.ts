@@ -19,7 +19,11 @@ export const BADGES=[
 ] as const;
 interface DailyResult{date:string;attempts:number;moves:number;onDay:boolean;}
 interface Journey{selected:BotId;wins:Record<BotId,number>;badges:Record<string,number>;solved:DailyResult[];attempts:Record<string,number>;processed:string[];}
-const initial=():Journey=>({selected:'baran',wins:{baran:0,simin:0,rostam:0},badges:{},solved:[],attempts:{},processed:[]});
+const initial=():Journey=>({
+  selected:'baran',
+  wins:Object.fromEntries(BOTS.map(bot => [bot.id, 0])) as Record<BotId, number>,
+  badges:{},solved:[],attempts:{},processed:[],
+});
 @Injectable({providedIn:'root'})
 export class PlayerJourney{
   readonly storage=inject(DeviceStorage);

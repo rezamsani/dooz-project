@@ -127,6 +127,7 @@ function minimaxClassic(
   humanPlayer: Player,
   alpha: number,
   beta: number,
+  maxDepth: number,
 ): number {
   const win = checkWinner(board);
   if (win) {
@@ -135,13 +136,14 @@ function minimaxClassic(
   if (isBoardFull(board)) {
     return 0;
   }
+  if (depth >= maxDepth) return evaluateBoardHeuristic(board, aiPlayer);
 
   if (isMaximizing) {
     let best = -Infinity;
     for (let i = 0; i < 9; i++) {
       if (board[i] === null) {
         board[i] = aiPlayer;
-        const score = minimaxClassic(board, depth + 1, false, aiPlayer, humanPlayer, alpha, beta);
+        const score = minimaxClassic(board, depth + 1, false, aiPlayer, humanPlayer, alpha, beta, maxDepth);
         board[i] = null;
         if (score > best) best = score;
         if (best > alpha) alpha = best;
@@ -154,7 +156,7 @@ function minimaxClassic(
     for (let i = 0; i < 9; i++) {
       if (board[i] === null) {
         board[i] = humanPlayer;
-        const score = minimaxClassic(board, depth + 1, true, aiPlayer, humanPlayer, alpha, beta);
+        const score = minimaxClassic(board, depth + 1, true, aiPlayer, humanPlayer, alpha, beta, maxDepth);
         board[i] = null;
         if (score < best) best = score;
         if (best < beta) beta = best;
@@ -168,8 +170,12 @@ function minimaxClassic(
 /**
  * Heuristic evaluator for Infinite (3-piece max) mode at depth limit.
  */
-function evaluateBoardHeuristic(board: readonly CellValue[], aiPlayer: Player): number {
+function evaluateBoardHeuristic(
+  board: readonly CellValue[], aiPlayer: Player, fadingX?: number, fadingO?: number,
+): number {
   const humanPlayer = getOpponent(aiPlayer);
+  const aiFading = aiPlayer === 'X' ? fadingX : fadingO;
+  const humanFading = aiPlayer === 'X' ? fadingO : fadingX;
   let score = 0;
   for (const line of WINNING_LINES) {
     let aiCount = 0;
@@ -178,8 +184,8 @@ function evaluateBoardHeuristic(board: readonly CellValue[], aiPlayer: Player): 
       if (board[idx] === aiPlayer) aiCount++;
       else if (board[idx] === humanPlayer) humanCount++;
     }
-    if (aiCount === 2 && humanCount === 0) score += 12;
-    else if (humanCount === 2 && aiCount === 0) score -= 14;
+    if (aiCount === 2 && humanCount === 0) score += line.cells.some(index => index === aiFading) ? 2 : 12;
+    else if (humanCount === 2 && aiCount === 0) score -= line.cells.some(index => index === humanFading) ? 2 : 14;
     else if (aiCount === 1 && humanCount === 0) score += 2;
     else if (humanCount === 1 && aiCount === 0) score -= 2;
   }
@@ -187,6 +193,8 @@ function evaluateBoardHeuristic(board: readonly CellValue[], aiPlayer: Player): 
   else if (board[4] === humanPlayer) score -= 5;
   return score;
 }
+
+const PREFERRED_CELLS = [4, 0, 2, 6, 8, 1, 3, 5, 7];
 
 /**
  * Depth-limited Minimax with alpha-beta pruning for Infinite (max 3 pieces) mode.
@@ -208,10 +216,11 @@ function minimaxInfinite(
     return win.winner === aiPlayer ? 100 - depth : depth - 100;
   }
   if (depth >= maxDepth) {
-    return evaluateBoardHeuristic(board, aiPlayer);
+    return evaluateBoardHeuristic(board, aiPlayer, xQueue.length === 3 ? xQueue[0] : undefined,
+      oQueue.length === 3 ? oQueue[0] : undefined);
   }
 
-  const available = getAvailableCells(board);
+  const available = PREFERRED_CELLS.filter(index => board[index] === null);
   const activePlayer = isMaximizing ? aiPlayer : humanPlayer;
 
   if (isMaximizing) {
@@ -284,6 +293,7 @@ export function chooseAiMove(
   aiPlayer: Player,
   difficulty: Difficulty,
   rule: BoardRule,
+  searchDepth?: number,
 ): number | null {
   const available = getAvailableCells(board);
   if (available.length === 0) return null;
@@ -291,7 +301,7 @@ export function chooseAiMove(
   const humanPlayer = getOpponent(aiPlayer);
 
   // Instant opening optimization for empty classic board
-  if (available.length === 9 && difficulty === 'HARD') {
+  if (available.length === 9 && difficulty === 'HARD' && (rule === 'CLASSIC' || searchDepth === undefined)) {
     const strongOpenings = [4, 0, 2, 6, 8];
     return strongOpenings[Math.floor(Math.random() * strongOpenings.length)] ?? 4;
   }
@@ -331,7 +341,8 @@ export function chooseAiMove(
     if (rule === 'CLASSIC') {
       const nextBoard = [...board];
       nextBoard[idx] = aiPlayer;
-      score = minimaxClassic(nextBoard, 0, false, aiPlayer, humanPlayer, -Infinity, Infinity);
+      score = minimaxClassic(nextBoard, 0, false, aiPlayer, humanPlayer, -Infinity, Infinity,
+        searchDepth === undefined ? Infinity : searchDepth - 1);
     } else {
       const next = applyMove(board, xQueue, oQueue, idx, aiPlayer, 'INFINITE');
       score = minimaxInfinite(
@@ -339,7 +350,7 @@ export function chooseAiMove(
         next.xQueue,
         next.oQueue,
         1,
-        5,
+        searchDepth ?? 5,
         false,
         aiPlayer,
         humanPlayer,

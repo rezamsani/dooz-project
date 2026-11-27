@@ -1,7 +1,7 @@
 import { bestClassicMoves, canForceWin, dailyPuzzle, immediateWins, reviewThree, tehranDay } from './learning-engine';
-import { applyMove, checkWinner, getAvailableCells } from './dooz-engine';
+import { applyMove, checkWinner, getAvailableCells, getOpponent } from './dooz-engine';
 import { CellValue, Player } from './dooz.types';
-import { personalityMove, personalityMorris } from './bot-personalities';
+import { BOTS, personalityMove, personalityMorris } from './bot-personalities';
 import { applyDecision, createInitialMorrisState } from './morris-engine';
 
 describe('daily challenge and coach',()=>{
@@ -31,6 +31,56 @@ describe('daily challenge and coach',()=>{
   });
   it('Simin blocks danger and every bot makes legal Morris moves',()=>{
     expect(personalityMove('simin',['X','X',null,'O',null,null,null,null,null],[0,1],[3],'O','CLASSIC')).toBe(2);
-    for(const id of ['baran','simin','rostam'] as const){const state=createInitialMorrisState('NINE','X',true);const move=personalityMorris(id,state,'X');expect(move).toBeTruthy();expect(applyDecision(state,move!)).toBeTruthy();}
+    for (const variant of ['NINE', 'TWELVE'] as const) {
+      const state = createInitialMorrisState(variant, 'X', true);
+      for (const { id } of BOTS) {
+        const move = personalityMorris(id, state, 'X');
+        expect(move).toBeTruthy();
+        expect(applyDecision(state, move!)).toBeTruthy();
+      }
+    }
+  });
+
+  it.each(['X', 'O'] as const)('keeps Simorgh unbeaten in classic play as %s', (bot) => {
+    const seen = new Set<string>();
+    const play = (board: CellValue[], turn: Player): void => {
+      const winner = checkWinner(board)?.winner;
+      if (winner) {
+        expect(winner).toBe(bot);
+        return;
+      }
+      const key = board.map(cell => cell ?? '-').join('') + turn;
+      if (seen.has(key)) return;
+      seen.add(key);
+      const available = getAvailableCells(board);
+      if (!available.length) return;
+      const moves = turn === bot ? [personalityMove('simorgh', board, [], [], bot, 'CLASSIC')!] : available;
+      for (const move of moves) {
+        expect(board[move]).toBeNull();
+        const next = [...board];
+        next[move] = turn;
+        play(next, getOpponent(turn));
+      }
+    };
+    play(Array<CellValue>(9).fill(null), 'X');
+  });
+
+  it('looks through a Morris mill and its follow-up capture to win', () => {
+    const state = createInitialMorrisState('NINE', 'X', true);
+    state.inHand = { X: 0, O: 0 };
+    state.action = 'MOVE';
+    for (const node of [0, 1, 3]) state.board[node] = 'X';
+    for (const node of [5, 10, 21]) state.board[node] = 'O';
+    const move = personalityMorris('simorgh', state, 'X');
+    expect(move).toEqual({ type: 'MOVE', from: 3, to: 2 });
+    const removal = applyDecision(state, move!)!;
+    expect(removal.action).toBe('REMOVE');
+    const capture = personalityMorris('simorgh', removal, 'X');
+    expect(applyDecision(removal, capture!)?.winner).toBe('X');
+  });
+
+  it('uses the fading piece order to find a real win in infinite Dooz', () => {
+    const board: CellValue[] = ['X', 'X', null, 'O', 'X', null, 'O', null, 'O'];
+    expect(personalityMove('simorgh', board, [0, 1, 4], [3, 6, 8], 'X', 'INFINITE')).toBe(7);
   });
 });

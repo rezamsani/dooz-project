@@ -6,11 +6,14 @@ import {
   ChangeDetectionStrategy,
   Component,
   DestroyRef,
+  Injector,
   PLATFORM_ID,
+  afterNextRender,
   computed,
   inject,
   signal,
   NgZone,
+  viewChild,
 } from '@angular/core';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { ColorPalettePicker } from './game/color-palette-picker';
@@ -78,7 +81,7 @@ import { COINS_PER_ROUND } from './game/player-score';
 import { DoozHistoryPanel } from './game/dooz-history-panel';
 import { CoachReview, MorrisLesson, reviewMorris } from './game/coach-review';
 import { RivalryPanel } from './game/rivalry-panel';
-import { BotId, botForDifficulty, personalityMove, personalityMorris } from './game/bot-personalities';
+import { BotId, personalityMove, personalityMorris } from './game/bot-personalities';
 import { ThreeLesson, reviewThree, immediateWins } from './game/learning-engine';
 import { PlayerDashboard } from './game/player-dashboard';
 
@@ -149,6 +152,8 @@ export class App {
   ]);
   private readonly platformId = inject(PLATFORM_ID);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly injector = inject(Injector);
+  private readonly botRoster = viewChild(BotRoster);
   readonly soundFx = inject(SoundFx);
   readonly playerStats = inject(PlayerStats);
   readonly onlineClient = inject(OnlineClient);
@@ -190,7 +195,7 @@ export class App {
   // Match settings
   readonly gameVariant = signal<GameVariant>('THREE');
   readonly gameMode = signal<GameMode>('AI');
-  readonly difficulty = signal<Difficulty>(this.journey.bot().difficulty);
+  readonly difficulty = computed<Difficulty>(() => this.journey.bot().difficulty);
   readonly boardRule = signal<BoardRule>('CLASSIC');
   readonly allowFlying = signal<boolean>(true);
   readonly turnTimeLimit = signal<TurnTimeLimit>(0);
@@ -618,16 +623,7 @@ export class App {
     return this.activeTurn() === 'X' ? 'close' : 'circle';
   });
 
-  readonly difficultyLabel = computed<string>(() => {
-    switch (this.difficulty()) {
-      case 'EASY':
-        return this.i18n.text("آسان");
-      case 'MEDIUM':
-        return this.i18n.text("متوسط");
-      case 'HARD':
-        return this.i18n.text("سخت");
-    }
-  });
+  readonly botMatchLabel = computed(() => this.i18n.text('بازی با {0}', [this.i18n.text(this.journey.bot().name)]));
 
   readonly variantTitle = computed<string>(() => {
     switch (this.gameVariant()) {
@@ -776,13 +772,13 @@ export class App {
     this.gameMode.set(mode);
   }
 
-  setDifficulty(level: Difficulty): void {
-    this.soundFx.playClick();
-    if (this.journey.selectBot(botForDifficulty(level).id)) this.difficulty.set(level);
+  openBotRoster(): void {
+    this.setGameMode('AI');
+    afterNextRender(() => this.botRoster()?.focusSelection(), { injector: this.injector });
   }
 
   selectBot(id: BotId): void {
-    if (this.journey.selectBot(id)) { this.difficulty.set(this.journey.bot().difficulty); this.soundFx.playClick(); }
+    if (this.gameState() === 'TITLE_MENU' && this.journey.selectBot(id)) this.soundFx.playClick();
   }
 
   setBoardRule(rule: BoardRule): void {
